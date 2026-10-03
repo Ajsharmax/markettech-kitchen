@@ -68,7 +68,7 @@
         </section>
 
         <section class="admin-page" id="page-inventory" hidden>
-          <div class="page-title-row"><div><div class="admin-eyebrow">STOCK THAT STAYS IN STEP</div><h1>Your <em>inventory.</em></h1><p>Update on-hand quantities and spot low-stock items before they sell out.</p></div><button class="admin-button admin-button-light" id="export-products">↓ &nbsp; Export CSV</button></div>
+          <div class="page-title-row"><div><div class="admin-eyebrow">STOCK THAT STAYS IN STEP</div><h1>Your <em>inventory.</em></h1><p>Update on-hand quantities and spot low-stock items before they sell out.</p></div><div class="title-actions"><button class="admin-button admin-button-dark" id="inventory-import-button"><span>⇪</span> Import Products</button><button class="admin-button admin-button-light" id="export-products">↓ &nbsp; Export products (CSV)</button></div></div>
           <section class="admin-card full-table-card"><div class="table-toolbar"><div><strong id="inventory-count-label">0 items</strong><small>Low-stock alert threshold: <span id="inventory-threshold-label">8</span> units.</small></div><label class="admin-search"><span>⌕</span><input id="inventory-search" type="search" placeholder="Search inventory…"></label></div><div class="table-wrap"><table><thead><tr><th>PRODUCT</th><th>SKU</th><th>ON HAND</th><th>STOCK STATUS</th><th></th></tr></thead><tbody id="inventory-rows"></tbody></table></div><div class="admin-empty" id="empty-inventory" hidden><span>▥</span><strong>No matching inventory</strong><small>Try another product name.</small></div></section>
         </section>
 
@@ -107,7 +107,7 @@
         <input type="file" id="product-import-file" accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
         <small>Columns: sku, product_name, slug, category, mrp, selling_price, stock_quantity, hsn_code, gst, description, status, featured, package_length_cm, package_breadth_cm, package_height_cm, package_weight_kg. SKU is the unique key: matching SKUs are updated, new SKUs are created, and products that are missing from your file are left untouched. Blank cells keep the value a product (or a new product's default) already has.</small>
       </label>
-      <div class="import-help"><a class="inline-link" href="/templates/product-import-template.csv" download id="import-template-link">↓ Download the CSV template</a><span>Nothing is written to your store until you press “Confirm Import”.</span></div>
+      <div class="import-help"><a class="inline-link" href="/templates/product-import-template.csv" download id="import-template-link">↓ Download a blank template (.csv)</a><span>Nothing is written to your store until you press “Confirm Import”.</span></div>
     </div>
     <div class="import-file-card" id="import-file-card" hidden></div>
     <div class="import-summary" id="import-summary" hidden></div>

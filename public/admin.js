@@ -566,6 +566,7 @@
     }
   }
   $('#products-import-button').addEventListener('click', openImportModal);
+  $('#inventory-import-button').addEventListener('click', openImportModal);
   $('#product-import-file').addEventListener('change', event => handleImportFile(event.target.files?.[0]));
   $('#import-filter').addEventListener('change', event => { importFilter = event.target.value; renderImportRows(); });
   $('#import-confirm-button').addEventListener('click', confirmImport);

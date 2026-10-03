@@ -4,7 +4,8 @@
   "private": true,
   "description": "MarketTech Kitchen storefront with Cloudflare Pages Functions, D1 and R2",
   "scripts": {
-    "check": "node --check public/app.js && node --check public/admin.js && node --check \"functions/api/[[path]].js\" && node --check \"functions/uploads/[[path]].js\""
+    "check": "node --check public/app.js && node --check public/admin.js && node --check \"functions/api/[[path]].js\" && node --check \"functions/uploads/[[path]].js\"",
+    "test:import": "node tests/product-import.test.mjs"
   },
   "engines": {
     "node": ">=18"

@@ -1,0 +1,4 @@
+sku,product_name,slug,category,mrp,selling_price,stock_quantity,hsn_code,gst,description,status,featured,package_length_cm,package_breadth_cm,package_height_cm,package_weight_kg
+MTK-EXAMPLE-001,Everyday Cast Iron Skillet,everyday-cast-iron-skillet,Cookware,2990,2490,24,73239990,18,"Pre-seasoned cast iron skillet for weekday breakfasts and slow Sunday suppers.",active,yes,31,27,11,2.4
+MTK-EXAMPLE-002,Nesting Stoneware Bowls,nesting-stoneware-bowls,Tableware,2190,1890,31,69120010,12,"Set of three hand-finished stoneware bowls for mixing and serving.",active,no,25,25,15,1.8
+MTK-EXAMPLE-003,Walnut and Steel Chef Knife,walnut-steel-chef-knife,Prep,2690,2250,0,82119310,18,"Full-tang stainless blade with a warm walnut handle. Set stock to 0 for sold out.",inactive,no,34,9,4,0.4

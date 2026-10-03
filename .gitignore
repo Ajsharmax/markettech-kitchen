@@ -1,0 +1,9 @@
+node_modules/
+.env
+.dev.vars
+.wrangler/
+.DS_Store
+*.log
+# Store customer/order data and uploaded images stay in Cloudflare D1/R2, not Git.
+/data/store.json
+/public/uploads/

@@ -16,6 +16,22 @@
   let previewToken = '';
   try { previewToken = sessionStorage.getItem('mt-admin-preview-token') || ''; } catch { /* storage may be disabled */ }
 
+  const IMPORT_MAX_BYTES = 4 * 1024 * 1024;
+  const IMPORT_STATUS_LABELS = { created: 'CREATED', updated: 'UPDATED', skipped: 'SKIPPED', error: 'ERROR', failed: 'FAILED' };
+  const IMPORT_FIELD_LABELS = {
+    sku: 'sku', product_name: 'product_name', slug: 'slug', category: 'category', mrp: 'mrp',
+    selling_price: 'selling_price', stock_quantity: 'stock_quantity', hsn_code: 'hsn_code', gst: 'gst',
+    description: 'description', status: 'status', featured: 'featured',
+    package_length_cm: 'package_length_cm', package_breadth_cm: 'package_breadth_cm',
+    package_height_cm: 'package_height_cm', package_weight_kg: 'package_weight_kg'
+  };
+  const importFieldLabel = field => IMPORT_FIELD_LABELS[field] || field;
+  let importPayload = null;
+  let importPreview = null;
+  let importResult = null;
+  let importFilter = 'all';
+  let importBusy = false;
+
   const formatMoney = amount => money.format(Number(amount) || 0);
   const dateShort = value => {
     if (!value) return '—';
@@ -138,7 +154,7 @@
     $('#product-rows').innerHTML = list.map(product => {
       const available = Number(product.stock) > 0;
       const stockClass = Number(product.stock) <= Number(settings?.site?.lowStockThreshold ?? 8) ? 'stock-low' : '';
-      return `<tr data-product-id="${escapeHtml(product.id)}"><td><div class="product-table-item"><img src="${escapeHtml(product.image)}" alt=""><span><strong>${escapeHtml(product.name)}</strong><small>${escapeHtml(product.tag || product.id)}</small></span></div></td><td><span class="category-label">${escapeHtml(product.category)}</span></td><td><span class="price-label">${formatMoney(product.price)}</span></td><td><span class="stock-label ${stockClass}">${Number(product.stock)} units</span></td><td><span class="product-status${available ? '' : ' out'}">${available ? 'Active' : 'Out of stock'}</span></td><td><div class="table-actions"><button type="button" data-action="edit-product">Edit</button><button type="button" class="delete-action" data-action="delete-product">Delete</button></div></td></tr>`;
+      return `<tr data-product-id="${escapeHtml(product.id)}"><td><div class="product-table-item"><img src="${escapeHtml(product.image)}" alt=""><span><strong>${escapeHtml(product.name)}</strong><small>${escapeHtml(product.sku ? (product.tag ? `${product.sku} · ${product.tag}` : product.sku) : (product.tag || product.id))}</small></span></div></td><td><span class="category-label">${escapeHtml(product.category)}</span></td><td><span class="price-label">${formatMoney(product.price)}</span></td><td><span class="stock-label ${stockClass}">${Number(product.stock)} units</span></td><td><span class="product-status${available ? '' : ' out'}">${available ? 'Active' : 'Out of stock'}</span></td><td><div class="table-actions"><button type="button" data-action="edit-product">Edit</button><button type="button" class="delete-action" data-action="delete-product">Delete</button></div></td></tr>`;
     }).join('');
     $('#empty-products-admin').hidden = list.length > 0;
   }
@@ -191,7 +207,7 @@
       const stock = Number(product.stock);
       const state = stock <= 0 ? 'Sold out' : stock <= threshold ? 'Low stock' : 'In stock';
       const stateClass = stock <= 0 ? 'inventory-out' : stock <= threshold ? 'inventory-low' : 'inventory-good';
-      return `<tr data-product-id="${escapeHtml(product.id)}"><td><div class="product-table-item"><img src="${escapeHtml(product.image)}" alt=""><span><strong>${escapeHtml(product.name)}</strong><small>${escapeHtml(product.category)}</small></span></div></td><td><span class="category-label">${escapeHtml(product.id)}</span></td><td><input class="inventory-stock-input" type="number" min="0" step="1" value="${stock}" aria-label="Stock quantity for ${escapeHtml(product.name)}"></td><td><span class="inventory-state ${stateClass}">${state}</span></td><td><button type="button" class="admin-button admin-button-light stock-save-button" data-action="save-stock">Save quantity</button></td></tr>`;
+      return `<tr data-product-id="${escapeHtml(product.id)}"><td><div class="product-table-item"><img src="${escapeHtml(product.image)}" alt=""><span><strong>${escapeHtml(product.name)}</strong><small>${escapeHtml(product.category)}</small></span></div></td><td><span class="category-label">${escapeHtml(product.sku || product.id)}</span></td><td><input class="inventory-stock-input" type="number" min="0" step="1" value="${stock}" aria-label="Stock quantity for ${escapeHtml(product.name)}"></td><td><span class="inventory-state ${stateClass}">${state}</span></td><td><button type="button" class="admin-button admin-button-light stock-save-button" data-action="save-stock">Save quantity</button></td></tr>`;
     }).join('');
     $('#empty-inventory').hidden = list.length > 0;
   }
@@ -252,6 +268,10 @@
     const set = (name, value) => { const element = form.elements.namedItem(name); if (element) element.value = value ?? ''; };
     set('id', product?.id || '');
     set('name', product?.name || '');
+    set('sku', product?.sku || '');
+    const categorySelect = form.elements.namedItem('category');
+    const existingOption = [...categorySelect.options].find(option => option.value === product?.category);
+    if (product?.category && !existingOption) categorySelect.add(new Option(product.category, product.category));
     set('category', product?.category || '');
     set('image', product?.image || '/images/product-pan.jpg');
     $('#product-image-preview').src = product?.image || '/images/product-pan.jpg';
@@ -340,6 +360,218 @@
     });
   }
 
+  /* ----- Bulk product import (Admin → Products → Import Products) ----- */
+  function formatBytes(bytes) {
+    if (!Number.isFinite(bytes) || bytes <= 0) return '0 KB';
+    return bytes >= 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  }
+  function importRows() {
+    if (importResult) return importResult.rows || [];
+    return importPreview ? importPreview.rows || [] : [];
+  }
+  function setImportProgress(message) {
+    const element = $('#import-progress');
+    element.textContent = message;
+    element.classList.remove('is-done');
+    element.hidden = !message;
+  }
+  function resetImportModal() {
+    importPayload = null; importPreview = null; importResult = null; importFilter = 'all'; importBusy = false;
+    $('#product-import-file').value = '';
+    $('#import-error').textContent = '';
+    for (const selector of ['#import-file-card', '#import-summary', '#import-issues', '#import-table-card']) {
+      const element = $(selector);
+      element.hidden = true;
+      if (selector !== '#import-table-card') element.innerHTML = '';
+    }
+    $('#import-rows-body').innerHTML = '';
+    $('#import-empty').hidden = true;
+    $('#import-filter').value = 'all';
+    setImportProgress('');
+    $('#import-upload-panel').hidden = false;
+    $('#import-reset-button').hidden = true;
+    $('#import-download-errors').hidden = true;
+    const button = $('#import-confirm-button');
+    button.disabled = true;
+    button.innerHTML = 'Confirm Import <span>↗</span>';
+  }
+  function openImportModal() {
+    resetImportModal();
+    openAdminModal('#product-import-modal');
+  }
+  function fileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = String(reader.result || '');
+        const comma = result.indexOf(',');
+        resolve(comma >= 0 ? result.slice(comma + 1) : '');
+      };
+      reader.onerror = () => reject(new Error('That file could not be read. Please try again.'));
+      reader.readAsDataURL(file);
+    });
+  }
+  function renderImportFileCard() {
+    const card = $('#import-file-card');
+    if (!importPreview) { card.hidden = true; return; }
+    const file = importPreview.file;
+    const columns = importPreview.columns || {};
+    const parts = [
+      `<span>File <b>${escapeHtml(file.name)}</b></span>`,
+      `<span>Format <b>${escapeHtml(String(file.format).toUpperCase())}</b>${file.sheetName ? ` · sheet <b>${escapeHtml(file.sheetName)}</b>` : ''}</span>`,
+      `<span>Size <b>${escapeHtml(formatBytes(file.sizeBytes))}</b></span>`,
+      `<span>Product rows <b>${Number(file.rowCount) || 0}</b>${file.blankRows ? ` · ${Number(file.blankRows)} blank row${Number(file.blankRows) === 1 ? '' : 's'} ignored` : ''}</span>`,
+      `<span>Header row <b>${Number(file.headerRowNumber) || 1}</b></span>`
+    ];
+    const missing = (columns.missingOptional || []).map(label => importFieldLabel(label));
+    if (missing.length) parts.push(`<span>Not in your file <b>${escapeHtml(missing.join(', '))}</b> — existing values are kept</span>`);
+    if ((columns.ignored || []).length) parts.push(`<span>Columns ignored <b>${escapeHtml(columns.ignored.slice(0, 8).join(', '))}</b>${columns.ignored.length > 8 ? ` and ${columns.ignored.length - 8} more` : ''}</span>`);
+    card.innerHTML = parts.join('');
+    card.hidden = false;
+  }
+  function renderImportSummary(mode) {
+    const container = $('#import-summary');
+    const summary = mode === 'result' ? importResult?.summary : importPreview?.summary;
+    if (!summary) { container.hidden = true; return; }
+    const stats = mode === 'result'
+      ? [['New products', summary.created, 'is-new'], ['Updated products', summary.updated, 'is-update'], ['Skipped', summary.skipped, 'is-skip'], ['Errors', summary.errors, 'is-error'], ['Rows with warnings', summary.warnings, 'is-skip']]
+      : [['Total rows', summary.total, ''], ['New products', summary.create, 'is-new'], ['Existing products to update', summary.update, 'is-update'], ['Skipped', summary.skip, 'is-skip'], ['Invalid rows', summary.error, 'is-error']];
+    const heading = mode === 'result' ? 'Import completed' : 'Nothing has been imported yet';
+    const note = mode === 'result'
+      ? `Finished just now. Products missing from your file were left untouched.${summary.warnings ? ` ${summary.warnings} row${summary.warnings === 1 ? ' has' : 's have'} warnings.` : ''}`
+      : 'Review the rows below, then press “Confirm Import” to write to your store.';
+    container.innerHTML = `<h3>${heading}</h3><small>${escapeHtml(note)}</small><div class="import-stat-grid">${stats.map(([label, value, className]) => `<div class="import-stat ${className}"><span>${escapeHtml(label)}</span><strong>${Number(value) || 0}</strong></div>`).join('')}</div>`;
+    container.hidden = false;
+  }
+  function renderImportIssues() {
+    const container = $('#import-issues');
+    const rows = importRows().filter(row => (row.errors || []).length || row.error || row.status === 'failed');
+    if (!rows.length) { container.hidden = true; container.innerHTML = ''; return; }
+    const shown = rows.slice(0, 40);
+    container.innerHTML = `<strong>${rows.length} row${rows.length === 1 ? '' : 's'} need attention</strong>${shown.map(row => {
+      const messages = [...(row.errors || []), row.error].filter(Boolean).join(' ');
+      return `<div class="import-issue"><b>Row ${Number(row.rowNumber) || '—'}</b> · SKU ${escapeHtml(row.sku || 'not set')} — ${escapeHtml(messages)}</div>`;
+    }).join('')}${rows.length > shown.length ? `<div class="import-issue">…and ${rows.length - shown.length} more. Download the rows for the full list.</div>` : ''}`;
+    container.hidden = false;
+  }
+  function renderImportRows() {
+    const all = importRows();
+    const rows = all.filter(row => importFilter === 'all' || row.action === importFilter);
+    const shown = rows.slice(0, 400);
+    $('#import-rows-body').innerHTML = shown.map(row => {
+      const badge = importResult ? (IMPORT_STATUS_LABELS[row.status] || row.action) : row.action;
+      const badgeClass = row.status === 'failed' ? 'is-error' : row.status === 'error' ? 'is-error' : row.action === 'NEW' || row.status === 'created' ? 'is-new' : row.action === 'UPDATE' || row.status === 'updated' ? 'is-update' : 'is-skip';
+      const note = row.error || row.skipReason || (row.action === 'ERROR' ? (row.errors || []).join(' ') : '');
+      const warnings = (row.warnings || []).length ? `<span class="import-row-flag" title="${escapeHtml(row.warnings.join(' '))}">⚠</span>` : '';
+      return `<tr><td>${Number(row.rowNumber) || '—'}</td><td>${escapeHtml(row.sku || '—')}</td><td>${escapeHtml(row.name || '—')}${warnings}</td><td>${escapeHtml(row.category || '—')}</td><td>${row.mrpProvided && row.mrp != null ? formatMoney(row.mrp) : '—'}</td><td>${row.sellingPrice != null ? formatMoney(row.sellingPrice) : '—'}</td><td>${row.stock != null ? Number(row.stock) : '—'}</td><td><span class="import-badge ${badgeClass}">${escapeHtml(badge)}</span>${note ? `<span class="import-row-note">${escapeHtml(note)}</span>` : ''}</td></tr>`;
+    }).join('');
+    $('#import-empty').hidden = rows.length > 0;
+    const note = rows.length > shown.length
+      ? `Showing the first ${shown.length} of ${rows.length} rows. Download the rows for the full list.`
+      : `${rows.length} of ${all.length} row${all.length === 1 ? '' : 's'} shown.`;
+    $('#import-preview-note').textContent = note;
+  }
+  function downloadImportRows() {
+    const rows = importRows();
+    if (!rows.length) return;
+    const report = [['Row', 'SKU', 'Product name', 'Category', 'MRP', 'Selling price', 'Stock', 'Action', 'Result', 'Errors', 'Warnings'],
+      ...rows.map(row => [
+        row.rowNumber,
+        row.sku,
+        row.name,
+        row.category,
+        row.mrpProvided && row.mrp != null ? row.mrp : '',
+        row.sellingPrice ?? '',
+        row.stock ?? '',
+        row.action,
+        row.status || '',
+        [...(row.errors || []), row.error, row.skipReason].filter(Boolean).join(' '),
+        (row.warnings || []).join(' ')
+      ])];
+    downloadCsv(importResult ? 'markettech-import-results.csv' : 'markettech-import-preview.csv', report);
+  }
+  async function handleImportFile(file) {
+    if (!file) return;
+    const errorBox = $('#import-error');
+    errorBox.textContent = '';
+    const name = String(file.name || '');
+    const extension = (name.match(/\.[a-z0-9]+$/i) || [''])[0].toLowerCase();
+    const xlsMessage = 'Old .xls workbooks are not supported. Open the file in Excel, choose “Save as” → .xlsx or .csv, then upload it again.';
+    if (extension === '.xls') { errorBox.textContent = xlsMessage; return; }
+    if (!['.xlsx', '.csv'].includes(extension)) { errorBox.textContent = 'Please choose an .xlsx or .csv file exported from your product spreadsheet.'; return; }
+    if (!file.size) { errorBox.textContent = 'That file is empty.'; return; }
+    if (file.size > IMPORT_MAX_BYTES) { errorBox.textContent = `That file is ${formatBytes(file.size)}. The importer accepts files up to 4 MB.`; return; }
+    const signature = [...new Uint8Array(await file.slice(0, 4).arrayBuffer())].map(byte => byte.toString(16).padStart(2, '0')).join('');
+    if (signature.startsWith('d0cf11e0')) { errorBox.textContent = xlsMessage; return; }
+    if (extension === '.xlsx' && !signature.startsWith('504b0304')) { errorBox.textContent = 'That file does not look like a real .xlsx workbook. Save it again from Excel as .xlsx and try once more.'; return; }
+    resetImportModal();
+    const input = $('#product-import-file');
+    const confirmButton = $('#import-confirm-button');
+    confirmButton.disabled = true;
+    setImportProgress('Reading the file and checking every row…');
+    try {
+      importPayload = { filename: name, data: await fileAsBase64(file) };
+      const response = await api('/api/admin/products/import/preview', { method: 'POST', body: JSON.stringify(importPayload) });
+      importPreview = response.preview;
+      importResult = null;
+      $('#import-upload-panel').hidden = true;
+      $('#import-reset-button').hidden = false;
+      renderImportFileCard(); renderImportSummary('preview'); renderImportIssues(); renderImportRows();
+      $('#import-table-card').hidden = false;
+      const importable = Number(importPreview.summary.create) + Number(importPreview.summary.update);
+      confirmButton.disabled = importable === 0;
+      $('#import-download-errors').hidden = !(importPreview.summary.error + importPreview.summary.skip);
+      setImportProgress('');
+      if (!importable) errorBox.textContent = 'There are no valid new or updated rows to import. Fix the errors listed above and upload the file again.';
+    } catch (error) {
+      importPayload = null;
+      importPreview = null;
+      setImportProgress('');
+      errorBox.textContent = error.message;
+    } finally {
+      input.value = '';
+    }
+  }
+  async function confirmImport() {
+    if (!importPayload || !importPreview || importBusy) return;
+    const importable = Number(importPreview.summary.create) + Number(importPreview.summary.update);
+    if (!importable) return;
+    importBusy = true;
+    const button = $('#import-confirm-button');
+    button.disabled = true;
+    button.innerHTML = 'Importing… <span>✳</span>';
+    $('#import-error').textContent = '';
+    setImportProgress(`Writing ${importable} product${importable === 1 ? '' : 's'} to Cloudflare D1…`);
+    try {
+      const response = await api('/api/admin/products/import', { method: 'POST', body: JSON.stringify(importPayload) });
+      importResult = response.result;
+      renderImportSummary('result');
+      renderImportIssues();
+      renderImportRows();
+      renderImportFileCard();
+      $('#import-download-errors').hidden = false;
+      setImportProgress(`Import completed — ${importResult.summary.created} new, ${importResult.summary.updated} updated, ${importResult.summary.skipped} skipped, ${importResult.summary.errors} error${importResult.summary.errors === 1 ? '' : 's'}.`);
+      $('#import-progress').classList.add('is-done');
+      button.innerHTML = 'Imported <span>✓</span>';
+      showToast(`Import completed — ${importResult.summary.created} new and ${importResult.summary.updated} updated product${importResult.summary.created + importResult.summary.updated === 1 ? '' : 's'}.`);
+      await refreshAll();
+      renderImportRows();
+    } catch (error) {
+      $('#import-error').textContent = error.message;
+      setImportProgress('');
+      button.disabled = false;
+      button.innerHTML = 'Confirm Import <span>↗</span>';
+    } finally {
+      importBusy = false;
+    }
+  }
+  $('#products-import-button').addEventListener('click', openImportModal);
+  $('#product-import-file').addEventListener('change', event => handleImportFile(event.target.files?.[0]));
+  $('#import-filter').addEventListener('change', event => { importFilter = event.target.value; renderImportRows(); });
+  $('#import-confirm-button').addEventListener('click', confirmImport);
+  $('#import-reset-button').addEventListener('click', resetImportModal);
+  $('#import-download-errors').addEventListener('click', downloadImportRows);
+
   $('#login-form').addEventListener('submit', async event => {
     event.preventDefault();
     const button = $('.login-submit', event.currentTarget);
@@ -373,7 +605,7 @@
   $('#products-add-button').addEventListener('click', () => openProductEditor());
   $('#product-search').addEventListener('input', renderProducts);
   $('#inventory-search').addEventListener('input', renderInventory);
-  $('#export-products').addEventListener('click', () => downloadCsv('markettech-inventory.csv', [['Product', 'SKU', 'Category', 'Price INR', 'Stock', 'Status'], ...products.map(product => [product.name, product.id, product.category, product.price, product.stock, Number(product.stock) > 0 ? 'Active' : 'Out of stock'])]));
+  $('#export-products').addEventListener('click', () => downloadCsv('markettech-inventory.csv', [['Product', 'SKU', 'Category', 'Price INR', 'Stock', 'Status'], ...products.map(product => [product.name, product.sku || product.id, product.category, product.price, product.stock, Number(product.stock) > 0 ? 'Active' : 'Out of stock'])]));
   $('#inventory-rows').addEventListener('click', async event => {
     const button = event.target.closest('[data-action="save-stock"]');
     if (!button) return;

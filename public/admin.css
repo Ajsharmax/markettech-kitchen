@@ -29,3 +29,47 @@
 .product-gallery-thumb button:disabled{font-weight:700;color:#374a37;cursor:default}
 .product-gallery-thumb button.gallery-remove{width:19px;height:19px;border:1px solid #e0d5cd;color:#9d574a;font-size:14px;line-height:1}
 .product-gallery-editor{grid-column:1/-1;min-width:0}
+
+/* Product import (Admin → Products → Import Products) */
+.title-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px}
+.product-import-modal{width:min(1080px,calc(100vw - 30px))}
+.import-upload{display:grid;gap:11px;border:1px dashed #ccd6c6;background:#f7f9f3;padding:14px}
+.import-upload .admin-field small{line-height:1.6}
+.import-help{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;font-size:8px;color:#87907f}
+.import-file-card{display:flex;flex-wrap:wrap;gap:6px 22px;border:1px solid var(--admin-line);background:#f6f7f2;padding:11px 13px;margin-top:14px}
+.import-file-card span{font-size:8px;color:#7d877c}
+.import-file-card b{color:#4d5c4b;font-weight:650}
+.import-summary{margin-top:14px}
+.import-summary h3{font:400 17px/1.2 var(--admin-serif);margin:0;color:#3c4d3c}
+.import-summary small{display:block;font-size:8px;color:#8b9384;margin-top:4px}
+.import-stat-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;margin-top:10px}
+.import-stat{border:1px solid var(--admin-line);background:#fffefa;padding:11px 12px}
+.import-stat span{font-size:7px;letter-spacing:.12em;color:#8c9588;text-transform:uppercase}
+.import-stat strong{display:block;font:400 23px/1.05 var(--admin-serif);margin-top:7px;color:#4b5b49}
+.import-stat.is-new strong{color:#4f7350}
+.import-stat.is-update strong{color:#54748c}
+.import-stat.is-skip strong{color:#8a8f7f}
+.import-stat.is-error strong{color:#a35c4e}
+.import-issues{margin-top:12px;border:1px solid #f0dcd5;background:#fdf7f4;padding:11px 13px;max-height:190px;overflow:auto}
+.import-issues strong{display:block;font-size:9px;color:#8d5a4d;margin-bottom:6px}
+.import-issue{font-size:8px;color:#8d6559;padding:5px 0;border-top:1px solid #f4e6df;line-height:1.6}
+.import-issue:first-of-type{border-top:0}
+.import-issue b{color:#7b483d}
+.import-preview-card{margin-top:14px;border:1px solid var(--admin-line);background:#fffefa}
+.import-preview-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:11px 13px;border-bottom:1px solid var(--admin-line)}
+.import-preview-head strong{display:block;font-size:10px;color:#4d5c4b}
+.import-preview-head small{display:block;font-size:8px;color:#92988d;margin-top:4px}
+.import-preview-head select{height:31px;border:1px solid #e2e5dc;background:#fffefa;color:#667263;font-size:8px;padding:0 8px}
+.import-table-wrap{max-height:330px;overflow:auto}
+.import-table tbody td{height:auto;min-height:36px;padding:8px 11px;font-size:8px;white-space:normal}
+.import-table tbody td:nth-child(2){font-weight:650;color:#4d5c4b}
+.import-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 7px;font-size:7px;letter-spacing:.06em;white-space:nowrap}
+.import-badge.is-new{background:#e9f1e7;color:#4f7350}
+.import-badge.is-update{background:#e8f0f3;color:#54748c}
+.import-badge.is-skip{background:#f0f1ec;color:#7d8578}
+.import-badge.is-error{background:#f6e7e2;color:#a35c4e}
+.import-row-note{display:block;font-size:7px;color:#a08c81;margin-top:4px;line-height:1.5;max-width:250px}
+.import-row-flag{color:#b98a56;font-size:8px;margin-left:5px;cursor:help}
+.import-progress{margin-top:14px;background:#eef1e8;border:1px solid #dfe4d6;padding:10px 12px;font-size:9px;color:#5d6d5a}
+.import-progress.is-done{background:#eaf1e7;border-color:#d5e0cd;color:#4f6a4d}
+@media(max-width:760px){.import-stat-grid{grid-template-columns:1fr 1fr}.import-table-wrap{max-height:260px}.title-actions{width:100%}.title-actions .admin-button{flex:1}}

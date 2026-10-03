@@ -5,6 +5,7 @@ A responsive kitchen-products storefront and admin panel. The storefront is stat
 ## Included features
 
 - Product catalogue, search, category filters, cart and stock-aware checkout.
+- Bulk product import from `.xlsx`/`.csv` with validation preview (Admin → Products → Import Products).
 - Customer registration/sign-in and private order history.
 - Admin panel for products, inventory, orders, customers, site copy, policies, delivery settings and coupons.
 - Up to 8 photos per product, uploaded to R2; admin-managed UPI QR image also uses R2.
@@ -49,6 +50,23 @@ Before connecting `markettech.in`, test the Pages address:
 
 Keep the current electronics storefront and all existing DNS/email records unchanged until the kitchen site passes testing and you explicitly approve the domain switch. The site will not automatically take over `markettech.in`.
 
+## Bulk product import
+
+Open **Admin → Products → Import Products**, choose an `.xlsx` or `.csv` file, check the
+preview, then press **Confirm Import**. The file is read inside the Pages Function and
+nothing is written to D1 until you confirm; cancel any time and the database is untouched.
+
+- Columns: `sku, product_name, slug, category, mrp, selling_price, stock_quantity, hsn_code, gst, description, status, featured, package_length_cm, package_breadth_cm, package_height_cm, package_weight_kg`. Common header spellings such as `Name`, `Selling Price (₹)`, `Stock` or `Package Weight (kg)` are recognised, and unknown columns are ignored.
+- **SKU is the unique key.** A new SKU creates a product; a matching SKU updates that product in place and keeps its existing ID. Repeating a SKU inside one file skips the repeats, so re-uploading the same file updates instead of duplicating. Products that are missing from the file are never deleted.
+- The preview reports total rows, new products, products to update, skipped rows and invalid rows, with a `SKU | Product Name | Category | MRP | Selling Price | Stock | Action` table (`NEW`, `UPDATE`, `ERROR`, `SKIP`).
+- Invalid rows are listed with their spreadsheet row number and the exact problem (for example `Selling price is missing`). Invalid rows are skipped and reported after the import; every other row is still written.
+- Product images, ratings and tags are preserved on update. New products start with the default cover image; R2 is not required and no image column is needed.
+- Marketplace-only columns (Flipkart listing IDs, seller details, marketplace pricing or URLs) are ignored and never stored.
+- `stock_quantity` is written to the existing `products.stock` column, so Inventory, checkout and stock alerts stay in sync.
+- Limits: 4 MB and 2,000 rows per upload. Legacy `.xls` workbooks must be re-saved as `.xlsx` or `.csv`.
+- The import window links to a ready-to-use template at `/templates/product-import-template.csv`.
+- Optional: run `migrations/0002_product_sku.sql` once per database to add the `sku` column before your first import. The importer creates the column and its unique index automatically, so most stores do not need to run anything.
+
 ## Costs and limits
 
 Cloudflare Pages, D1 and R2 have free-tier allowances, not unlimited free usage. Usage beyond the current free limits can be billable. Check Cloudflare’s current [Workers pricing](https://developers.cloudflare.com/workers/platform/pricing/), [D1 pricing](https://developers.cloudflare.com/d1/platform/pricing/) and [R2 pricing](https://developers.cloudflare.com/r2/pricing/) before public promotion, and keep an eye on usage. No paid payment gateway is needed for COD/manual UPI; a gateway may charge transaction fees.
@@ -57,7 +75,7 @@ Customer passwords are hashed with PBKDF2-SHA256 at a 20,000-iteration work fact
 
 ## Source checks
 
-The repository includes a dependency-free `npm run check` command for JavaScript syntax checks. The deployed site runs on Cloudflare Pages Functions; it does not run the old Node file server or use local JSON files for production data.
+The repository includes a dependency-free `npm run check` command for JavaScript syntax checks and `npm run test:import`, which runs the bulk importer end to end against a temporary SQLite database (needs Node 22.5+ for `node:sqlite`). The deployed site runs on Cloudflare Pages Functions; it does not run the old Node file server or use local JSON files for production data.
 
 ## Important launch notes
 

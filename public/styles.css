@@ -662,8 +662,8 @@ p{font-weight:500}
 }
 @media(max-width:800px){
   .hero{
-    min-height:500px;
-    height:500px;
+    min-height:430px;
+    height:430px;
     box-sizing:border-box;
     padding:35px 0;
   }
@@ -677,6 +677,7 @@ p{font-weight:500}
   }
 }
 @media(max-width:560px){
+  .hero{min-height:430px;height:430px;padding-top:24px;padding-bottom:24px}
   .hero h1{font-size:clamp(48px,13vw,70px)}
   .hero-search{display:grid;grid-template-columns:45px 1fr}
   .hero-search label{width:auto}

@@ -1358,7 +1358,7 @@ function shippingDistanceKm(lat, lon) {
   const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(28.6139)) * Math.cos(toRad(Number(lat))) * Math.sin(dLon / 2) ** 2;
   return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(Math.max(0, 1 - a)));
 }
-const NCR_DISTRICTS = new Set(['delhi','gurugram','gurgaon','faridabad','rohtak','sonipat','sonepat','rewari','jhajjar','nuh','mewat','palwal','panipat','mahendragarh','bhiwani','charkhi dadri','jind','karnal','meerut','ghaziabad','gautam buddha nagar','gautambuddha nagar','bulandshahr','bulandshahar','baghpat','hapur','muzaffarnagar','shamli','alwar','bharatpur']);
+const NCR_DISTRICTS = new Set(['delhi','new delhi','gurugram','gurgaon','faridabad','noida','greater noida','ghaziabad','meerut','hapur','baghpat','bulandshahr','bulandshahar','muzaffarnagar','shamli','gautam buddha nagar','gautambuddha nagar','rohtak','sonipat','sonepat','rewari','jhajjar','nuh','mewat','palwal','panipat','mahendragarh','bhiwani','charkhi dadri','jind','karnal','alwar','bharatpur','bahadurgarh']);
 async function resolveShippingFee(state, pincode) {
   const cleanPin = String(pincode || '').replace(/\D/g, '');
   if (!/^\d{6}$/.test(cleanPin)) return 149;

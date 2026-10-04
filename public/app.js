@@ -14,6 +14,7 @@
   let storefrontSettings = { site: {}, policies: {}, marketing: {}, developer: {}, offers: [] };
   let appliedCoupon = '';
   let currentCustomer = null;
+  let checkoutAfterAuth = false;
   let modalGalleryImages = [];
   let modalGalleryIndex = 0;
   let activeModalProduct = null;
@@ -150,6 +151,7 @@
     updateAccountButtons();
   }
   async function submitCustomerAuth(form, endpoint, errorSelector) {
+    const shouldContinueToCheckout = checkoutAfterAuth;
     const button = $('button[type="submit"]', form);
     const original = button.innerHTML;
     $(errorSelector).textContent = '';
@@ -164,8 +166,15 @@
       }
       currentCustomer = result.customer;
       form.reset();
-      await showAccountProfile();
-      showToast(endpoint.endsWith('register') ? 'Your account is ready. Welcome in!' : 'You’re signed in. Welcome back.');
+      if (shouldContinueToCheckout) {
+        checkoutAfterAuth = false;
+        closeLayer($('#account-modal'));
+        showToast(endpoint.endsWith('register') ? 'Account created. Continuing to checkout…' : 'Signed in. Continuing to checkout…');
+        setTimeout(() => startCheckout(), 120);
+      } else {
+        await showAccountProfile();
+        showToast(endpoint.endsWith('register') ? 'Your account is ready. Welcome in!' : 'You’re signed in. Welcome back.');
+      }
     } catch (error) { $(errorSelector).textContent = error.message; }
     finally { button.disabled = false; button.innerHTML = original; }
   }
@@ -650,6 +659,18 @@
 
   function startCheckout() {
     if (!itemCount()) return showToast('Your bag is empty for now.');
+    if (!currentCustomer) {
+      checkoutAfterAuth = true;
+      openLayer($('#account-modal'));
+      $('#account-auth-view').hidden = false;
+      $('#account-profile-view').hidden = true;
+      setAccountMode('login');
+      $('#customer-login-error').textContent = '';
+      const loginEmail = $('#customer-login-form')?.elements.namedItem('email');
+      if (loginEmail) setTimeout(() => loginEmail.focus({ preventScroll: true }), 80);
+      showToast('Please sign in or create an account to place your order.');
+      return;
+    }
     if (currentCustomer) {
       for (const field of ['name', 'phone', 'email']) {
         const input = $('#checkout-form').elements.namedItem(field);

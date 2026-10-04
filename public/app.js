@@ -14,6 +14,8 @@
   let storefrontSettings = { site: {}, policies: {}, marketing: {}, developer: {}, offers: [] };
   let publicCoupons = [];
   let appliedCoupon = '';
+  let checkoutShippingFee = null;
+  let shippingQuoteKey = '';
   let currentCustomer = null;
   let checkoutAfterAuth = false;
   let modalGalleryImages = [];
@@ -76,6 +78,44 @@
     const cap = Number(coupon.maxDiscount) || 0;
     return cap > 0 ? Math.min(raw, cap) : raw;
   }
+  function renderAvailableCoupons(subtotal = cartSubtotal()) {
+    const box = $('#available-coupons');
+    if (!box) return;
+    const coupons = (Array.isArray(publicCoupons) ? publicCoupons : []).filter(coupon => coupon.code);
+    if (!coupons.length) { box.innerHTML = ''; return; }
+    box.innerHTML = '<small class="coupon-list-title">Available offers</small>' + coupons.map(coupon => {
+      const minOrder = Number(coupon.minOrder) || 0;
+      const eligible = subtotal >= minOrder;
+      const discount = couponDiscountPreview(coupon, subtotal);
+      const gap = Math.max(0, minOrder - subtotal);
+      const label = coupon.discountType === 'fixed' ? formatMoney(coupon.discountValue) + ' off' : Number(coupon.discountValue) + '% off';
+      const cap = Number(coupon.maxDiscount) > 0 ? ' · up to ' + formatMoney(coupon.maxDiscount) : '';
+      const state = appliedCoupon.toUpperCase() === String(coupon.code).toUpperCase() ? 'Applied ✓' : eligible ? 'Apply' : 'Add ' + formatMoney(gap) + ' more';
+      const disabled = !eligible || appliedCoupon.toUpperCase() === String(coupon.code).toUpperCase();
+      return '<div class="coupon-option' + (disabled && !eligible ? ' is-locked' : '') + '"><div><strong>' + escapeHtml(coupon.code) + '</strong><span>' + escapeHtml(label + cap) + '</span><small>Minimum ' + formatMoney(minOrder) + (coupon.customerEmail ? ' · Personal offer' : '') + '</small></div><button type="button" data-apply-coupon-code="' + escapeHtml(coupon.code) + '"' + (disabled ? ' disabled' : '') + '>' + escapeHtml(state) + '</button></div>';
+    }).join('');
+  }
+  async function refreshShippingQuote() {
+    const pincode = $('#checkout-form')?.elements.namedItem('pincode')?.value?.trim() || '';
+    const state = $('#checkout-form')?.elements.namedItem('state')?.value?.trim() || '';
+    const key = state.toLowerCase() + '|' + pincode;
+    if (!/^\d{6}$/.test(pincode)) {
+      checkoutShippingFee = 49;
+      shippingQuoteKey = '';
+      renderCheckoutSummary();
+      return;
+    }
+    if (key === shippingQuoteKey) return;
+    shippingQuoteKey = key;
+    try {
+      const result = await api('/api/shipping-rate?pincode=' + encodeURIComponent(pincode) + '&state=' + encodeURIComponent(state));
+      checkoutShippingFee = Number(result.fee) || 149;
+    } catch {
+      checkoutShippingFee = 49;
+    }
+    renderCheckoutSummary();
+  }
+
   function renderLivePromoMessage(subtotal = cartSubtotal()) {
     const box = $('#live-promo-message');
     if (!box) return;
@@ -97,6 +137,7 @@
     } else if (best) message = '<strong>🎉 Best available saving: ' + escapeHtml(best.coupon.code) + ' — ' + formatMoney(best.discount) + ' off.</strong>';
     box.innerHTML = message;
     box.hidden = !message;
+    renderAvailableCoupons(subtotal);
   }
 
   function ratingMarkup(product) {
@@ -200,6 +241,9 @@
       form.reset();
       if (shouldContinueToCheckout) {
         checkoutAfterAuth = false;
+        try {
+          publicCoupons = await api('/api/public-coupons');
+        } catch {}
         closeLayer($('#account-modal'));
         showToast(endpoint.endsWith('register') ? 'Account created. Continuing to checkout…' : 'Signed in. Continuing to checkout…');
         setTimeout(() => startCheckout(), 120);
@@ -541,8 +585,8 @@
     $('#shipping-progress').classList.toggle('is-hidden', items.length === 0);
     const threshold = Number.isFinite(Number(config.freeShippingAt)) ? Number(config.freeShippingAt) : 1999;
     const remaining = Math.max(0, threshold - subtotal);
-    $('#shipping-message').textContent = remaining ? `You’re ${formatMoney(remaining)} away from free shipping` : 'Lovely — your delivery is on us.';
-    $('#shipping-progress-fill').style.width = `${Math.min(100, (subtotal / threshold) * 100)}%`;
+    $('#shipping-message').textContent = 'Delivery from ₹49 · final fee depends on your PIN code';
+    $('#shipping-progress-fill').style.width = '0%';
     $('#bag-count').setAttribute('aria-label', `${count} items in bag`);
   }
 
@@ -613,12 +657,9 @@
   function renderCheckoutSummary() {
     const items = currentCartItems();
     const subtotal = cartSubtotal();
-    const threshold = Number.isFinite(Number(config.freeShippingAt)) ? Number(config.freeShippingAt) : 1999;
-    const fee = Number.isFinite(Number(config.shippingFee)) ? Number(config.shippingFee) : 99;
-    const shipping = subtotal >= threshold ? 0 : fee;
-    const marketing = storefrontSettings.marketing || {};
-    const validCoupon = appliedCoupon && appliedCoupon.toUpperCase() === String(marketing.couponCode || '').toUpperCase() && Number(marketing.discountPercent) > 0;
-    const discount = validCoupon ? Math.round(subtotal * Number(marketing.discountPercent) / 100) : 0;
+    const shipping = checkoutShippingFee === null ? 49 : checkoutShippingFee;
+    const coupon = publicCoupons.find(item => String(item.code).toUpperCase() === String(appliedCoupon).toUpperCase());
+    const discount = coupon ? couponDiscountPreview(coupon, subtotal) : 0;
     $('#checkout-discount-line').hidden = !discount;
     $('#checkout-discount').textContent = `−${formatMoney(discount)}`;
     $('#checkout-item-count').textContent = `${items.reduce((total, item) => total + item.quantity, 0)} ${items.length === 1 ? 'item' : 'items'}`;
@@ -633,7 +674,7 @@
     $('#checkout-discount').textContent = quantityDiscount || discount ? `−${formatMoney(quantityDiscount + discount)}` : '−₹0';
     $('#checkout-shipping').textContent = shipping ? formatMoney(shipping) : 'On us';
     $('#checkout-total').textContent = formatMoney(subtotal - quantityDiscount - discount + shipping);
-    $('.summary-note').textContent = threshold > 0 ? `Free delivery on orders over ${formatMoney(threshold)}.` : 'Delivery is on us for every order.';
+    $('.summary-note').textContent = 'Delivery: ₹49 Delhi NCR · ₹99 within 500 km of Delhi · ₹149 elsewhere in India.';
     renderLivePromoMessage(subtotal);
   }
   function loadExternalScript(src) {
@@ -721,6 +762,8 @@
       }
     }
     appliedCoupon = '';
+    checkoutShippingFee = null;
+    shippingQuoteKey = '';
     $('#coupon-input').value = '';
     $('#coupon-message').textContent = '';
     $('#cart-drawer').hidden = true;
@@ -918,15 +961,32 @@
 
   $('#apply-coupon').addEventListener('click', () => {
     const entered = $('#coupon-input').value.trim().toUpperCase();
-    appliedCoupon = entered;
-    if (entered) {
-      $('#coupon-message').textContent = 'Code added. We’ll verify it when you place the order.';
-      $('#coupon-message').classList.remove('coupon-error');
-    } else {
-      $('#coupon-message').textContent = '';
-      $('#coupon-message').classList.remove('coupon-error');
+    const coupon = publicCoupons.find(item => String(item.code).toUpperCase() === entered);
+    if (!coupon) {
+      appliedCoupon = '';
+      $('#coupon-message').textContent = 'Please choose one of the available coupons below.';
+      $('#coupon-message').classList.add('coupon-error');
+      renderCheckoutSummary();
+      return;
     }
+    if (cartSubtotal() < Number(coupon.minOrder || 0)) {
+      $('#coupon-message').textContent = 'Add ' + formatMoney(Number(coupon.minOrder) - cartSubtotal()) + ' more to use this coupon.';
+      $('#coupon-message').classList.add('coupon-error');
+      return;
+    }
+    appliedCoupon = coupon.code;
+    $('#coupon-message').textContent = couponDiscountPreview(coupon, cartSubtotal()) > 0 ? '✓ ' + coupon.code + ' applied.' : 'Coupon selected.';
+    $('#coupon-message').classList.remove('coupon-error');
     renderCheckoutSummary();
+  });
+
+  $('#available-coupons').addEventListener('click', event => {
+    const button = event.target.closest('[data-apply-coupon-code]');
+    if (!button || button.disabled) return;
+    const code = button.getAttribute('data-apply-coupon-code') || '';
+    const input = $('#coupon-input');
+    if (input) input.value = code;
+    $('#apply-coupon').click();
   });
 
   $('#coupon-input').addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); $('#apply-coupon').click(); } });

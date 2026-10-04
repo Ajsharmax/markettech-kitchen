@@ -718,7 +718,7 @@
     renderFilters(); renderProducts();
   });
   $('#sort-select').addEventListener('change', event => { sortOrder = event.target.value; renderProducts(); });
-  $('#view-all-link').addEventListener('click', event => { event.preventDefault(); activeCategory = 'all'; searchTerm = ''; $('#search-input').value = ''; renderFilters(); renderProducts(); });
+  $('#view-all-link')?.addEventListener('click', event => { event.preventDefault(); activeCategory = 'all'; searchTerm = ''; $('#search-input').value = ''; renderFilters(); renderProducts(); });
   $('#reset-filters').addEventListener('click', () => {
     if (!products.length && !searchTerm) {
       window.location.href = '/about.html';

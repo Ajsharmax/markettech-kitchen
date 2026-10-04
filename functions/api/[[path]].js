@@ -89,7 +89,8 @@ function normalizeSettings(input) {
   return {
     site: { ...DEFAULT_SETTINGS.site, ...(source.site && typeof source.site === 'object' ? source.site : {}) },
     policies: { ...DEFAULT_SETTINGS.policies, ...(source.policies && typeof source.policies === 'object' ? source.policies : {}) },
-    marketing: { ...DEFAULT_SETTINGS.marketing, ...(source.marketing && typeof source.marketing === 'object' ? source.marketing : {}) }
+    marketing: { ...DEFAULT_SETTINGS.marketing, ...(source.marketing && typeof source.marketing === 'object' ? source.marketing : {}) },
+    developer: { textOverrides: {}, ...(source.developer && typeof source.developer === 'object' ? source.developer : {}) }
   };
 }
 
@@ -424,6 +425,10 @@ function updateSettings(current, input) {
     if (Object.hasOwn(body.policies || {}, key)) settings.policies[key] = clean(body.policies[key], max);
   }
   const marketingLimits = { promoBanner: 180, couponCode: 40, metaPixelId: 40, googleAnalyticsId: 40, googleAdsId: 60, googleAdsConversionLabel: 100, googleTagManagerId: 40, whatsappNumber: 24 };
+  const textOverrides = body.developer?.textOverrides && typeof body.developer.textOverrides === 'object' ? body.developer.textOverrides : null;
+  if (textOverrides) {
+    settings.developer.textOverrides = Object.fromEntries(Object.entries(textOverrides).slice(0, 200).map(([key, value]) => [String(key).slice(0, 80), clean(value, 240)]));
+  }
   for (const [key, max] of Object.entries(marketingLimits)) {
     if (Object.hasOwn(body.marketing || {}, key)) settings.marketing[key] = clean(body.marketing[key], max);
   }
@@ -1291,6 +1296,75 @@ async function executeImport(env, analysis) {
   };
 }
 
+
+function parseRowJson(value, fallback = {}) {
+  try { return JSON.parse(value || '{}'); } catch { return fallback; }
+}
+function parseTags(value) {
+  try { return Array.isArray(JSON.parse(value || '[]')) ? JSON.parse(value || '[]') : []; } catch { return []; }
+}
+function parseCouponRow(row) {
+  return { id: row.id, code: row.code, discountType: row.discount_type, discountValue: Number(row.discount_value || 0), minOrder: Number(row.min_order || 0), maxDiscount: Number(row.max_discount || 0), usageLimit: Number(row.usage_limit || 0), usedCount: Number(row.used_count || 0), perCustomerLimit: Number(row.per_customer_limit || 0), startsAt: row.starts_at, endsAt: row.ends_at || '', scopeType: row.scope_type, scopeValue: row.scope_value || '', active: Boolean(row.active), createdAt: row.created_at, updatedAt: row.updated_at };
+}
+function parseOfferRow(row) {
+  return { id: row.id, name: row.name, type: row.type, value: Number(row.value || 0), scopeType: row.scope_type, scopeValue: row.scope_value || '', startsAt: row.starts_at, endsAt: row.ends_at, banner: row.banner || '', active: Boolean(row.active), createdAt: row.created_at, updatedAt: row.updated_at };
+}
+function marketingPayload(input, existing = {}, kind = 'coupon') {
+  const now = new Date().toISOString();
+  const cleanText = (v, max) => String(v ?? '').trim().slice(0, max);
+  if (kind === 'coupon') {
+    const code = cleanText(input.code ?? existing.code, 40).toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+    const discountType = String(input.discountType ?? existing.discountType ?? 'percent') === 'fixed' ? 'fixed' : 'percent';
+    const discountValue = Math.max(0, Math.min(discountType === 'percent' ? 90 : 1000000, Math.floor(Number(input.discountValue ?? existing.discountValue ?? 0))));
+    const minOrder = Math.max(0, Math.min(1000000, Math.floor(Number(input.minOrder ?? existing.minOrder ?? 0))));
+    const maxDiscount = Math.max(0, Math.min(1000000, Math.floor(Number(input.maxDiscount ?? existing.maxDiscount ?? 0))));
+    const usageLimit = Math.max(0, Math.min(100000000, Math.floor(Number(input.usageLimit ?? existing.usageLimit ?? 0))));
+    const perCustomerLimit = Math.max(0, Math.min(1000000, Math.floor(Number(input.perCustomerLimit ?? existing.perCustomerLimit ?? 0))));
+    const startsAt = cleanText(input.startsAt ?? existing.startsAt ?? now, 40);
+    const endsAt = cleanText(input.endsAt ?? existing.endsAt ?? '', 40);
+    const scopeType = ['all','product','category'].includes(input.scopeType ?? existing.scopeType) ? (input.scopeType ?? existing.scopeType) : 'all';
+    const scopeValue = cleanText(input.scopeValue ?? existing.scopeValue ?? '', 160);
+    const active = input.active === undefined ? existing.active !== false : Boolean(input.active);
+    if (!code || discountValue < 1) throw new HttpError(400, 'Enter a coupon code and a discount value.');
+    if (endsAt && new Date(endsAt) <= new Date(startsAt)) throw new HttpError(400, 'Coupon end time must be after the start time.');
+    return { id: existing.id || crypto.randomUUID(), code, discountType, discountValue, minOrder, maxDiscount, usageLimit, usedCount: Number(existing.usedCount || 0), perCustomerLimit, startsAt, endsAt, scopeType, scopeValue, active, createdAt: existing.createdAt || now, updatedAt: now };
+  }
+  const name = cleanText(input.name ?? existing.name, 100);
+  const type = String(input.type ?? existing.type ?? 'percent') === 'fixed' ? 'fixed' : 'percent';
+  const value = Math.max(0, Math.min(type === 'percent' ? 90 : 1000000, Math.floor(Number(input.value ?? existing.value ?? 0))));
+  const scopeType = ['all','product','category'].includes(input.scopeType ?? existing.scopeType) ? (input.scopeType ?? existing.scopeType) : 'all';
+  const scopeValue = cleanText(input.scopeValue ?? existing.scopeValue ?? '', 160);
+  const startsAt = cleanText(input.startsAt ?? existing.startsAt ?? now, 40);
+  const endsAt = cleanText(input.endsAt ?? existing.endsAt ?? '', 40);
+  const banner = cleanText(input.banner ?? existing.banner ?? '', 180);
+  const active = input.active === undefined ? existing.active !== false : Boolean(input.active);
+  if (!name || value < 1 || !endsAt) throw new HttpError(400, 'Enter an offer name, discount, and end time.');
+  if (new Date(endsAt) <= new Date(startsAt)) throw new HttpError(400, 'Offer end time must be after the start time.');
+  return { id: existing.id || crypto.randomUUID(), name, type, value, scopeType, scopeValue, startsAt, endsAt, banner, active, createdAt: existing.createdAt || now, updatedAt: now };
+}
+function offerMatches(offer, product) {
+  if (!offer.active) return false;
+  const now = Date.now();
+  if (new Date(offer.startsAt).getTime() > now || new Date(offer.endsAt).getTime() < now) return false;
+  if (offer.scopeType === 'product') return String(product.id) === String(offer.scopeValue);
+  if (offer.scopeType === 'category') return String(product.category).toLowerCase() === String(offer.scopeValue).toLowerCase();
+  return true;
+}
+function offerDiscountForLines(offers, lines, products) {
+  let best = { discount: 0, offer: null };
+  for (const offer of offers) {
+    let eligibleSubtotal = 0;
+    for (const line of lines) {
+      const product = products.get(line.id);
+      if (product && offerMatches(offer, product)) eligibleSubtotal += Number(product.price) * line.quantity;
+    }
+    if (!eligibleSubtotal) continue;
+    const discount = offer.type === 'fixed' ? Math.min(eligibleSubtotal, Number(offer.value || 0)) : Math.min(eligibleSubtotal, Math.round(eligibleSubtotal * Number(offer.value || 0) / 100));
+    if (discount > best.discount) best = { discount, offer };
+  }
+  return best;
+}
+
 async function handleApi(request, env) {
   const url = new URL(request.url);
   const route = url.pathname;
@@ -1318,7 +1392,8 @@ async function handleApi(request, env) {
 
   if (route === '/api/storefront-settings' && method === 'GET') {
     const settings = await getSettings(env);
-    return json(200, { site: settings.site, policies: settings.policies, marketing: settings.marketing });
+    const offers = await env.DB.prepare('SELECT * FROM offers WHERE active = 1 AND starts_at <= ? AND ends_at >= ? ORDER BY starts_at DESC').bind(new Date().toISOString(), new Date().toISOString()).all().catch(() => ({ results: [] }));
+    return json(200, { site: settings.site, policies: settings.policies, marketing: settings.marketing, developer: settings.developer, offers: (offers.results || []).map(parseOfferRow) });
   }
 
   if (route === '/api/auth/register' && method === 'POST') {
@@ -1479,14 +1554,33 @@ async function handleApi(request, env) {
     const freeShippingAt = Number.isFinite(Number(settings.site.freeShippingAt)) ? Number(settings.site.freeShippingAt) : DEFAULT_FREE_SHIPPING_AT;
     const shippingFee = Number.isFinite(Number(settings.site.shippingFee)) ? Number(settings.site.shippingFee) : DEFAULT_SHIPPING_FEE;
     const shipping = subtotal >= freeShippingAt ? 0 : shippingFee;
-    const requestedCoupon = String(body.couponCode || '').trim();
+    const nowIso = new Date().toISOString();
+    const activeOffersRows = await env.DB.prepare('SELECT * FROM offers WHERE active = 1 AND starts_at <= ? AND ends_at >= ?').bind(nowIso, nowIso).all().catch(() => ({ results: [] }));
+    const activeOffers = (activeOffersRows.results || []).map(parseOfferRow);
+    const offerResult = offerDiscountForLines(activeOffers, requestedLines, products);
+    const offerDiscount = offerResult.discount;
+    const requestedCoupon = String(body.couponCode || '').trim().toUpperCase();
     let discount = 0;
+    let couponRecord = null;
     if (requestedCoupon) {
-      const expectedCoupon = String(settings.marketing.couponCode || '');
-      const percent = Number(settings.marketing.discountPercent) || 0;
-      if (!expectedCoupon || requestedCoupon.toUpperCase() !== expectedCoupon.toUpperCase() || percent < 1) return json(400, { error: 'That promo code is not active.' });
-      discount = Math.round((subtotal - quantityDiscount) * percent / 100);
+      const couponRow = await env.DB.prepare('SELECT * FROM coupons WHERE code = ? AND active = 1').bind(requestedCoupon).first();
+      if (!couponRow) return json(400, { error: 'That promo code is not active.' });
+      couponRecord = parseCouponRow(couponRow);
+      if (new Date(couponRecord.startsAt) > new Date(nowIso) || (couponRecord.endsAt && new Date(couponRecord.endsAt) < new Date(nowIso))) return json(400, { error: 'That promo code is outside its active dates.' });
+      if (couponRecord.usageLimit && couponRecord.usedCount >= couponRecord.usageLimit) return json(400, { error: 'That promo code has reached its usage limit.' });
+      if (subtotal < couponRecord.minOrder) return json(400, { error: `Add ₹${couponRecord.minOrder - subtotal} more to use this code.` });
+      const eligibleSubtotal = couponRecord.scopeType === 'all' ? subtotal : requestedLines.reduce((sum, line) => {
+        const p = products.get(line.id); if (!p) return sum;
+        const eligible = couponRecord.scopeType === 'product' ? p.id === couponRecord.scopeValue : String(p.category).toLowerCase() === couponRecord.scopeValue.toLowerCase();
+        return sum + (eligible ? Number(p.price) * line.quantity : 0);
+      }, 0);
+      if (!eligibleSubtotal) return json(400, { error: 'This coupon does not apply to the items in your bag.' });
+      discount = couponRecord.discountType === 'fixed' ? Math.min(eligibleSubtotal, couponRecord.discountValue) : Math.min(couponRecord.maxDiscount || Infinity, Math.round(eligibleSubtotal * couponRecord.discountValue / 100));
+    } else {
+      discount = 0;
     }
+    const promotionDiscount = Math.min(subtotal - quantityDiscount, Math.max(0, offerDiscount));
+    discount += promotionDiscount;
 
     const requestedPayment = String(body.paymentMethod || 'cod').toLowerCase();
     if (!['cod', 'upi', 'razorpay'].includes(requestedPayment)) return json(400, { error: 'Choose a valid payment option.' });
@@ -1510,7 +1604,10 @@ async function handleApi(request, env) {
       items: orderItems,
       subtotal,
       discount,
-      discountCode: discount ? requestedCoupon : '',
+      discountCode: couponRecord ? requestedCoupon : '',
+      offerId: offerResult.offer?.id || '',
+      offerName: offerResult.offer?.name || '',
+      offerDiscount: promotionDiscount,
       shipping,
       quantityDiscount,
       total: subtotal - discount - quantityDiscount + shipping,
@@ -1520,6 +1617,7 @@ async function handleApi(request, env) {
     };
 
     let razorpayOrder = null;
+    if (couponRecord) await env.DB.prepare('UPDATE coupons SET used_count = used_count + 1, updated_at = ? WHERE id = ? AND (usage_limit = 0 OR used_count < usage_limit)').bind(new Date().toISOString(), couponRecord.id).run();
     if (requestedPayment === 'razorpay') {
       razorpayOrder = await createRazorpayOrder(order, env);
       order.gatewayOrderId = razorpayOrder.id;
@@ -1636,6 +1734,114 @@ async function handleApi(request, env) {
         emailProvider: { configured: Boolean(env.RESEND_API_KEY || env.SENDGRID_API_KEY) },
         imageStorage: { configured: Boolean(env.UPLOADS) }
       });
+    }
+
+
+    if (route === '/api/admin/coupons' && method === 'GET') {
+      const result = await env.DB.prepare('SELECT * FROM coupons ORDER BY created_at DESC').all();
+      return json(200, (result.results || []).map(parseCouponRow));
+    }
+    if (route === '/api/admin/coupons' && method === 'POST') {
+      const body = await readJson(request);
+      const coupon = marketingPayload(body, {}, 'coupon');
+      try {
+        await env.DB.prepare(`INSERT INTO coupons (id, code, discount_type, discount_value, min_order, max_discount, usage_limit, used_count, per_customer_limit, starts_at, ends_at, scope_type, scope_value, active, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+          .bind(coupon.id, coupon.code, coupon.discountType, coupon.discountValue, coupon.minOrder, coupon.maxDiscount, coupon.usageLimit, 0, coupon.perCustomerLimit, coupon.startsAt, coupon.endsAt || null, coupon.scopeType, coupon.scopeValue, coupon.active ? 1 : 0, coupon.createdAt, coupon.updatedAt).run();
+      } catch (error) {
+        if (String(error?.message || '').toLowerCase().includes('unique')) return json(409, { error: 'That coupon code already exists.' });
+        throw error;
+      }
+      return json(201, coupon);
+    }
+    const couponMatch = route.match(/^\/api\/admin\/coupons\/([^/]+)$/);
+    if (couponMatch && (method === 'PATCH' || method === 'DELETE')) {
+      const id = decodeURIComponent(couponMatch[1]);
+      const row = await env.DB.prepare('SELECT * FROM coupons WHERE id = ?').bind(id).first();
+      if (!row) return json(404, { error: 'Coupon not found.' });
+      if (method === 'DELETE') { await env.DB.prepare('DELETE FROM coupons WHERE id = ?').bind(id).run(); return json(200, { ok: true }); }
+      const current = parseCouponRow(row);
+      const coupon = marketingPayload(await readJson(request), current, 'coupon');
+      try {
+        await env.DB.prepare(`UPDATE coupons SET code=?, discount_type=?, discount_value=?, min_order=?, max_discount=?, usage_limit=?, per_customer_limit=?, starts_at=?, ends_at=?, scope_type=?, scope_value=?, active=?, updated_at=? WHERE id=?`)
+          .bind(coupon.code, coupon.discountType, coupon.discountValue, coupon.minOrder, coupon.maxDiscount, coupon.usageLimit, coupon.perCustomerLimit, coupon.startsAt, coupon.endsAt || null, coupon.scopeType, coupon.scopeValue, coupon.active ? 1 : 0, coupon.updatedAt, id).run();
+      } catch (error) {
+        if (String(error?.message || '').toLowerCase().includes('unique')) return json(409, { error: 'That coupon code already exists.' });
+        throw error;
+      }
+      return json(200, coupon);
+    }
+
+    if (route === '/api/admin/offers' && method === 'GET') {
+      const result = await env.DB.prepare('SELECT * FROM offers ORDER BY starts_at DESC').all();
+      return json(200, (result.results || []).map(parseOfferRow));
+    }
+    if (route === '/api/admin/offers' && method === 'POST') {
+      const offer = marketingPayload(await readJson(request), {}, 'offer');
+      await env.DB.prepare(`INSERT INTO offers (id,name,type,value,scope_type,scope_value,starts_at,ends_at,banner,active,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`)
+        .bind(offer.id, offer.name, offer.type, offer.value, offer.scopeType, offer.scopeValue, offer.startsAt, offer.endsAt, offer.banner, offer.active ? 1 : 0, offer.createdAt, offer.updatedAt).run();
+      return json(201, offer);
+    }
+    const offerMatch = route.match(/^\/api\/admin\/offers\/([^/]+)$/);
+    if (offerMatch && (method === 'PATCH' || method === 'DELETE')) {
+      const id = decodeURIComponent(offerMatch[1]);
+      const row = await env.DB.prepare('SELECT * FROM offers WHERE id = ?').bind(id).first();
+      if (!row) return json(404, { error: 'Offer not found.' });
+      if (method === 'DELETE') { await env.DB.prepare('DELETE FROM offers WHERE id = ?').bind(id).run(); return json(200, { ok: true }); }
+      const offer = marketingPayload(await readJson(request), parseOfferRow(row), 'offer');
+      await env.DB.prepare(`UPDATE offers SET name=?,type=?,value=?,scope_type=?,scope_value=?,starts_at=?,ends_at=?,banner=?,active=?,updated_at=? WHERE id=?`)
+        .bind(offer.name, offer.type, offer.value, offer.scopeType, offer.scopeValue, offer.startsAt, offer.endsAt, offer.banner, offer.active ? 1 : 0, offer.updatedAt, id).run();
+      return json(200, offer);
+    }
+
+    if (route === '/api/admin/crm/segments' && method === 'GET') {
+      const customersResult = await env.DB.prepare('SELECT id, name, email, phone, created_at FROM customers ORDER BY created_at DESC').all();
+      const metaResult = await env.DB.prepare('SELECT * FROM crm_customer_meta').all();
+      const ordersResult = await env.DB.prepare('SELECT customer_id,total,status,created_at FROM orders WHERE customer_id <> ""').all();
+      const meta = new Map((metaResult.results || []).map(row => [row.customer_id, { tags: parseTags(row.tags), segment: row.segment || 'General', note: row.note || '' }]));
+      const agg = new Map();
+      for (const row of ordersResult.results || []) {
+        const x = agg.get(row.customer_id) || { orders: 0, spend: 0, lastOrder: '' };
+        if (row.status !== 'Cancelled') x.spend += Number(row.total || 0);
+        x.orders += 1; if (!x.lastOrder || row.created_at > x.lastOrder) x.lastOrder = row.created_at; agg.set(row.customer_id, x);
+      }
+      return json(200, (customersResult.results || []).map(row => ({ ...safeCustomer(row), ...(agg.get(row.id) || { orders: 0, spend: 0, lastOrder: '' }), ...(meta.get(row.id) || { tags: [], segment: 'General', note: '' }) })));
+    }
+
+    const crmCustomerMatch = route.match(/^\/api\/admin\/crm\/customers\/([^/]+)$/);
+    if (crmCustomerMatch && method === 'GET') {
+      const id = decodeURIComponent(crmCustomerMatch[1]);
+      const customer = await env.DB.prepare('SELECT id,name,email,phone,created_at FROM customers WHERE id=?').bind(id).first();
+      if (!customer) return json(404, { error: 'Customer not found.' });
+      const [meta, notes, orders] = await Promise.all([
+        env.DB.prepare('SELECT * FROM crm_customer_meta WHERE customer_id=?').bind(id).first(),
+        env.DB.prepare('SELECT id,body,created_at FROM crm_notes WHERE customer_id=? ORDER BY created_at DESC').bind(id).all(),
+        env.DB.prepare('SELECT id,status,payment_status,total,created_at,data FROM orders WHERE customer_id=? ORDER BY created_at DESC').bind(id).all()
+      ]);
+      return json(200, { customer: safeCustomer(customer), meta: meta ? { tags: parseTags(meta.tags), segment: meta.segment, note: meta.note } : { tags: [], segment: 'General', note: '' }, notes: notes.results || [], orders: (orders.results || []).map(parseOrder) });
+    }
+
+    if (crmCustomerMatch && method === 'PATCH') {
+      const id = decodeURIComponent(crmCustomerMatch[1]);
+      const body = await readJson(request);
+      const tags = Array.isArray(body.tags) ? [...new Set(body.tags.map(v => String(v).trim().slice(0, 32)).filter(Boolean))].slice(0, 20) : [];
+      const segment = String(body.segment || 'General').trim().slice(0, 40) || 'General';
+      const note = String(body.note || '').trim().slice(0, 2000);
+      await env.DB.prepare(`INSERT INTO crm_customer_meta(customer_id,tags,segment,note,updated_at) VALUES(?,?,?,?,?) ON CONFLICT(customer_id) DO UPDATE SET tags=excluded.tags,segment=excluded.segment,note=excluded.note,updated_at=excluded.updated_at`)
+        .bind(id, JSON.stringify(tags), segment, note, new Date().toISOString()).run();
+      return json(200, { ok: true, tags, segment, note });
+    }
+
+    if (route === '/api/admin/crm/notes' && method === 'POST') {
+      const body = await readJson(request);
+      const customerId = String(body.customerId || '');
+      const note = String(body.body || '').trim().slice(0, 2000);
+      if (!customerId || !note) return json(400, { error: 'Write a customer note first.' });
+      const customer = await env.DB.prepare('SELECT id FROM customers WHERE id=?').bind(customerId).first();
+      if (!customer) return json(404, { error: 'Customer not found.' });
+      const row = { id: crypto.randomUUID(), customerId, body: note, createdAt: new Date().toISOString() };
+      await env.DB.prepare('INSERT INTO crm_notes(id,customer_id,body,created_at) VALUES(?,?,?,?)').bind(row.id,row.customerId,row.body,row.createdAt).run();
+      return json(201, row);
     }
 
     if (route === '/api/admin/uploads' && method === 'POST') {

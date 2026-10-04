@@ -368,7 +368,16 @@
   function currentCartItems() {
     return Object.entries(cart).map(([id, item]) => {
       const product = products.find(entry => entry.id === id) || item;
-      return { ...product, quantity: Math.max(1, Number(item.quantity) || 1) };
+      // Keep the customer's selected variant when rebuilding cart lines.
+      // Previously only the product object was returned, so color/size stored
+      // in localStorage was silently dropped before checkout. The API then
+      // correctly rejected the order because the variant fields were empty.
+      return {
+        ...product,
+        quantity: Math.max(1, Number(item.quantity) || 1),
+        color: String(item.color || '').trim(),
+        size: String(item.size || '').trim()
+      };
     }).filter(item => item.id && item.quantity > 0);
   }
   function cartSubtotal() {

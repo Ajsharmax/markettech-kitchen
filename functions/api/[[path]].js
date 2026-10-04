@@ -1568,6 +1568,10 @@ async function handleApi(request, env) {
       couponRecord = parseCouponRow(couponRow);
       if (new Date(couponRecord.startsAt) > new Date(nowIso) || (couponRecord.endsAt && new Date(couponRecord.endsAt) < new Date(nowIso))) return json(400, { error: 'That promo code is outside its active dates.' });
       if (couponRecord.usageLimit && couponRecord.usedCount >= couponRecord.usageLimit) return json(400, { error: 'That promo code has reached its usage limit.' });
+      if (couponRecord.perCustomerLimit && signedInCustomer?.id) {
+        const used = await env.DB.prepare('SELECT COUNT(*) AS count FROM orders WHERE customer_id = ? AND data LIKE ?').bind(signedInCustomer.id, '%"discountCode":"' + requestedCoupon.replaceAll('"','') + '"%').first();
+        if (Number(used?.count || 0) >= couponRecord.perCustomerLimit) return json(400, { error: 'This coupon has reached its limit for your account.' });
+      }
       if (subtotal < couponRecord.minOrder) return json(400, { error: `Add ₹${couponRecord.minOrder - subtotal} more to use this code.` });
       const eligibleSubtotal = couponRecord.scopeType === 'all' ? subtotal : requestedLines.reduce((sum, line) => {
         const p = products.get(line.id); if (!p) return sum;
@@ -1617,7 +1621,6 @@ async function handleApi(request, env) {
     };
 
     let razorpayOrder = null;
-    if (couponRecord) await env.DB.prepare('UPDATE coupons SET used_count = used_count + 1, updated_at = ? WHERE id = ? AND (usage_limit = 0 OR used_count < usage_limit)').bind(new Date().toISOString(), couponRecord.id).run();
     if (requestedPayment === 'razorpay') {
       razorpayOrder = await createRazorpayOrder(order, env);
       order.gatewayOrderId = razorpayOrder.id;
@@ -1638,6 +1641,10 @@ async function handleApi(request, env) {
       env.DB.prepare(orderInsert).bind(order.id, order.customerId, order.status, order.paymentStatus, order.total, order.createdAt, JSON.stringify(order), quantities.size)
     ]);
     if (!batch?.[1]?.meta?.changes) return json(409, { error: 'Stock changed while you were checking out. Please refresh your bag and try again.' });
+    if (couponRecord) {
+      const claimed = await env.DB.prepare('UPDATE coupons SET used_count = used_count + 1, updated_at = ? WHERE id = ? AND (usage_limit = 0 OR used_count < usage_limit)').bind(new Date().toISOString(), couponRecord.id).run();
+      if (!claimed?.meta?.changes) return json(409, { error: 'That promo code was just used up. Please remove it and try again.' });
+    }
 
     const responseOrder = { id: order.id, total: order.total, status: order.status, paymentMethod: order.paymentMethod, paymentStatus: order.paymentStatus };
     if (requestedPayment === 'upi') {

@@ -991,6 +991,18 @@
 
   $('#coupon-input').addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); $('#apply-coupon').click(); } });
 
+  ['pincode', 'state'].forEach(name => {
+    const input = $('#checkout-form')?.elements.namedItem(name);
+    if (input) {
+      input.addEventListener('input', () => {
+        checkoutShippingFee = null;
+        shippingQuoteKey = '';
+        renderCheckoutSummary();
+      });
+      input.addEventListener('blur', refreshShippingQuote);
+    }
+  });
+
   $('#checkout-form').addEventListener('submit', async event => {
     event.preventDefault();
     const button = $('.place-order-button', event.currentTarget);

@@ -519,6 +519,11 @@
     $('#bag-count').textContent = count;
     $('#drawer-count').textContent = `(${count})`;
     $('#cart-subtotal').textContent = formatMoney(subtotal);
+    const cartPromo = $('#cart-live-promo');
+    if (cartPromo) {
+      cartPromo.innerHTML = $('#live-promo-message')?.innerHTML || '';
+      cartPromo.hidden = $('#live-promo-message')?.hidden !== false;
+    }
     $('#cart-items').innerHTML = items.map(item => {
       const itemDiscount = lineDiscount(item);
       const options = [item.color && `Colour: ${item.color}`, item.size && `Size: ${item.size}`].filter(Boolean).join(' · ');

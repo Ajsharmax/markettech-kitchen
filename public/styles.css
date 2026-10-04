@@ -975,3 +975,5 @@ p{font-weight:500}
 }
 
 .live-promo-message{margin-top:10px;padding:10px 11px;background:#eef3e9;border:1px solid #dce6d5;color:#52654d;font-size:8px;line-height:1.55}.live-promo-message strong{display:block;font-size:9px;color:#3f573f;margin-bottom:3px}.live-promo-message span{display:block;color:#778273}.live-promo-message b{color:#4e684b}
+
+.available-coupons{margin-top:10px}.coupon-list-title{display:block;margin-bottom:6px;color:#687065;font-weight:700}.coupon-option{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid #e4e5dd}.coupon-option>div{min-width:0}.coupon-option strong{display:inline-block;font-size:9px;letter-spacing:.05em;margin-right:7px}.coupon-option span{font-size:8px;color:#4e684b}.coupon-option small{display:block;margin-top:2px;color:#858a80;font-size:7px}.coupon-option button{flex:0 0 auto;border:1px solid #cbd4c4;background:#fff;color:#38503e;padding:7px 9px;font-size:8px;font-weight:700;cursor:pointer}.coupon-option button:hover:not(:disabled){background:#38503e;color:#fff}.coupon-option button:disabled{opacity:.55;cursor:not-allowed}.coupon-option.is-locked{opacity:.72}

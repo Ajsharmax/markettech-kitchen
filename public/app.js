@@ -360,22 +360,42 @@
   function itemCount() {
     return currentCartItems().reduce((sum, item) => sum + item.quantity, 0);
   }
-  function addToCart(product, quantity = 1) {
+  function quantityDiscountPercent(product, quantity) {
+    const perExtra = Number(product?.quantityDiscountPercent) || 0;
+    if (quantity < 2 || perExtra <= 0) return 0;
+    return Math.min(50, (quantity - 1) * perExtra);
+  }
+  function lineDiscount(item) {
+    const percent = quantityDiscountPercent(item, item.quantity);
+    return Math.round(Number(item.price) * item.quantity * percent / 100);
+  }
+  function cartQuantityDiscount() {
+    return currentCartItems().reduce((sum, item) => sum + lineDiscount(item), 0);
+  }
+  function addToCart(product, quantity = 1, color = '', size = '') {
     if (!product || Number(product.stock) <= 0) return showToast('That piece is currently out of stock.');
+    const minQty = Math.max(1, Number(product.minOrderQty) || 1);
+    quantity = Math.max(minQty, Math.floor(Number(quantity) || minQty));
     const existing = Number(cart[product.id]?.quantity || 0);
     if (existing + quantity > Number(product.stock)) return showToast(`Only ${product.stock} of this piece are available.`);
-    cart[product.id] = { id: product.id, quantity: existing + quantity };
+    if (product.colors?.length && !color) return showToast('Please choose a colour.');
+    if (product.sizes?.length && !size) return showToast('Please choose a size.');
+    cart[product.id] = { id: product.id, quantity: existing + quantity, color, size };
     saveCart();
     updateCartUI();
     trackEvent('add_to_cart', { value: Number(product.price) * quantity, currency: 'INR', item_name: product.name });
-    showToast(`${product.name} added to your bag.`);
+    showToast(quantity > 1 ? `${product.name} added to your bag. Quantity discount applied.` : `${product.name} added to your bag.`);
   }
   function changeQuantity(id, delta) {
     const product = products.find(item => item.id === id);
     if (!product || !cart[id]) return;
+    const minQty = Math.max(1, Number(product.minOrderQty) || 1);
     const next = Number(cart[id].quantity) + delta;
-    if (next <= 0) delete cart[id];
-    else if (next > Number(product.stock)) showToast(`Only ${product.stock} of this piece are available.`);
+    if (next < minQty) {
+      if (delta < 0) showToast(`Minimum order quantity is ${minQty}. Remove the item instead.`);
+      return;
+    }
+    if (next > Number(product.stock)) showToast(`Only ${product.stock} of this piece are available.`);
     else cart[id].quantity = next;
     saveCart(); updateCartUI();
   }
@@ -386,11 +406,15 @@
     $('#bag-count').textContent = count;
     $('#drawer-count').textContent = `(${count})`;
     $('#cart-subtotal').textContent = formatMoney(subtotal);
-    $('#cart-items').innerHTML = items.map(item => `<div class="cart-line" data-cart-id="${escapeHtml(item.id)}">
+    $('#cart-items').innerHTML = items.map(item => {
+      const itemDiscount = lineDiscount(item);
+      const options = [item.color && `Colour: ${item.color}`, item.size && `Size: ${item.size}`].filter(Boolean).join(' · ');
+      return `<div class="cart-line" data-cart-id="${escapeHtml(item.id)}">
       <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}">
-      <div class="cart-line-main"><div class="cart-line-name">${escapeHtml(item.name)}</div><div class="cart-line-category">${escapeHtml(item.category)}</div><div class="cart-line-price">${formatMoney(item.price)}</div>
+      <div class="cart-line-main"><div class="cart-line-name">${escapeHtml(item.name)}</div><div class="cart-line-category">${escapeHtml(item.category)}${options ? ` · ${escapeHtml(options)}` : ''}</div><div class="cart-line-price">${formatMoney(Number(item.price) * item.quantity - itemDiscount)} ${itemDiscount ? `<del>${formatMoney(Number(item.price) * item.quantity)}</del>` : ''}</div>
       <div class="qty-stepper"><button type="button" data-cart-action="decrease" aria-label="Decrease quantity">−</button><span>${item.quantity}</span><button type="button" data-cart-action="increase" aria-label="Increase quantity">+</button></div></div>
-      <button type="button" class="cart-remove" data-cart-action="remove" aria-label="Remove ${escapeHtml(item.name)}">×</button></div>`).join('');
+      <button type="button" class="cart-remove" data-cart-action="remove" aria-label="Remove ${escapeHtml(item.name)}">×</button></div>`;
+    }).join('');
     $('#cart-empty').classList.toggle('is-visible', items.length === 0);
     $('#cart-items').style.display = items.length ? 'block' : 'none';
     $('#drawer-foot').classList.toggle('is-hidden', items.length === 0);

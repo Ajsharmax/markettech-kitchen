@@ -9,5 +9,8 @@
 /admin.js
   Cache-Control: no-cache
 
+/app.js
+  Cache-Control: no-cache
+
 /admin.css
   Cache-Control: no-cache

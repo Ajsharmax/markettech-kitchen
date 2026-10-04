@@ -328,3 +328,204 @@ textarea:focus{
   .product-card .product-meta,
   .product-card .product-actions{padding-left:12px;padding-right:12px}
 }
+
+/* MarketTech storefront visual refresh — stronger type, richer layout and less empty space */
+:root{
+  --sans:"Arial","Helvetica Neue",Helvetica,sans-serif;
+  --ink:#162119;
+  --muted:#526055;
+  --paper:#f8f6f0;
+  --paper-deep:#e7e4da;
+  --olive:#3f604c;
+  --olive-dark:#173126;
+  --clay:#c97854;
+  --line:#d0cec4;
+}
+
+body{
+  font-family:var(--sans);
+  color:var(--ink);
+  font-size:15px;
+  font-weight:600;
+  line-height:1.62;
+  -webkit-font-smoothing:auto;
+  text-rendering:optimizeLegibility;
+}
+p,button,input,select,textarea,a,small,span,label{font-family:var(--sans)}
+p{font-weight:500}
+.primary-nav a,.nav-actions,.announcement-bar,.campaign-banner,.benefit-item,.filter-chip,.sort-control,.button,.text-link{
+  font-weight:700;
+}
+.primary-nav a{font-size:12px;color:#25342b}
+.admin-link{font-weight:800}
+.hero-content>p{font-size:16px;font-weight:500;color:rgba(255,255,255,.94)}
+.eyebrow{font-weight:800;color:#4c5b4f}
+.hero h1,.section-heading h2,.story-copy h2,.newsletter-copy h2,.product-detail-copy h2,.checkout-modal h2,.success-modal h2{
+  font-family:Georgia,"Times New Roman",serif;
+}
+.hero h1{font-weight:400;text-shadow:0 2px 20px rgba(0,0,0,.12)}
+.hero{
+  min-height:600px;
+  box-shadow:inset 0 -1px rgba(255,255,255,.08);
+}
+.benefit-strip{
+  min-height:86px;
+  background:#fbfaf6;
+}
+.benefit-item{color:#344139;font-size:11px}
+.category-section{background:#f8f6f0}
+.category-grid{gap:18px}
+.category-card{
+  border-radius:20px;
+  box-shadow:0 14px 34px rgba(23,33,26,.10);
+}
+.shop-section{
+  background:linear-gradient(180deg,#e9e7df 0%,#f7f5ef 82%);
+  padding-top:100px;
+}
+.shop-heading h2{font-weight:400}
+.shop-toolbar{
+  padding:15px 0;
+  background:rgba(255,255,255,.34);
+  border-bottom:1px solid #c8c5bb;
+}
+.filter-chip{font-weight:700;padding:9px 15px;border-radius:999px}
+.sort-control{font-weight:700}
+.product-grid{gap:22px 18px}
+.product-card{
+  background:#fffdfa;
+  border:1px solid rgba(22,33,25,.11);
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow:0 10px 28px rgba(23,33,26,.07);
+  transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease;
+}
+.product-card:hover{
+  transform:translateY(-6px);
+  border-color:rgba(63,96,76,.3);
+  box-shadow:0 18px 38px rgba(23,33,26,.12);
+}
+.product-visual{
+  background:linear-gradient(145deg,#eeebe2,#dfddd4);
+}
+.product-info{padding-bottom:18px}
+.product-card .product-info,.product-card .product-meta,.product-card .product-actions{
+  padding-left:18px;padding-right:18px;
+}
+.product-name{font-size:18px;font-weight:800;color:#18231c}
+.product-category{font-weight:700;color:#59655b}
+.product-price{font-size:18px;font-weight:800;color:#1c2a21}
+.product-stock{font-weight:700}
+.product-tag{
+  border-radius:999px;
+  font-weight:800;
+}
+.quick-view,.product-add{
+  border-radius:10px;
+}
+.story-section{
+  padding-top:110px;
+  padding-bottom:110px;
+}
+.story-copy h2{font-weight:400}
+.story-copy p{font-size:16px;color:#4f5d53;font-weight:500}
+.quote-band{
+  margin-top:0;
+  box-shadow:inset 0 1px rgba(255,255,255,.3),inset 0 -1px rgba(0,0,0,.05);
+}
+.owner-preview{
+  margin-top:0;
+  margin-bottom:104px;
+  padding:48px;
+  display:grid;
+  grid-template-columns:110px minmax(0,1fr) 240px;
+  gap:36px;
+  align-items:center;
+  border:1px solid rgba(23,49,38,.12);
+  border-radius:28px;
+  background:
+    radial-gradient(circle at 90% 20%,rgba(201,120,84,.14),transparent 24%),
+    linear-gradient(135deg,#f0eee6,#faf9f5);
+  box-shadow:0 18px 45px rgba(27,38,30,.08);
+}
+.owner-preview-art{
+  width:100px;height:100px;border-radius:27px;position:relative;
+  display:grid;place-items:center;
+  background:#173126;color:#f6c6a2;
+  box-shadow:0 14px 28px rgba(23,49,38,.17);
+}
+.owner-avatar{font-family:Georgia,serif;font-size:36px;font-style:italic}
+.owner-spark{position:absolute;right:-8px;top:-8px;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#f0bf99;color:#173126;font-weight:900}
+.owner-preview h2{
+  margin:10px 0 12px;
+  max-width:650px;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:clamp(34px,4.2vw,56px);
+  line-height:1.02;
+  letter-spacing:-.045em;
+  font-weight:400;
+}
+.owner-preview h2 em{color:#3f604c}
+.owner-preview-copy p{
+  max-width:680px;margin:0 0 22px;color:#536158;
+  font-size:15px;line-height:1.75;font-weight:500;
+}
+.owner-preview-facts{border-left:1px solid #d1cec3;padding-left:28px;display:grid;gap:17px}
+.owner-preview-facts div{display:flex;align-items:center;gap:12px}
+.owner-preview-facts strong{font-size:11px;color:#b56d4f}
+.owner-preview-facts span{font-size:12px;font-weight:800;color:#354238}
+.newsletter-section{
+  margin-top:104px;
+  margin-bottom:25px;
+  border-radius:28px;
+  background:#eeece4;
+  padding:58px clamp(24px,5vw,72px);
+  box-shadow:0 10px 32px rgba(25,34,28,.05);
+}
+.site-footer{
+  border-top:1px solid #d3d0c6;
+}
+.social-links a{
+  width:38px;height:38px;
+  display:grid;place-items:center;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.22);
+  font-weight:800;
+}
+.empty-state{
+  min-height:330px;
+  margin-top:24px;
+  padding:60px 26px;
+  display:grid;
+  place-items:center;
+  align-content:center;
+  text-align:center;
+  border:1px dashed #b9b7ac;
+  border-radius:24px;
+  background:
+    radial-gradient(circle at 20% 20%,rgba(201,120,84,.10),transparent 23%),
+    radial-gradient(circle at 80% 70%,rgba(63,96,76,.10),transparent 25%),
+    #fbfaf6;
+}
+.empty-state>span{font-size:32px;color:#c97854}
+.empty-state h3{
+  margin:12px 0 7px;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:32px;font-weight:400;
+}
+.empty-state p{max-width:470px;margin:0 auto 20px;color:#5b665d;font-size:15px}
+@media(max-width:900px){
+  .owner-preview{grid-template-columns:85px minmax(0,1fr);padding:34px}
+  .owner-preview-facts{grid-column:1/-1;border-left:0;border-top:1px solid #d1cec3;padding:20px 0 0;grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:650px){
+  body{font-size:15px}
+  .hero{min-height:560px}
+  .benefit-strip{justify-content:flex-start;overflow:auto}
+  .category-grid{grid-template-columns:1fr;gap:14px}
+  .category-card{height:280px}
+  .owner-preview{grid-template-columns:1fr;padding:26px;border-radius:22px}
+  .owner-preview-art{width:82px;height:82px}
+  .owner-preview-facts{grid-template-columns:1fr;gap:10px}
+  .newsletter-section{border-radius:20px;margin-top:70px}
+}

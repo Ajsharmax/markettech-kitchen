@@ -740,3 +740,24 @@ p{font-weight:500}
   .brand{width:150px !important;max-width:150px !important}
   .brand-logo{width:150px !important;max-width:150px !important}
 }
+
+
+/* Customer contact panel */
+.contact-modal { max-width: 680px; width: min(92vw, 680px); padding: 0; overflow: hidden; }
+.contact-modal-inner { padding: clamp(32px, 5vw, 58px); }
+.contact-modal h2 { margin: 12px 0 18px; font-size: clamp(2.5rem, 6vw, 4.5rem); line-height: .95; }
+.contact-intro { max-width: 570px; margin: 0 0 28px; font-size: 1rem; line-height: 1.7; color: #5f665f; }
+.contact-options { display: grid; gap: 12px; margin: 24px 0; }
+.contact-option { display: flex; align-items: center; gap: 16px; padding: 18px; border: 1px solid #d9ded5; background: #f7f8f3; color: inherit; text-decoration: none; transition: transform .18s ease, border-color .18s ease, background .18s ease; }
+.contact-option:hover { transform: translateY(-2px); border-color: #a9b5a5; background: #fff; }
+.contact-option-icon { width: 46px; height: 46px; display: grid; place-items: center; flex: 0 0 46px; border-radius: 50%; background: #304936; color: #fff; font-size: 1.15rem; }
+.contact-option strong, .contact-option small, .contact-option em { display: block; }
+.contact-option strong { font-size: 1rem; margin-bottom: 4px; }
+.contact-option small { color: #304936; font-size: .9rem; margin-bottom: 4px; }
+.contact-option em { font-style: normal; color: #777d77; font-size: .78rem; }
+.contact-note { display: flex; gap: 12px; align-items: flex-start; padding: 15px 16px; margin: 18px 0 24px; background: #eef2e9; color: #4f594f; }
+.contact-note span { color: #c98257; }
+.contact-note p { margin: 0; font-size: .82rem; line-height: 1.55; }
+.contact-note strong { color: #304936; }
+.contact-close-button { width: 100%; justify-content: center; }
+@media (max-width: 600px) { .contact-modal-inner { padding: 28px 22px; } .contact-option { padding: 14px; } .contact-option-icon { width: 40px; height: 40px; flex-basis: 40px; } }

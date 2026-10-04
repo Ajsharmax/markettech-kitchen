@@ -340,9 +340,10 @@
       $('p', empty).textContent = 'Tap the heart on anything you’d like to keep close.';
       $('#reset-filters').textContent = 'Browse the collection';
     } else {
-      $('h3', empty).textContent = 'Nothing on this shelf yet.';
-      $('p', empty).textContent = 'Try another category or search for something else.';
-      $('#reset-filters').textContent = 'See all goods';
+      $('h3', empty).textContent = searchTerm ? 'We couldn’t find that item yet.' : 'Our new collection is coming together.';
+      $('p', empty).textContent = searchTerm ? 'Try a different search, or browse the full collection.' : 'We’re preparing the next MarketTech collection. Visit the About page to meet the owner while we add the products.';
+      $('#reset-filters').textContent = searchTerm ? 'See all goods' : 'Meet Ajay';
+      if (!searchTerm) $('#reset-filters').onclick = () => { window.location.href = '/about.html'; };
     }
     $('#search-result-note').textContent = searchTerm ? `${list.length} ${list.length === 1 ? 'good thing' : 'good things'} for “${searchTerm}”` : '';
   }

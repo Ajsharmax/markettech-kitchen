@@ -761,3 +761,5 @@ p{font-weight:500}
 .contact-note strong { color: #304936; }
 .contact-close-button { width: 100%; justify-content: center; }
 @media (max-width: 600px) { .contact-modal-inner { padding: 28px 22px; } .contact-option { padding: 14px; } .contact-option-icon { width: 40px; height: 40px; flex-basis: 40px; } }
+
+.header-whatsapp-support{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 11px;border:1px solid #cfe3d4;border-radius:999px;background:#f2fbf4;color:#25D366;font-size:10px;font-weight:750;letter-spacing:.03em;white-space:nowrap;transition:background .2s,border-color .2s,transform .2s}.header-whatsapp-support svg{width:19px;height:19px}.header-whatsapp-support:hover{background:#e5f8e9;border-color:#25D366;transform:translateY(-1px)}.mobile-whatsapp-support{display:flex!important;align-items:center;gap:9px;color:#25D366;font-weight:700}.mobile-whatsapp-support svg{width:20px;height:20px;flex:0 0 auto}@media(max-width:760px){.header-whatsapp-support{width:36px;height:36px;padding:0;justify-content:center;border-radius:50%}.header-whatsapp-support span{display:none}}

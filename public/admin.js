@@ -575,6 +575,23 @@
     }
   }
   $('#products-import-button').addEventListener('click', openImportModal);
+  $('#load-market-catalog')?.addEventListener('click', async event => {
+    const button = event.currentTarget;
+    if (!window.confirm('Add the cleaned MarketTech product catalogue? Existing products with the same IDs will be left unchanged.')) return;
+    const original = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = 'Adding…';
+    try {
+      const result = await api('/api/admin/catalog/load-market-products', { method: 'POST', body: '{}' });
+      await refreshAll();
+      showToast(`${result.count} products added. You can edit stock, photos, colours and sizes now.`);
+    } catch (error) {
+      showToast(error.message);
+    } finally {
+      button.disabled = false;
+      button.innerHTML = original;
+    }
+  });
   $('#inventory-import-button').addEventListener('click', openImportModal);
   $('#product-import-file').addEventListener('change', event => handleImportFile(event.target.files?.[0]));
   $('#import-filter').addEventListener('change', event => { importFilter = event.target.value; renderImportRows(); });

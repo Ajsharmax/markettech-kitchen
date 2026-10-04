@@ -48,7 +48,7 @@ const DEFAULT_SETTINGS = {
     seoDescription: 'Thoughtful kitchen tools for the rituals you return to. Shop considered cookware, prep tools, tableware and everyday essentials.'
   },
   policies: {
-    shipping: 'We currently deliver across India. Orders are packed with care and usually dispatched within 2–4 business days. Free shipping applies to orders above ₹1,999; other orders have a flat ₹99 delivery fee.',
+    shipping: 'We currently deliver across India. Delivery is ₹49 in Delhi NCR, ₹99 for locations within 500 km of Delhi, and ₹149 elsewhere in India. Orders are packed with care and usually dispatched within 2–4 business days.',
     returns: 'If something is not quite right, contact us within 7 days of delivery. Products must be unused and in their original packaging. We will help arrange a return or exchange. Contact hello@markettech.in to get started.',
     privacy: 'We use the details you share only to fulfil orders, provide support and send updates you have requested. We do not sell your personal information. Contact hello@markettech.in with privacy questions.',
     terms: 'Product descriptions, prices and availability may change. Orders are subject to stock confirmation. Cash-on-delivery orders are payable at the time of delivery. Please contact hello@markettech.in for help.'

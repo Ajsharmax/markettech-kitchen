@@ -1042,3 +1042,58 @@ p{font-weight:500}
   .header-account-group { gap:8px; }
   .track-order-link { font-size:12px; }
 }
+
+
+/* FINAL MOBILE HEADER HIT-AREA FIX
+   Keep the logo from overlapping the right-side controls.
+   The bag/account buttons must always receive the tap/click. */
+@media (max-width: 720px){
+  .nav-shell{
+    position:relative;
+    grid-template-columns:34px minmax(0,1fr) auto !important;
+    gap:8px !important;
+    overflow:visible !important;
+  }
+  .brand{
+    grid-column:2 !important;
+    width:min(150px,100%) !important;
+    max-width:150px !important;
+    min-width:0 !important;
+    justify-self:center !important;
+    position:relative !important;
+    z-index:1 !important;
+  }
+  .brand-logo{
+    width:min(150px,100%) !important;
+    max-width:150px !important;
+    pointer-events:none !important;
+  }
+  .nav-actions{
+    grid-column:3 !important;
+    position:relative !important;
+    z-index:50 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:flex-end !important;
+    gap:8px !important;
+    min-width:max-content !important;
+    pointer-events:auto !important;
+  }
+  .nav-actions > *{
+    position:relative !important;
+    z-index:51 !important;
+    pointer-events:auto !important;
+  }
+  #open-cart,
+  #open-account,
+  #search-toggle{
+    pointer-events:auto !important;
+    touch-action:manipulation !important;
+  }
+  .bag-button{
+    position:relative !important;
+    z-index:52 !important;
+    min-width:30px !important;
+    min-height:34px !important;
+  }
+}

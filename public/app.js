@@ -382,7 +382,7 @@
       shopTitle2: '.shop-heading [data-site="shopTitle2"]'
     };
     for (const [key, selector] of Object.entries(overrideMap)) {
-      if (overrides[key]) $(selector).forEach(element => { element.childNodes[0] && (element.childNodes[0].textContent = overrides[key]); });
+      if (overrides[key]) $$(selector).forEach(element => { element.childNodes[0] && (element.childNodes[0].textContent = overrides[key]); });
     }
     const threshold = Number(config.freeShippingAt) || 0;
     const shippingCopy = threshold > 0 ? `Free delivery on orders over ${formatMoney(threshold)}` : 'Free delivery on every order';
@@ -983,9 +983,9 @@
     if (!value) { searchTerm = ''; $('#search-input').value = ''; renderProducts(); }
   });
   $('#open-cart').addEventListener('click', openCart);
-  $('[data-open-track-order]').forEach(link => link.addEventListener('click', event => { event.preventDefault(); openTrackOrder(); }));
+  $$('[data-open-track-order]').forEach(link => link.addEventListener('click', event => { event.preventDefault(); openTrackOrder(); }));
   $('#track-order-form').addEventListener('submit', event => { event.preventDefault(); submitOrderTracking(event.currentTarget); });
-  $('[data-close-track-order]').forEach(button => button.addEventListener('click', () => closeLayer($('#track-order-modal'))));
+  $$('[data-close-track-order]').forEach(button => button.addEventListener('click', () => closeLayer($('#track-order-modal'))));
   $('#open-account').addEventListener('click', openAccount);
   $('#mobile-account-link').addEventListener('click', openAccount);
   $$('[data-account-mode]').forEach(button => button.addEventListener('click', () => setAccountMode(button.dataset.accountMode)));

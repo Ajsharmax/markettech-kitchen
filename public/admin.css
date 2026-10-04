@@ -154,3 +154,85 @@
 @media(max-width:900px){
   .sidebar-brand .admin-brand-logo{width:165px}
 }
+
+
+/* Accessibility + navigation usability refresh */
+.admin-sidebar{
+  overflow-y:auto;
+  overflow-x:hidden;
+  overscroll-behavior:contain;
+  scrollbar-gutter:stable;
+}
+.admin-sidebar::-webkit-scrollbar{width:7px}
+.admin-sidebar::-webkit-scrollbar-track{background:transparent}
+.admin-sidebar::-webkit-scrollbar-thumb{background:#cfd7ca;border-radius:10px}
+.admin-sidebar{scrollbar-width:thin;scrollbar-color:#cfd7ca transparent}
+.admin-nav{flex-shrink:0}
+.sidebar-bottom{margin-top:22px;flex-shrink:0}
+
+/* Larger, easier-to-read admin typography */
+body.admin-body{font-size:14px}
+.sidebar-label{font-size:10px}
+.admin-nav-item{font-size:12px;height:43px;gap:12px}
+.sidebar-store strong{font-size:11px}
+.sidebar-store small{font-size:9px}
+.help-card strong{font-size:11px}
+.help-card small,.help-card a{font-size:9px}
+.admin-profile strong{font-size:10px}
+.admin-profile small{font-size:9px}
+.topbar-breadcrumb{font-size:11px}
+.today-label,.store-shortcut{font-size:10px}
+.admin-content{padding-top:36px}
+.page-title-row .admin-eyebrow{font-size:10px}
+.page-title-row h1{font-size:44px}
+.page-title-row p{font-size:12px}
+.stat-top{font-size:11px}
+.stat-card>small{font-size:10px}
+.card-heading h2{font-size:21px}
+.card-heading p{font-size:10px}
+thead th{font-size:9px}
+tbody td{font-size:11px}
+.customer-cell strong{font-size:11px}
+.customer-cell small,.date-cell{font-size:9px}
+.order-id,.order-total{font-size:11px}
+.status-pill{font-size:9px}
+.product-table-item strong{font-size:14px}
+.product-table-item small,.category-label,.stock-label{font-size:9px}
+.price-label{font-size:11px}
+.product-status{font-size:9px}
+.admin-search input{font-size:10px}
+.table-toolbar>div:first-child strong{font-size:12px}
+.table-toolbar>div:first-child small{font-size:10px}
+.settings-card-heading h2{font-size:22px}
+.settings-card-heading p{font-size:10px}
+.admin-field{font-size:10px}
+.admin-field input,.admin-field select,.admin-field textarea{font-size:11px}
+.settings-actions>span{font-size:10px}
+.admin-button{font-size:11px}
+
+/* Developer workspace: make every control comfortable to read and click */
+#page-developer .settings-card{padding:26px}
+#page-developer .settings-card-heading{padding-bottom:18px;margin-bottom:22px}
+#page-developer .settings-card-heading h2{font-size:24px}
+#page-developer .settings-card-heading p{font-size:12px;line-height:1.55}
+#page-developer .admin-field{font-size:11px;gap:8px}
+#page-developer .admin-field input,#page-developer .admin-field select,#page-developer .admin-field textarea{height:42px;font-size:13px;padding:0 12px}
+#page-developer .admin-field textarea{height:auto;padding:12px;line-height:1.55}
+#page-developer .settings-grid{gap:17px 18px}
+#page-developer .settings-actions{margin-top:22px;padding-top:17px}
+#page-developer .settings-actions>span{font-size:11px;line-height:1.5}
+#page-developer .developer-note{padding:22px 26px}
+#page-developer .developer-note strong{font-size:13px}
+#page-developer .developer-note p{font-size:11px;line-height:1.6}
+
+@media(max-width:760px){
+  .admin-sidebar{overflow-y:auto}
+  .admin-nav-item{height:44px;font-size:12px}
+  .page-title-row h1{font-size:38px}
+  .page-title-row p{font-size:11px}
+  #page-developer .settings-card{padding:18px 15px}
+  #page-developer .settings-card-heading h2{font-size:21px}
+  #page-developer .settings-card-heading p{font-size:11px}
+  #page-developer .admin-field{font-size:10px}
+  #page-developer .admin-field input,#page-developer .admin-field select,#page-developer .admin-field textarea{font-size:12px}
+}

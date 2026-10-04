@@ -468,12 +468,20 @@
     modalGalleryIndex = 0;
     if (!modalGalleryImages.length) modalGalleryImages = ['/images/product-pan.jpg'];
     const compare = product.compareAt && product.compareAt > product.price ? `<del>${formatMoney(product.compareAt)}</del>` : '';
-    $('#product-modal-body').innerHTML = `<div class="product-detail-grid"><div class="product-detail-gallery"><div class="product-detail-image"><img id="product-gallery-main-image" src="${escapeHtml(modalGalleryImages[0])}" alt="${escapeHtml(product.name)}"><button type="button" class="gallery-arrow gallery-arrow-prev" data-gallery-step="-1" aria-label="Previous product photo">‹</button><button type="button" class="gallery-arrow gallery-arrow-next" data-gallery-step="1" aria-label="Next product photo">›</button><span class="gallery-image-count" id="product-gallery-count"></span></div><div class="product-gallery-thumbs" id="product-gallery-thumbs"></div></div>
-      <div class="product-detail-copy"><div class="eyebrow"><span class="eyebrow-line"></span> ${escapeHtml(product.category.toUpperCase())}</div><h2 id="modal-product-name">${escapeHtml(product.name)}</h2><div class="product-detail-rating">${ratingMarkup(product)}</div><div class="product-detail-price">${formatMoney(product.price)} ${compare}</div><p>${escapeHtml(product.description || '')}</p><div class="product-detail-stock">${Number(product.stock) > 0 ? `✳ &nbsp;In stock · ${product.stock} ready to find a home` : 'Currently out of stock'}</div><div class="product-detail-actions"><button class="button button-dark detail-add" type="button" data-action="modal-add" data-id="${escapeHtml(product.id)}" ${Number(product.stock) <= 0 ? 'disabled' : ''}><span>${Number(product.stock) > 0 ? 'Add to bag' : 'Sold out'}</span><span>+</span></button><button type="button" class="detail-wishlist${wishlist.includes(product.id) ? ' is-saved' : ''}" data-action="modal-wishlist" aria-pressed="${wishlist.includes(product.id)}">${wishlist.includes(product.id) ? '♥ Saved' : '♡ Save for later'}</button></div></div></div>`;
+    const colors = Array.isArray(product.colors) ? product.colors.filter(Boolean) : [];
+    const sizes = Array.isArray(product.sizes) ? product.sizes.filter(Boolean) : [];
+    const minQty = Math.max(1, Number(product.minOrderQty) || 1);
+    const optionFields = [
+      colors.length ? `<label class="product-option"><span>Colour</span><select id="modal-product-color"><option value="">Choose colour</option>${colors.map(value => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join('')}</select></label>` : '',
+      sizes.length ? `<label class="product-option"><span>Size</span><select id="modal-product-size"><option value="">Choose size</option>${sizes.map(value => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join('')}</select></label>` : '',
+      `<label class="product-option"><span>Quantity</span><div class="modal-qty"><button type="button" id="modal-qty-minus" aria-label="Decrease quantity">−</button><input id="modal-product-quantity" type="number" min="${minQty}" max="${Math.max(minQty, Number(product.stock) || minQty)}" value="${minQty}" inputmode="numeric"><button type="button" id="modal-qty-plus" aria-label="Increase quantity">+</button></div></label>`
+    ].join('');
+    const discountText = Number(product.quantityDiscountPercent) > 0 ? `<div class="quantity-discount-note">Buy 2+ and save 5% for each additional unit.</div>` : '';
+    $('#product-modal-body').innerHTML = `<div class="product-detail-grid"><div class="product-detail-gallery"><div class="product-detail-image"><img id="product-gallery-main-image" src="${escapeHtml(modalGalleryImages[0])}" alt="${escapeHtml(product.name)}"><button type="button" class="gallery-arrow gallery-arrow-prev" data-gallery-step="-1" aria-label="Previous product photo">‹</button><button type="button" class="gallery-arrow gallery-arrow-next" data-gallery-step="1" aria-label="Next product photo">›</button><span class="gallery-image-count" id="product-gallery-count"></span></div><div class="product-gallery-thumbs" id="product-gallery-thumbs"></div></div>` +
+      `<div class="product-detail-copy"><div class="eyebrow"><span class="eyebrow-line"></span> ${escapeHtml(product.category.toUpperCase())}</div><h2 id="modal-product-name">${escapeHtml(product.name)}</h2><div class="product-detail-rating">${ratingMarkup(product)}</div><div class="product-detail-price">${formatMoney(product.price)} ${compare}</div><p>${escapeHtml(product.description || '')}</p><div class="product-option-grid">${optionFields}</div>${discountText}<div class="product-detail-stock">${Number(product.stock) > 0 ? `✳ &nbsp;In stock · ${product.stock} available` : 'Currently out of stock'}</div><div class="product-detail-actions"><button class="button button-dark detail-add" type="button" data-action="modal-add" data-id="${escapeHtml(product.id)}" ${Number(product.stock) <= 0 ? 'disabled' : ''}><span>${Number(product.stock) > 0 ? 'Add to bag' : 'Sold out'}</span><span>+</span></button><button type="button" class="detail-wishlist${wishlist.includes(product.id) ? ' is-saved' : ''}" data-action="modal-wishlist" aria-pressed="${wishlist.includes(product.id)}">${wishlist.includes(product.id) ? '♥ Saved' : '♡ Save for later'}</button></div></div></div>`;
     renderModalGallery();
     openLayer($('#product-modal'));
   }
-
   function openPolicy(key) {
     const labels = { shipping: 'Shipping policy', returns: 'Returns & refunds', privacy: 'Privacy policy', terms: 'Terms & conditions' };
     const content = storefrontSettings.policies?.[key] || 'Please contact our team for the latest information.';
@@ -494,10 +502,17 @@
     $('#checkout-discount-line').hidden = !discount;
     $('#checkout-discount').textContent = `−${formatMoney(discount)}`;
     $('#checkout-item-count').textContent = `${items.reduce((total, item) => total + item.quantity, 0)} ${items.length === 1 ? 'item' : 'items'}`;
-    $('#checkout-items').innerHTML = items.map(item => `<div class="checkout-item"><img src="${escapeHtml(item.image)}" alt=""><div class="checkout-item-name">${escapeHtml(item.name)}<small>Qty ${item.quantity}</small></div><strong>${formatMoney(item.price * item.quantity)}</strong></div>`).join('');
+    $('#checkout-items').innerHTML = items.map(item => {
+      const itemDiscount = lineDiscount(item);
+      const options = [item.color && `Colour: ${item.color}`, item.size && `Size: ${item.size}`].filter(Boolean).join(' · ');
+      return `<div class="checkout-item"><img src="${escapeHtml(item.image)}" alt=""><div class="checkout-item-name">${escapeHtml(item.name)}<small>Qty ${item.quantity}${options ? ` · ${escapeHtml(options)}` : ''}</small></div><strong>${formatMoney(item.price * item.quantity - itemDiscount)}</strong></div>`;
+    }).join('');
+    const quantityDiscount = cartQuantityDiscount();
     $('#checkout-subtotal').textContent = formatMoney(subtotal);
+    $('#checkout-discount-line').hidden = !quantityDiscount && !discount;
+    $('#checkout-discount').textContent = quantityDiscount || discount ? `−${formatMoney(quantityDiscount + discount)}` : '−₹0';
     $('#checkout-shipping').textContent = shipping ? formatMoney(shipping) : 'On us';
-    $('#checkout-total').textContent = formatMoney(subtotal - discount + shipping);
+    $('#checkout-total').textContent = formatMoney(subtotal - quantityDiscount - discount + shipping);
     $('.summary-note').textContent = threshold > 0 ? `Free delivery on orders over ${formatMoney(threshold)}.` : 'Delivery is on us for every order.';
   }
   function loadExternalScript(src) {
@@ -597,11 +612,36 @@
     if (thumb) { modalGalleryIndex = Number(thumb.dataset.gallerySelect); renderModalGallery(); return; }
     const wishlistButton = event.target.closest('[data-action="modal-wishlist"]');
     if (wishlistButton && activeModalProduct) { toggleWishlist(activeModalProduct.id); return; }
+    const qtyPlus = event.target.closest('#modal-qty-plus');
+    const qtyMinus = event.target.closest('#modal-qty-minus');
+    if ((qtyPlus || qtyMinus) && activeModalProduct) {
+      const input = $('#modal-product-quantity');
+      const minQty = Math.max(1, Number(activeModalProduct.minOrderQty) || 1);
+      const maxQty = Math.max(minQty, Number(activeModalProduct.stock) || minQty);
+      const step = qtyPlus ? 1 : -1;
+      input.value = Math.max(minQty, Math.min(maxQty, Math.floor(Number(input.value) || minQty) + step));
+      return;
+    }
     const button = event.target.closest('[data-action="modal-add"]');
     if (!button) return;
     const product = products.find(item => item.id === button.dataset.id);
-    if (product && Number(product.stock) > 0) { addToCart(product); closeAllLayers(); openCart(); }
+    if (product && Number(product.stock) > 0) {
+      const minQty = Math.max(1, Number(product.minOrderQty) || 1);
+      const quantity = Math.max(minQty, Math.floor(Number($('#modal-product-quantity')?.value) || minQty));
+      const color = $('#modal-product-color')?.value || '';
+      const size = $('#modal-product-size')?.value || '';
+      addToCart(product, quantity, color, size);
+      closeAllLayers(); openCart();
+    }
   });
+  $('#modal-product-body').addEventListener('change', event => {
+    // Quantity/option controls are handled in click/change events inside the modal.
+    if (event.target.id === 'modal-product-quantity' && activeModalProduct) {
+      const minQty = Math.max(1, Number(activeModalProduct.minOrderQty) || 1);
+      event.target.value = Math.max(minQty, Math.min(Number(activeModalProduct.stock) || minQty, Math.floor(Number(event.target.value) || minQty)));
+    }
+  });
+
   $('#filter-list').addEventListener('click', event => {
     const button = event.target.closest('[data-filter]');
     if (!button) return;
@@ -756,7 +796,7 @@
     const paymentMethod = form.get('paymentMethod') || 'cod';
     const customer = Object.fromEntries(form.entries());
     delete customer.paymentMethod;
-    const items = currentCartItems().map(item => ({ id: item.id, quantity: item.quantity }));
+    const items = currentCartItems().map(item => ({ id: item.id, quantity: item.quantity, color: item.color || '', size: item.size || '' }));
     $('#checkout-error').textContent = '';
     button.disabled = true; button.innerHTML = 'Placing your order…';
     try {

@@ -18,6 +18,14 @@
   let modalGalleryIndex = 0;
   let activeModalProduct = null;
   let customerPreviewToken = '';
+  // Customer-facing fallback used only when a mobile browser cannot reach the catalogue API.
+  // The live D1 catalogue remains the source of truth whenever the API succeeds.
+  const FALLBACK_PRODUCTS = [
+    { id: 'i-phone-19-pro-max-35f5', name: 'i Phone 19 pro Max', category: 'Mobile Phones', price: 549989, compareAt: 699999, image: '/uploads/1791104656694-2af20aef9a276984.jpg', images: ['/uploads/1791104656694-2af20aef9a276984.jpg'], tag: 'Bestseller', rating: 4.8, reviews: 0, stock: 9990, featured: true, description: 'i Phone 19 pro Max' },
+    { id: 'bottle-dd44', name: 'Bottle', category: 'Bottle and Flask', price: 1299, compareAt: 2999, image: '/images/product-pan.jpg', images: ['/images/product-pan.jpg'], tag: 'New', rating: 4.8, reviews: 0, stock: 999, featured: true, description: 'Everyday reusable bottle.' },
+    { id: 'drtfyui-b80b', name: 'drtfyui', category: 'ghij', price: 2345, compareAt: 23455, image: '/images/product-pan.jpg', images: ['/images/product-pan.jpg'], tag: 'New', rating: 0, reviews: 0, stock: 33333, featured: true, description: 'Everyday product.' },
+    { id: 'getfit-silicone-back-scrubber', name: 'GetFit Silicone Back Scrubber', category: 'Bath & Personal Care', price: 129, compareAt: null, image: '/images/product-bath-belt.svg', images: ['/images/product-bath-belt.svg'], brand: 'GetFit', rating: 0, reviews: 0, stock: 97, featured: true, description: 'Flexible silicone back scrubber for everyday bathing.' }
+  ];
   try { customerPreviewToken = sessionStorage.getItem('mt-customer-preview-token') || ''; } catch { /* storage may be disabled */ }
 
   function loadCart() {
@@ -195,8 +203,17 @@
       try { renderPaymentOptions(); }
       catch (error) { console.error('MarketTech payment options failed:', error); }
     } catch (error) {
-      $('#product-grid').innerHTML = `<div class="store-error"><span>✳</span><h3>Our shelves are getting ready.</h3><p>Please refresh in a moment.</p></div>`;
-      console.error(error);
+      // Never leave the mobile storefront blank because a customer's browser
+      // temporarily cannot reach /api/products. Keep the catalogue usable.
+      console.error('MarketTech product API failed; using storefront fallback:', error);
+      products = FALLBACK_PRODUCTS.map(product => ({ ...product }));
+      renderFilters();
+      renderProducts();
+      syncCartWithProducts();
+      updateCartUI();
+      const grid = $('#product-grid');
+      grid.hidden = false;
+      $('#empty-products').hidden = true;
     }
   }
 

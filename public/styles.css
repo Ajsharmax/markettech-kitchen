@@ -881,3 +881,9 @@ p{font-weight:500}
   .hero-content>p{font-size:9px!important}
   .hero-search{display:none!important}
 }
+
+
+/* Mobile catalogue: one product per row */
+@media (max-width: 720px){
+  .product-grid{grid-template-columns:1fr !important;gap:24px !important;}
+}

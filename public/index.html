@@ -46,7 +46,7 @@
       <nav class="primary-nav" id="primary-nav" aria-label="Main navigation">
         <a href="#shop" data-nav-filter="all">Shop all</a>
         <a href="#shop">Categories</a>
-        <a href="https://wa.me/917827685375?text=Hi%20MarketTech%20Team%2C%20I%20need%20some%20help%20with%20my%20order.%20Could%20you%20please%20assist%20me%3F" target="_blank" rel="noopener noreferrer">Help &amp; contact</a>
+        <a href="#contact" data-contact-open>Help &amp; contact</a>
       </nav>
       <div class="nav-actions">
         <button class="icon-button search-toggle" id="search-toggle" aria-label="Search products">
@@ -153,7 +153,28 @@
 
   <section class="modal account-modal" id="account-modal" role="dialog" aria-modal="true" aria-labelledby="account-title" hidden><button class="close-button modal-close" data-close-account aria-label="Close account">×</button><div id="account-auth-view"><div class="eyebrow"><span class="eyebrow-line"></span> YOUR MARKETTECH ACCOUNT</div><h2 id="account-title">A little closer<br><em>to your kitchen.</em></h2><div class="account-tabs"><button type="button" class="active" data-account-mode="login">Sign in</button><button type="button" data-account-mode="register">Create account</button></div><form id="customer-login-form" class="account-form"><label class="field">Email address<input name="email" type="email" autocomplete="email" required placeholder="you@example.com"></label><label class="field">Password<input name="password" type="password" autocomplete="current-password" required placeholder="Your password"></label><p class="account-error" id="customer-login-error" role="alert"></p><button class="button button-dark" type="submit">Sign in <span>↗</span></button></form><form id="customer-register-form" class="account-form" hidden><label class="field">Full name<input name="name" autocomplete="name" required maxlength="100" placeholder="Your name"></label><label class="field">Email address<input name="email" type="email" autocomplete="email" required placeholder="you@example.com"></label><label class="field">Phone number<input name="phone" type="tel" autocomplete="tel" required placeholder="+91 98765 43210"></label><label class="field">Password <small>At least 10 characters</small><input name="password" type="password" autocomplete="new-password" minlength="10" maxlength="128" required placeholder="Create a password"></label><p class="account-error" id="customer-register-error" role="alert"></p><button class="button button-dark" type="submit">Create my account <span>↗</span></button><small class="account-terms">By creating an account, you agree to the store’s <a href="#policies" data-policy="terms">terms</a> and <a href="#policies" data-policy="privacy">privacy policy</a>.</small></form></div><div id="account-profile-view" hidden><div class="eyebrow"><span class="eyebrow-line"></span> YOUR MARKETTECH ACCOUNT</div><h2 id="account-greeting">Welcome back.</h2><p class="account-email" id="account-email"></p><div class="account-orders-heading"><h3>Your orders</h3><button type="button" id="account-signout">Sign out</button></div><div class="account-orders" id="account-orders"></div></div></section>
 
-  <section class="modal policy-modal" id="policy-modal" role="dialog" aria-modal="true" aria-labelledby="policy-title" hidden><button class="close-button modal-close" data-close-policy aria-label="Close policy">×</button><div class="eyebrow"><span class="eyebrow-line"></span> THE IMPORTANT BITS</div><h2 id="policy-title">Our <em>policies.</em></h2><div class="policy-content" id="policy-content"></div><button class="button button-outline" data-close-policy>Close</button></section>
+
+  <section class="modal contact-modal" id="contact-modal" role="dialog" aria-modal="true" aria-labelledby="contact-title" hidden>
+    <button class="close-button modal-close" data-close-contact aria-label="Close contact">×</button>
+    <div class="contact-modal-inner">
+      <div class="eyebrow"><span class="eyebrow-line"></span> WE'RE HERE TO HELP</div>
+      <h2 id="contact-title">Let’s get you<br><em>the right help.</em></h2>
+      <p class="contact-intro">Have a question about an order, product, delivery, return, or anything else? Choose the way you’d like to reach us. We’ll be happy to help.</p>
+      <div class="contact-options">
+        <a class="contact-option" href="mailto:primecreation.selling@gmail.com">
+          <span class="contact-option-icon">✉</span>
+          <span><strong>Email us</strong><small>primecreation.selling@gmail.com</small><em>Best for detailed questions and order support ↗</em></span>
+        </a>
+        <a class="contact-option contact-option-whatsapp" href="https://wa.me/917827685375?text=Hi%20MarketTech%20Team%2C%20I%20need%20some%20help%20with%20my%20order.%20Could%20you%20please%20assist%20me%3F" target="_blank" rel="noopener noreferrer">
+          <span class="contact-option-icon">◉</span>
+          <span><strong>Chat on WhatsApp</strong><small>+91 78276 85375</small><em>Quick support with a pre-filled message ↗</em></span>
+        </a>
+      </div>
+      <div class="contact-note"><span>✳</span><p><strong>Need order help?</strong><br>Please keep your order number ready so we can assist you faster.</p></div>
+      <button class="button button-outline contact-close-button" type="button" data-close-contact>Continue shopping <span>↗</span></button>
+    </div>
+  </section>
+\n  <section class="modal policy-modal" id="policy-modal" role="dialog" aria-modal="true" aria-labelledby="policy-title" hidden><button class="close-button modal-close" data-close-policy aria-label="Close policy">×</button><div class="eyebrow"><span class="eyebrow-line"></span> THE IMPORTANT BITS</div><h2 id="policy-title">Our <em>policies.</em></h2><div class="policy-content" id="policy-content"></div><button class="button button-outline" data-close-policy>Close</button></section>
 
   <a class="whatsapp-cta" id="whatsapp-cta" href="#" target="_blank" rel="noopener" aria-label="Chat with us on WhatsApp" hidden><span>◉</span> Chat with us</a>
   <aside class="cookie-banner" id="cookie-banner" hidden><div><strong>A small note about cookies</strong><p>We use optional analytics and ad measurement to understand what’s useful. You can choose whether to allow them.</p></div><div class="cookie-actions"><button type="button" id="cookie-essential">Essential only</button><button type="button" id="cookie-accept">Allow analytics</button></div></aside>

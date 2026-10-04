@@ -1390,6 +1390,22 @@ async function handleApi(request, env) {
     });
   }
 
+  if (route === '/api/public-coupons' && method === 'GET') {
+    const nowIso = new Date().toISOString();
+    const result = await env.DB.prepare('SELECT code, discount_type, discount_value, min_order, max_discount, starts_at, ends_at, scope_type, scope_value FROM coupons WHERE active = 1 AND starts_at <= ? AND (ends_at IS NULL OR ends_at >= ?) ORDER BY min_order ASC, discount_value DESC').bind(nowIso, nowIso).all().catch(() => ({ results: [] }));
+    return json(200, (result.results || []).map(row => ({
+      code: String(row.code || ''),
+      discountType: row.discount_type === 'fixed' ? 'fixed' : 'percent',
+      discountValue: Number(row.discount_value || 0),
+      minOrder: Number(row.min_order || 0),
+      maxDiscount: Number(row.max_discount || 0),
+      scopeType: row.scope_type || 'all',
+      scopeValue: row.scope_value || '',
+      startsAt: row.starts_at || '',
+      endsAt: row.ends_at || ''
+    })));
+  }
+
   if (route === '/api/storefront-settings' && method === 'GET') {
     const settings = await getSettings(env);
     const offers = await env.DB.prepare('SELECT * FROM offers WHERE active = 1 AND starts_at <= ? AND ends_at >= ? ORDER BY starts_at DESC').bind(new Date().toISOString(), new Date().toISOString()).all().catch(() => ({ results: [] }));

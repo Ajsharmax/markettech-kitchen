@@ -817,19 +817,18 @@
   });
 
   $('#apply-coupon').addEventListener('click', () => {
-    const entered = $('#coupon-input').value.trim();
-    const marketing = storefrontSettings.marketing || {};
-    if (entered && entered.toUpperCase() === String(marketing.couponCode || '').toUpperCase() && Number(marketing.discountPercent) > 0) {
-      appliedCoupon = String(marketing.couponCode);
-      $('#coupon-message').textContent = `${Number(marketing.discountPercent)}% discount applied.`;
+    const entered = $('#coupon-input').value.trim().toUpperCase();
+    appliedCoupon = entered;
+    if (entered) {
+      $('#coupon-message').textContent = 'Code added. We’ll verify it when you place the order.';
       $('#coupon-message').classList.remove('coupon-error');
     } else {
-      appliedCoupon = '';
-      $('#coupon-message').textContent = 'That code is not active.';
-      $('#coupon-message').classList.add('coupon-error');
+      $('#coupon-message').textContent = '';
+      $('#coupon-message').classList.remove('coupon-error');
     }
     renderCheckoutSummary();
   });
+
   $('#coupon-input').addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); $('#apply-coupon').click(); } });
 
   $('#checkout-form').addEventListener('submit', async event => {

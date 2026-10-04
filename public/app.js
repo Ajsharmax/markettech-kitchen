@@ -12,6 +12,7 @@
   let wishlist = loadWishlist();
   let config = { shippingFee: 99, freeShippingAt: 1999, paymentOptions: { cashOnDelivery: true, upi: false, razorpay: false } };
   let storefrontSettings = { site: {}, policies: {}, marketing: {}, developer: {}, offers: [] };
+  let publicCoupons = [];
   let appliedCoupon = '';
   let currentCustomer = null;
   let checkoutAfterAuth = false;
@@ -67,6 +68,37 @@
     }
   }
   function formatMoney(value) { return money.format(Number(value) || 0); }
+  function couponDiscountPreview(coupon, subtotal) {
+    const minOrder = Math.max(0, Number(coupon.minOrder) || 0);
+    if (subtotal < minOrder) return 0;
+    if (coupon.discountType === 'fixed') return Math.min(subtotal, Number(coupon.discountValue) || 0);
+    const raw = Math.round(subtotal * (Number(coupon.discountValue) || 0) / 100);
+    const cap = Number(coupon.maxDiscount) || 0;
+    return cap > 0 ? Math.min(raw, cap) : raw;
+  }
+  function renderLivePromoMessage(subtotal = cartSubtotal()) {
+    const box = $('#live-promo-message');
+    if (!box) return;
+    const coupons = (Array.isArray(publicCoupons) ? publicCoupons : []).filter(coupon => coupon.code && Number(coupon.minOrder) >= 0).sort((a, b) => Number(a.minOrder) - Number(b.minOrder));
+    if (!coupons.length) { box.hidden = true; box.innerHTML = ''; return; }
+    const eligible = coupons.map(coupon => ({ coupon, discount: couponDiscountPreview(coupon, subtotal) })).filter(entry => entry.discount > 0).sort((a, b) => b.discount - a.discount);
+    const best = eligible[0];
+    const next = coupons.filter(coupon => Number(coupon.minOrder) > subtotal).sort((a, b) => Number(a.minOrder) - Number(b.minOrder))[0];
+    let message = '';
+    if (best && next) {
+      const gap = Math.max(0, Number(next.coupon.minOrder) - subtotal);
+      const nextAt = couponDiscountPreview(next.coupon, Number(next.coupon.minOrder));
+      if (nextAt > best.discount) message = '<strong>🎉 ' + escapeHtml(best.coupon.code) + ' unlocked: save ' + formatMoney(best.discount) + '.</strong><span>Add ' + formatMoney(gap) + ' more to unlock <b>' + escapeHtml(next.coupon.code) + '</b> and save up to ' + formatMoney(nextAt) + '.</span>';
+      else message = '<strong>🎉 ' + escapeHtml(best.coupon.code) + ' is available: save ' + formatMoney(best.discount) + '.</strong><span>You already have the better available saving.</span>';
+    } else if (next) {
+      const gap = Math.max(0, Number(next.coupon.minOrder) - subtotal);
+      const nextAt = couponDiscountPreview(next.coupon, Number(next.coupon.minOrder));
+      message = '<strong>💡 Add ' + formatMoney(gap) + ' more to unlock ' + escapeHtml(next.coupon.code) + '.</strong><span>Reach ' + formatMoney(next.coupon.minOrder) + ' and save up to ' + formatMoney(nextAt) + '.</span>';
+    } else if (best) message = '<strong>🎉 Best available saving: ' + escapeHtml(best.coupon.code) + ' — ' + formatMoney(best.discount) + ' off.</strong>';
+    box.innerHTML = message;
+    box.hidden = !message;
+  }
+
   function ratingMarkup(product) {
     return `<span aria-hidden="true">★</span> ${Number(product.rating || 0).toFixed(1)} <span class="rating-count">(${Number(product.reviews || 0)})</span>`;
   }
@@ -200,14 +232,17 @@
 
       // Settings are secondary. Keep the catalogue visible even if one settings
       // request fails, while retaining the last known safe defaults.
-      const [settingsResult, contentResult] = await Promise.allSettled([
+      const [settingsResult, contentResult, couponsResult] = await Promise.allSettled([
         api('/api/config'),
-        api('/api/storefront-settings')
+        api('/api/storefront-settings'),
+        api('/api/public-coupons')
       ]);
       if (settingsResult.status === 'fulfilled') config = settingsResult.value;
       else console.error('MarketTech config failed:', settingsResult.reason);
       if (contentResult.status === 'fulfilled') storefrontSettings = contentResult.value;
       else console.error('MarketTech storefront settings failed:', contentResult.reason);
+      if (couponsResult.status === 'fulfilled') publicCoupons = Array.isArray(couponsResult.value) ? couponsResult.value : [];
+      else publicCoupons = [];
 
       // Settings only decorate the catalogue. If applying them fails, keep the
       // products on screen instead of replacing the whole grid with an error.
@@ -592,6 +627,7 @@
     $('#checkout-shipping').textContent = shipping ? formatMoney(shipping) : 'On us';
     $('#checkout-total').textContent = formatMoney(subtotal - quantityDiscount - discount + shipping);
     $('.summary-note').textContent = threshold > 0 ? `Free delivery on orders over ${formatMoney(threshold)}.` : 'Delivery is on us for every order.';
+    renderLivePromoMessage(subtotal);
   }
   function loadExternalScript(src) {
     return new Promise((resolve, reject) => {

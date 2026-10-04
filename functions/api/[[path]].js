@@ -1440,6 +1440,13 @@ async function handleApi(request, env) {
     })));
   }
 
+  if (route === '/api/shipping-rate' && method === 'GET') {
+    const pincode = String(url.searchParams.get('pincode') || '').replace(/\D/g, '');
+    const state = String(url.searchParams.get('state') || '').trim().slice(0, 80);
+    const fee = await resolveShippingFee(state, pincode);
+    return json(200, { fee, currency: 'INR' });
+  }
+
   if (route === '/api/storefront-settings' && method === 'GET') {
     const settings = await getSettings(env);
     const offers = await env.DB.prepare('SELECT * FROM offers WHERE active = 1 AND starts_at <= ? AND ends_at >= ? ORDER BY starts_at DESC').bind(new Date().toISOString(), new Date().toISOString()).all().catch(() => ({ results: [] }));

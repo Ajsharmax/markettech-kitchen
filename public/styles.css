@@ -719,6 +719,33 @@ p{font-weight:500}
 .cart-line-price{font-weight:800}
 .cart-line-price del{font-size:11px;color:#8a8e88;margin-left:6px;font-weight:600}
 .checkout-item-name small{display:block;line-height:1.45}
+.checkout-item-name .checkout-item-savings{
+  color:#3f604c;
+  font-weight:700;
+}
+.checkout-item>strong{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:3px;
+  white-space:nowrap;
+}
+.checkout-item>strong del{
+  font-size:8px;
+  color:#92958d;
+  font-weight:500;
+}
+.cart-line-discount-label{
+  display:block;
+  margin-top:3px;
+  color:#4e684b;
+  font-size:8px;
+  font-weight:700;
+}
+.summary-lines .summary-total{
+  font-size:13px;
+}
+
 @media(max-width:600px){
   .product-option-grid{grid-template-columns:1fr}
 }

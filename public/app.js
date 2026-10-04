@@ -378,8 +378,8 @@
         ${tag}<img src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}" loading="lazy">
         ${photoBadge}<button class="wishlist-toggle${saved ? ' is-saved' : ''}" type="button" data-action="wishlist" aria-label="${saved ? 'Remove from' : 'Add to'} saved items: ${escapeHtml(product.name)}" aria-pressed="${saved}">${saved ? '♥' : '♡'}</button>
         <button class="quick-view" type="button" data-action="view" aria-label="Quick view ${escapeHtml(product.name)}">↗</button>
-        <button class="product-add" type="button" data-action="add" ${outOfStock ? 'disabled' : ''}><span>${outOfStock ? 'Sold out' : 'Add to bag'}</span><span aria-hidden="true">${outOfStock ? '—' : '+'}</span></button>
       </div>
+      <button class="product-add" type="button" data-action="add" ${outOfStock ? 'disabled' : ''}><span>${outOfStock ? 'Sold out' : 'Add to bag'}</span><span aria-hidden="true">${outOfStock ? '—' : '+'}</span></button>
       <div class="product-info"><div class="product-meta"><h3 class="product-name">${escapeHtml(product.name)}</h3><span class="product-rating">${ratingMarkup(product)}</span></div>
         ${product.brand ? `<div class="product-brand">${escapeHtml(product.brand)}</div>` : ""}<div class="product-category">${escapeHtml(product.category)}</div>
         <div class="product-price-row"><span class="product-price">${formatMoney(product.price)}</span>${compare}<span class="product-stock">${outOfStock ? 'Out of stock' : Number(product.stock) <= 5 ? `Only ${Number(product.stock)} left` : ''}</span></div>

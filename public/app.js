@@ -205,7 +205,7 @@
     const marketing = storefrontSettings.marketing || {};
     const developer = storefrontSettings.developer || {};
     const overrides = developer.textOverrides || {};
-    for (const element of $('[data-site]')) {
+    for (const element of $$('[data-site]')) {
       const key = element.dataset.site;
       const value = Object.hasOwn(overrides, key) && overrides[key] ? overrides[key] : site[key];
       if (value != null) element.textContent = value;
@@ -256,7 +256,7 @@
       const chatUrl = `https://wa.me/${whatsapp.startsWith('91') ? whatsapp : '91' + whatsapp}?text=${encodeURIComponent(whatsappMessage)}`;
       $('#whatsapp-cta').href = chatUrl;
       $('#whatsapp-cta').hidden = false;
-      $('[data-contact-whatsapp]').forEach(element => { element.href = chatUrl; });
+      $$('[data-contact-whatsapp]').forEach(element => { element.href = chatUrl; });
     }
     setupTracking(marketing);
   }
@@ -831,7 +831,7 @@
     $('#mobile-menu-toggle').setAttribute('aria-label', 'Open menu');
   });
 
-  $('[data-close-contact]').forEach(button => button.addEventListener('click', () => closeLayer($('#contact-modal'))));
+  $$('[data-close-contact]').forEach(button => button.addEventListener('click', () => closeLayer($('#contact-modal'))));
 
   $('#apply-coupon').addEventListener('click', () => {
     const entered = $('#coupon-input').value.trim().toUpperCase();

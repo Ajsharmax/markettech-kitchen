@@ -1754,6 +1754,125 @@ async function handleApi(request, env) {
 
     if (route === '/api/admin/products' && method === 'GET') return json(200, await listProducts(env));
 
+    if (route === '/api/admin/catalog/load-market-products' && method === 'POST') {
+      const catalog = [
+        {
+          id: 'water-bottle-15l',
+          name: '1.5 L Pump Water Bottle',
+          category: 'Water Bottles',
+          price: 198,
+          compareAt: null,
+          image: '/images/product-bottle.svg',
+          images: ['/images/product-bottle.svg'],
+          stock: 100,
+          colors: ['Black', 'Transparent'],
+          sizes: ['1.5 L'],
+          minOrderQty: 1,
+          quantityDiscountPercent: 5,
+          tag: '1.5 L',
+          description: 'Reusable 1.5 litre water bottle with a convenient pump-style lid, carry-friendly design and easy everyday handling.',
+          featured: true
+        },
+        {
+          id: 'silicone-bath-belt',
+          name: 'Silicone Bath Belt & Back Scrubber',
+          category: 'Bath & Personal Care',
+          price: 129,
+          compareAt: null,
+          image: '/images/product-bath-belt.svg',
+          images: ['/images/product-bath-belt.svg'],
+          stock: 100,
+          colors: ['Pink', 'Blue', 'Purple'],
+          sizes: ['Standard'],
+          minOrderQty: 1,
+          quantityDiscountPercent: 5,
+          tag: 'Easy clean',
+          description: 'Flexible silicone bath belt designed to help clean hard-to-reach areas with a textured surface and easy-grip ends.',
+          featured: true
+        },
+        {
+          id: 'silicone-cleaning-gloves',
+          name: 'Reusable Silicone Cleaning Gloves',
+          category: 'Cleaning Essentials',
+          price: 129,
+          compareAt: null,
+          image: '/images/product-gloves.svg',
+          images: ['/images/product-gloves.svg'],
+          stock: 100,
+          colors: ['Purple', 'Blue'],
+          sizes: ['M', 'L', 'XL'],
+          minOrderQty: 1,
+          quantityDiscountPercent: 5,
+          tag: 'Reusable',
+          description: 'Reusable waterproof silicone cleaning gloves with textured palms for everyday dishwashing and household cleaning.',
+          featured: true
+        },
+        {
+          id: 'large-plastic-tumbler',
+          name: 'Large Plastic Tumbler with Straw & Handle',
+          category: 'Tumblers',
+          price: 199,
+          compareAt: null,
+          image: '/images/product-tumbler.svg',
+          images: ['/images/product-tumbler.svg'],
+          stock: 100,
+          colors: ['Green', 'Pink'],
+          sizes: ['Standard'],
+          minOrderQty: 1,
+          quantityDiscountPercent: 5,
+          tag: 'Everyday tumbler',
+          description: 'Reusable plastic tumbler with a comfortable handle and straw-style lid for convenient everyday drinking.',
+          featured: true
+        },
+        {
+          id: 'nice-water-bottle',
+          name: 'Premium Everyday Water Bottle',
+          category: 'Water Bottles',
+          price: 99,
+          compareAt: null,
+          image: '/images/product-nice-bottle.svg',
+          images: ['/images/product-nice-bottle.svg'],
+          stock: 100,
+          colors: ['Blue', 'Pink'],
+          sizes: ['Standard'],
+          minOrderQty: 2,
+          quantityDiscountPercent: 5,
+          tag: 'Minimum 2',
+          description: 'Reusable everyday water bottle with a compact shape and secure lid, suited to home, office and daily travel.',
+          featured: true
+        },
+        {
+          id: 'multicolor-sipper-bottle',
+          name: 'Multicolor Sipper Bottle',
+          category: 'Water Bottles',
+          price: 150,
+          compareAt: null,
+          image: '/images/product-sipper.svg',
+          images: ['/images/product-sipper.svg'],
+          stock: 100,
+          colors: ['Pink', 'Blue', 'Green', 'White'],
+          sizes: ['Standard'],
+          minOrderQty: 1,
+          quantityDiscountPercent: 5,
+          tag: 'Assorted colours',
+          description: 'Lightweight reusable sipper bottle available in assorted colours for school, office, travel and everyday use.',
+          featured: true
+        }
+      ];
+      const existingRows = await env.DB.prepare('SELECT id FROM products').all();
+      const existing = new Set((existingRows.results || []).map(row => row.id));
+      const added = [];
+      const skipped = [];
+      for (const product of catalog) {
+        if (existing.has(product.id)) { skipped.push(product.id); continue; }
+        await saveProductSafely(env, product);
+        added.push(product.id);
+      }
+      return json(200, { ok: true, added, skipped, count: added.length });
+    }
+
+
+
     // Bulk import: preview validates and reports, the import route writes to D1.
     if (route === '/api/admin/products/import/preview' && method === 'POST') {
       const body = await readJson(request, 8_000_000);

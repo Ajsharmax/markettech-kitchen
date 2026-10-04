@@ -11,7 +11,7 @@
   let cart = loadCart();
   let wishlist = loadWishlist();
   let config = { shippingFee: 99, freeShippingAt: 1999, paymentOptions: { cashOnDelivery: true, upi: false, razorpay: false } };
-  let storefrontSettings = { site: {}, policies: {}, marketing: {} };
+  let storefrontSettings = { site: {}, policies: {}, marketing: {}, developer: {}, offers: [] };
   let appliedCoupon = '';
   let currentCustomer = null;
   let modalGalleryImages = [];
@@ -203,9 +203,23 @@
   function applyStorefrontSettings() {
     const site = storefrontSettings.site || {};
     const marketing = storefrontSettings.marketing || {};
-    for (const element of $$('[data-site]')) {
+    const developer = storefrontSettings.developer || {};
+    const overrides = developer.textOverrides || {};
+    for (const element of $('[data-site]')) {
       const key = element.dataset.site;
-      if (Object.hasOwn(site, key) && site[key] != null) element.textContent = site[key];
+      const value = Object.hasOwn(overrides, key) && overrides[key] ? overrides[key] : site[key];
+      if (value != null) element.textContent = value;
+    }
+    const overrideMap = {
+      heroPrimaryCta: '.hero-actions .button',
+      heroSecondaryCta: '.hero-actions .button:nth-child(2)',
+      storyCta: '#story .button',
+      shopEyebrow: '.shop-heading [data-site="shopEyebrow"]',
+      shopTitle1: '.shop-heading [data-site="shopTitle1"]',
+      shopTitle2: '.shop-heading [data-site="shopTitle2"]'
+    };
+    for (const [key, selector] of Object.entries(overrideMap)) {
+      if (overrides[key]) $(selector).forEach(element => { element.childNodes[0] && (element.childNodes[0].textContent = overrides[key]); });
     }
     const threshold = Number(config.freeShippingAt) || 0;
     const shippingCopy = threshold > 0 ? `Free delivery on orders over ${formatMoney(threshold)}` : 'Free delivery on every order';
@@ -228,10 +242,12 @@
     const metaDescription = $('meta[name="description"]');
     if (metaDescription && site.seoDescription) metaDescription.content = site.seoDescription;
     const campaign = $('#campaign-banner');
-    $('#checkout-coupon-section').hidden = !(marketing.couponCode && Number(marketing.discountPercent) > 0);
-    if (campaign && marketing.promoBanner) {
+    $('#checkout-coupon-section').hidden = false;
+    const activeOffers = Array.isArray(storefrontSettings.offers) ? storefrontSettings.offers.filter(offer => offer.active) : [];
+    const offerBanner = activeOffers.find(offer => offer.banner)?.banner || '';
+    if (campaign && (marketing.promoBanner || offerBanner)) {
       campaign.hidden = false;
-      $('#campaign-banner-text').textContent = marketing.promoBanner;
+      $('#campaign-banner-text').textContent = offerBanner || marketing.promoBanner;
       $('#campaign-coupon').textContent = marketing.couponCode ? `Use ${marketing.couponCode}` : '';
     }
     const whatsapp = String(marketing.whatsappNumber || '').replace(/\D/g, '');

@@ -622,6 +622,26 @@
   });
   $('#close-search').addEventListener('click', () => { $('#search-row').hidden = true; searchTerm = ''; $('#search-input').value = ''; renderProducts(); });
   $('#search-input').addEventListener('input', event => { searchTerm = event.target.value; renderProducts(); if (searchTerm) document.querySelector('#shop').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+  function runQuickSearch(value) {
+    searchTerm = String(value || '').trim();
+    $('#search-input').value = searchTerm;
+    const heroInput = $('#quick-search-input');
+    const quickInput = $('#quick-find-input');
+    if (heroInput) heroInput.value = searchTerm;
+    if (quickInput) quickInput.value = searchTerm;
+    activeCategory = 'all';
+    renderFilters();
+    renderProducts();
+    document.querySelector('#shop').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  $('#quick-search-button')?.addEventListener('click', () => runQuickSearch($('#quick-search-input')?.value));
+  $('#quick-search-input')?.addEventListener('keydown', event => { if (event.key === 'Enter') runQuickSearch(event.currentTarget.value); });
+  $('#quick-find-search-button')?.addEventListener('click', () => runQuickSearch($('#quick-find-input')?.value));
+  $('#quick-find-input')?.addEventListener('keydown', event => { if (event.key === 'Enter') runQuickSearch(event.currentTarget.value); });
+  $('#quick-find-input')?.addEventListener('input', event => {
+    const value = event.currentTarget.value;
+    if (!value) { searchTerm = ''; $('#search-input').value = ''; renderProducts(); }
+  });
   $('#open-cart').addEventListener('click', openCart);
   $('#open-account').addEventListener('click', openAccount);
   $('#mobile-account-link').addEventListener('click', openAccount);

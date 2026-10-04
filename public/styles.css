@@ -701,3 +701,10 @@ p{font-weight:500}
 @media(max-width:600px){
   .product-option-grid{grid-template-columns:1fr}
 }
+
+/* MarketTECH brand logo */
+.brand-logo{display:block;width:210px;height:auto;max-height:64px;object-fit:contain;object-position:left center}
+.brand-footer .brand-logo{width:230px}
+.checkout-brand .brand-logo{width:220px}
+@media (max-width:900px){.brand-logo{width:185px;max-height:58px}.brand-footer .brand-logo,.checkout-brand .brand-logo{width:205px}}
+@media (max-width:620px){.brand-logo{width:160px;max-height:52px}}

@@ -58,7 +58,7 @@
     try {
       response = await fetch(path, {
         credentials: 'same-origin', ...options,
-        headers: { ...(options.body ? { 'Content-Type': 'application/json' } : {}), ...(previewToken ? { Authorization: `Bearer ${previewToken}` } : {}), ...(options.headers || {}) }
+        headers: { ...(options.body && !(options.body instanceof FormData) ? { 'Content-Type': 'application/json' } : {}), ...(previewToken ? { Authorization: `Bearer ${previewToken}` } : {}), ...(options.headers || {}) }
       });
     } catch {
       throw new Error('Could not reach the store API. Check your internet connection and open the deployed Cloudflare Pages address.');
@@ -67,6 +67,127 @@
     if (!response.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
     return data;
   }
+  function readUint16(view, offset) { return view.getUint16(offset, true); }
+  function readUint32(view, offset) { return view.getUint32(offset, true); }
+
+  async function readStoredZip(file) {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const eocdMin = 22;
+    const searchStart = Math.max(0, bytes.length - 65557);
+    let eocd = -1;
+    for (let i = bytes.length - eocdMin; i >= searchStart; i--) {
+      if (readUint32(view, i) === 0x06054b50) { eocd = i; break; }
+    }
+    if (eocd < 0) throw new Error('That file is not a readable ZIP catalogue.');
+    const entryCount = readUint16(view, eocd + 10);
+    const centralOffset = readUint32(view, eocd + 16);
+    const entries = new Map();
+    let pointer = centralOffset;
+    const decoder = new TextDecoder();
+    for (let index = 0; index < entryCount; index++) {
+      if (pointer + 46 > bytes.length || readUint32(view, pointer) !== 0x02014b50) throw new Error('The ZIP catalogue index is damaged.');
+      const flags = readUint16(view, pointer + 8);
+      const method = readUint16(view, pointer + 10);
+      const compressedSize = readUint32(view, pointer + 20);
+      const nameLength = readUint16(view, pointer + 28);
+      const extraLength = readUint16(view, pointer + 30);
+      const commentLength = readUint16(view, pointer + 32);
+      const localOffset = readUint32(view, pointer + 42);
+      if (method !== 0 || (flags & 0x08)) throw new Error('This catalogue ZIP must use standard uncompressed ZIP entries.');
+      const name = decoder.decode(bytes.subarray(pointer + 46, pointer + 46 + nameLength));
+      entries.set(name, { compressedSize, localOffset });
+      pointer += 46 + nameLength + extraLength + commentLength;
+    }
+    const readEntry = name => {
+      const entry = entries.get(name);
+      if (!entry) return null;
+      const offset = entry.localOffset;
+      if (offset + 30 > bytes.length || readUint32(view, offset) !== 0x04034b50) throw new Error('A ZIP image entry is damaged.');
+      const nameLength = readUint16(view, offset + 26);
+      const extraLength = readUint16(view, offset + 28);
+      const start = offset + 30 + nameLength + extraLength;
+      return bytes.slice(start, start + entry.compressedSize);
+    };
+    return { names: [...entries.keys()], read: readEntry };
+  }
+
+  async function importSupplierCatalogZip(file) {
+    if (!file) return;
+    const status = $('#supplier-import-status');
+    const fill = $('#supplier-import-progress-fill');
+    const statusText = $('#supplier-import-status-text');
+    const button = $('#supplier-catalog-import-button');
+    status.hidden = false;
+    fill.style.width = '0%';
+    button.disabled = true;
+    try {
+      if (!/\.zip$/i.test(file.name)) throw new Error('Please choose the MarketTech supplier ZIP file.');
+      const zip = await readStoredZip(file);
+      const catalogBytes = zip.read('catalog.json');
+      if (!catalogBytes) throw new Error('catalog.json is missing from the ZIP file.');
+      const catalog = JSON.parse(new TextDecoder().decode(catalogBytes));
+      if (!Array.isArray(catalog) || !catalog.length) throw new Error('The ZIP does not contain a valid product catalogue.');
+
+      const imageNames = zip.names.filter(name => /^images\/(?:[^/]+\.(?:jpg|jpeg|png|webp))$/i.test(name));
+      if (!imageNames.length) throw new Error('No product images were found in the ZIP.');
+      const uploadedByName = new Map();
+      const imageBatchSize = 20;
+
+      for (let start = 0; start < imageNames.length; start += imageBatchSize) {
+        const batchNames = imageNames.slice(start, start + imageBatchSize);
+        const form = new FormData();
+        for (const zipName of batchNames) {
+          const bytes = zip.read(zipName);
+          if (!bytes) continue;
+          const filename = zipName.split('/').pop();
+          form.append('files', new File([bytes], filename, { type: 'image/jpeg' }));
+        }
+        const result = await api('/api/admin/uploads/batch', { method: 'POST', body: form });
+        for (const item of (result.uploaded || [])) uploadedByName.set(item.name, item.url);
+        const pct = Math.round(((start + batchNames.length) / imageNames.length) * 72);
+        fill.style.width = pct + '%';
+        statusText.textContent = `Uploading product photos… ${Math.min(start + batchNames.length, imageNames.length)} / ${imageNames.length}`;
+      }
+
+      if (uploadedByName.size < Math.min(imageNames.length, 1)) throw new Error('No catalogue images were uploaded to R2.');
+
+      const importable = catalog.map(product => {
+        const imageFile = String(product.image || '').split('/').pop();
+        const url = uploadedByName.get(imageFile) || product.image;
+        return { ...product, image: url, images: [url] };
+      });
+
+      let created = 0, updated = 0, errors = 0;
+      const productBatchSize = 50;
+      for (let start = 0; start < importable.length; start += productBatchSize) {
+        const batch = importable.slice(start, start + productBatchSize);
+        const result = await api('/api/admin/catalog/import-products', {
+          method: 'POST',
+          body: JSON.stringify({ products: batch })
+        });
+        created += Number(result.created) || 0;
+        updated += Number(result.updated) || 0;
+        errors += Array.isArray(result.errors) ? result.errors.length : 0;
+        const pct = 72 + Math.round(((start + batch.length) / importable.length) * 28);
+        fill.style.width = Math.min(100, pct) + '%';
+        statusText.textContent = `Adding products… ${Math.min(start + batch.length, importable.length)} / ${importable.length}`;
+      }
+
+      await refreshAll();
+      fill.style.width = '100%';
+      status.classList.add('is-done');
+      statusText.textContent = `Completed: ${created} added, ${updated} updated${errors ? `, ${errors} errors` : ''}.`;
+      showToast(`Supplier catalogue imported: ${created} added, ${updated} updated.`);
+    } catch (error) {
+      statusText.textContent = error.message || 'Catalogue import failed.';
+      showToast(error.message || 'Catalogue import failed.');
+    } finally {
+      button.disabled = false;
+      $('#supplier-catalog-file').value = '';
+    }
+  }
+
   function showLogin() {
     $('#login-screen').hidden = false;
     $('#admin-layout').hidden = true;
@@ -574,24 +695,9 @@
       importBusy = false;
     }
   }
+  $('#supplier-catalog-import-button')?.addEventListener('click', () => $('#supplier-catalog-file')?.click());
+  $('#supplier-catalog-file')?.addEventListener('change', event => importSupplierCatalogZip(event.target.files?.[0]));
   $('#products-import-button').addEventListener('click', openImportModal);
-  $('#load-market-catalog')?.addEventListener('click', async event => {
-    const button = event.currentTarget;
-    if (!window.confirm('Add the cleaned MarketTech product catalogue? Existing products with the same IDs will be left unchanged.')) return;
-    const original = button.innerHTML;
-    button.disabled = true;
-    button.innerHTML = 'Adding…';
-    try {
-      const result = await api('/api/admin/catalog/load-market-products', { method: 'POST', body: '{}' });
-      await refreshAll();
-      showToast(`Catalogue loaded: ${result.added?.length || 0} added, ${result.updated?.length || 0} updated.`);
-    } catch (error) {
-      showToast(error.message);
-    } finally {
-      button.disabled = false;
-      button.innerHTML = original;
-    }
-  });
   $('#inventory-import-button').addEventListener('click', openImportModal);
   $('#product-import-file').addEventListener('change', event => handleImportFile(event.target.files?.[0]));
   $('#import-filter').addEventListener('change', event => { importFilter = event.target.value; renderImportRows(); });

@@ -900,6 +900,9 @@
   }
 
   $('#year').textContent = new Date().getFullYear();
+  if (window.location.hash === '#contact') {
+    setTimeout(() => openLayer($('#contact-modal')), 80);
+  }
   updateAccountButtons();
   updateCartUI();
   refreshCustomerSession();

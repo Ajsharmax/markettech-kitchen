@@ -584,7 +584,7 @@
     try {
       const result = await api('/api/admin/catalog/load-market-products', { method: 'POST', body: '{}' });
       await refreshAll();
-      showToast(`${result.count} products added. You can edit stock, photos, colours and sizes now.`);
+      showToast(`Catalogue loaded: ${result.added?.length || 0} added, ${result.updated?.length || 0} updated.`);
     } catch (error) {
       showToast(error.message);
     } finally {

@@ -1304,7 +1304,7 @@ function parseTags(value) {
   try { return Array.isArray(JSON.parse(value || '[]')) ? JSON.parse(value || '[]') : []; } catch { return []; }
 }
 function parseCouponRow(row) {
-  return { id: row.id, code: row.code, discountType: row.discount_type, discountValue: Number(row.discount_value || 0), minOrder: Number(row.min_order || 0), maxDiscount: Number(row.max_discount || 0), usageLimit: Number(row.usage_limit || 0), usedCount: Number(row.used_count || 0), perCustomerLimit: Number(row.per_customer_limit || 0), startsAt: row.starts_at, endsAt: row.ends_at || '', scopeType: row.scope_type, scopeValue: row.scope_value || '', active: Boolean(row.active), createdAt: row.created_at, updatedAt: row.updated_at };
+  return { id: row.id, code: row.code, discountType: row.discount_type, discountValue: Number(row.discount_value || 0), minOrder: Number(row.min_order || 0), maxDiscount: Number(row.max_discount || 0), usageLimit: Number(row.usage_limit || 0), usedCount: Number(row.used_count || 0), perCustomerLimit: Number(row.per_customer_limit || 0), startsAt: row.starts_at, endsAt: row.ends_at || '', scopeType: row.scope_type, scopeValue: row.scope_value || '', customerEmail: row.customer_email || '', active: Boolean(row.active), createdAt: row.created_at, updatedAt: row.updated_at };
 }
 function parseOfferRow(row) {
   return { id: row.id, name: row.name, type: row.type, value: Number(row.value || 0), scopeType: row.scope_type, scopeValue: row.scope_value || '', startsAt: row.starts_at, endsAt: row.ends_at, banner: row.banner || '', active: Boolean(row.active), createdAt: row.created_at, updatedAt: row.updated_at };
@@ -1315,7 +1315,7 @@ function marketingPayload(input, existing = {}, kind = 'coupon') {
   if (kind === 'coupon') {
     const code = cleanText(input.code ?? existing.code, 40).toUpperCase().replace(/[^A-Z0-9_-]/g, '');
     const discountType = String(input.discountType ?? existing.discountType ?? 'percent') === 'fixed' ? 'fixed' : 'percent';
-    const discountValue = Math.max(0, Math.min(discountType === 'percent' ? 90 : 1000000, Math.floor(Number(input.discountValue ?? existing.discountValue ?? 0))));
+    const discountValue = Math.max(0, Math.min(discountType === 'percent' ? 100 : 1000000, Math.floor(Number(input.discountValue ?? existing.discountValue ?? 0))));
     const minOrder = Math.max(0, Math.min(1000000, Math.floor(Number(input.minOrder ?? existing.minOrder ?? 0))));
     const maxDiscount = Math.max(0, Math.min(1000000, Math.floor(Number(input.maxDiscount ?? existing.maxDiscount ?? 0))));
     const usageLimit = Math.max(0, Math.min(100000000, Math.floor(Number(input.usageLimit ?? existing.usageLimit ?? 0))));
@@ -1324,10 +1324,11 @@ function marketingPayload(input, existing = {}, kind = 'coupon') {
     const endsAt = cleanText(input.endsAt ?? existing.endsAt ?? '', 40);
     const scopeType = ['all','product','category'].includes(input.scopeType ?? existing.scopeType) ? (input.scopeType ?? existing.scopeType) : 'all';
     const scopeValue = cleanText(input.scopeValue ?? existing.scopeValue ?? '', 160);
+    const customerEmail = cleanText(input.customerEmail ?? existing.customerEmail ?? '', 254).toLowerCase();
     const active = input.active === undefined ? existing.active !== false : Boolean(input.active);
     if (!code || discountValue < 1) throw new HttpError(400, 'Enter a coupon code and a discount value.');
     if (endsAt && new Date(endsAt) <= new Date(startsAt)) throw new HttpError(400, 'Coupon end time must be after the start time.');
-    return { id: existing.id || crypto.randomUUID(), code, discountType, discountValue, minOrder, maxDiscount, usageLimit, usedCount: Number(existing.usedCount || 0), perCustomerLimit, startsAt, endsAt, scopeType, scopeValue, active, createdAt: existing.createdAt || now, updatedAt: now };
+    return { id: existing.id || crypto.randomUUID(), code, discountType, discountValue, minOrder, maxDiscount, usageLimit, usedCount: Number(existing.usedCount || 0), perCustomerLimit, startsAt, endsAt, scopeType, scopeValue, customerEmail, active, createdAt: existing.createdAt || now, updatedAt: now };
   }
   const name = cleanText(input.name ?? existing.name, 100);
   const type = String(input.type ?? existing.type ?? 'percent') === 'fixed' ? 'fixed' : 'percent';
@@ -1350,6 +1351,37 @@ function offerMatches(offer, product) {
   if (offer.scopeType === 'category') return String(product.category).toLowerCase() === String(offer.scopeValue).toLowerCase();
   return true;
 }
+function shippingDistanceKm(lat, lon) {
+  const toRad = value => Number(value) * Math.PI / 180;
+  const dLat = toRad(Number(lat) - 28.6139);
+  const dLon = toRad(Number(lon) - 77.2090);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(28.6139)) * Math.cos(toRad(Number(lat))) * Math.sin(dLon / 2) ** 2;
+  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(Math.max(0, 1 - a)));
+}
+const NCR_DISTRICTS = new Set(['delhi','gurugram','gurgaon','faridabad','rohtak','sonipat','sonepat','rewari','jhajjar','nuh','mewat','palwal','panipat','mahendragarh','bhiwani','charkhi dadri','jind','karnal','meerut','ghaziabad','gautam buddha nagar','gautambuddha nagar','bulandshahr','bulandshahar','baghpat','hapur','muzaffarnagar','shamli','alwar','bharatpur']);
+async function resolveShippingFee(state, pincode) {
+  const cleanPin = String(pincode || '').replace(/\D/g, '');
+  if (!/^\d{6}$/.test(cleanPin)) return 149;
+  try {
+    const response = await fetch('https://api.zippopotam.us/IN/' + cleanPin, { headers: { 'Accept': 'application/json' } });
+    if (response.ok) {
+      const data = await response.json();
+      const place = data?.places?.[0] || {};
+      const district = String(place['place name'] || '').toLowerCase();
+      const stateName = String(place.state || state || '').toLowerCase();
+      const lat = Number(place.latitude);
+      const lon = Number(place.longitude);
+      if (stateName === 'delhi' || NCR_DISTRICTS.has(district)) return 49;
+      if (Number.isFinite(lat) && Number.isFinite(lon) && shippingDistanceKm(lat, lon) <= 500) return 99;
+      if (stateName === 'haryana' || stateName === 'uttar pradesh') return 99;
+    }
+  } catch {}
+  const stateName = String(state || '').trim().toLowerCase();
+  if (stateName === 'delhi') return 49;
+  if (stateName === 'haryana' || stateName === 'uttar pradesh') return 99;
+  return 149;
+}
+
 function offerDiscountForLines(offers, lines, products) {
   let best = { discount: 0, offer: null };
   for (const offer of offers) {
@@ -1392,8 +1424,9 @@ async function handleApi(request, env) {
 
   if (route === '/api/public-coupons' && method === 'GET') {
     const nowIso = new Date().toISOString();
-    const result = await env.DB.prepare('SELECT code, discount_type, discount_value, min_order, max_discount, starts_at, ends_at, scope_type, scope_value FROM coupons WHERE active = 1 AND starts_at <= ? AND (ends_at IS NULL OR ends_at >= ?) ORDER BY min_order ASC, discount_value DESC').bind(nowIso, nowIso).all().catch(() => ({ results: [] }));
-    return json(200, (result.results || []).map(row => ({
+    const customer = await getCustomer(request, env);
+    const result = await env.DB.prepare('SELECT code, discount_type, discount_value, min_order, max_discount, starts_at, ends_at, scope_type, scope_value, customer_email FROM coupons WHERE active = 1 AND starts_at <= ? AND (ends_at IS NULL OR ends_at >= ?) ORDER BY min_order ASC, discount_value DESC').bind(nowIso, nowIso).all().catch(() => ({ results: [] }));
+    return json(200, (result.results || []).filter(row => !row.customer_email || (customer?.email && row.customer_email.toLowerCase() === customer.email.toLowerCase())).map(row => ({
       code: String(row.code || ''),
       discountType: row.discount_type === 'fixed' ? 'fixed' : 'percent',
       discountValue: Number(row.discount_value || 0),
@@ -1401,6 +1434,7 @@ async function handleApi(request, env) {
       maxDiscount: Number(row.max_discount || 0),
       scopeType: row.scope_type || 'all',
       scopeValue: row.scope_value || '',
+      customerEmail: row.customer_email || '',
       startsAt: row.starts_at || '',
       endsAt: row.ends_at || ''
     })));
@@ -1574,7 +1608,7 @@ async function handleApi(request, env) {
     const settings = await getSettings(env);
     const freeShippingAt = Number.isFinite(Number(settings.site.freeShippingAt)) ? Number(settings.site.freeShippingAt) : DEFAULT_FREE_SHIPPING_AT;
     const shippingFee = Number.isFinite(Number(settings.site.shippingFee)) ? Number(settings.site.shippingFee) : DEFAULT_SHIPPING_FEE;
-    const shipping = subtotal >= freeShippingAt ? 0 : shippingFee;
+    const shipping = await resolveShippingFee(state, pincode);
     const nowIso = new Date().toISOString();
     const activeOffersRows = await env.DB.prepare('SELECT * FROM offers WHERE active = 1 AND starts_at <= ? AND ends_at >= ?').bind(nowIso, nowIso).all().catch(() => ({ results: [] }));
     const activeOffers = (activeOffersRows.results || []).map(parseOfferRow);
@@ -1586,6 +1620,7 @@ async function handleApi(request, env) {
     if (requestedCoupon) {
       const couponRow = await env.DB.prepare('SELECT * FROM coupons WHERE code = ? AND active = 1').bind(requestedCoupon).first();
       if (!couponRow) return json(400, { error: 'That promo code is not active.' });
+      if (couponRow.customer_email && (!signedInCustomer?.email || couponRow.customer_email.toLowerCase() !== signedInCustomer.email.toLowerCase())) return json(403, { error: 'This promo code is reserved for a specific customer account.' });
       couponRecord = parseCouponRow(couponRow);
       if (new Date(couponRecord.startsAt) > new Date(nowIso) || (couponRecord.endsAt && new Date(couponRecord.endsAt) < new Date(nowIso))) return json(400, { error: 'That promo code is outside its active dates.' });
       if (couponRecord.usageLimit && couponRecord.usedCount >= couponRecord.usageLimit) return json(400, { error: 'That promo code has reached its usage limit.' });
@@ -1774,8 +1809,8 @@ async function handleApi(request, env) {
       const coupon = marketingPayload(body, {}, 'coupon');
       try {
         await env.DB.prepare(`INSERT INTO coupons (id, code, discount_type, discount_value, min_order, max_discount, usage_limit, used_count, per_customer_limit, starts_at, ends_at, scope_type, scope_value, active, created_at, updated_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-          .bind(coupon.id, coupon.code, coupon.discountType, coupon.discountValue, coupon.minOrder, coupon.maxDiscount, coupon.usageLimit, 0, coupon.perCustomerLimit, coupon.startsAt, coupon.endsAt || null, coupon.scopeType, coupon.scopeValue, coupon.active ? 1 : 0, coupon.createdAt, coupon.updatedAt).run();
+          undefined`)
+          .bind(coupon.id, coupon.code, coupon.discountType, coupon.discountValue, coupon.minOrder, coupon.maxDiscount, coupon.usageLimit, 0, coupon.perCustomerLimit, coupon.startsAt, coupon.endsAt || null, coupon.scopeType, coupon.scopeValue, coupon.active ? 1 : 0, coupon.createdAt, coupon.updatedAt, coupon.customerEmail).run();
       } catch (error) {
         if (String(error?.message || '').toLowerCase().includes('unique')) return json(409, { error: 'That coupon code already exists.' });
         throw error;
@@ -1791,8 +1826,8 @@ async function handleApi(request, env) {
       const current = parseCouponRow(row);
       const coupon = marketingPayload(await readJson(request), current, 'coupon');
       try {
-        await env.DB.prepare(`UPDATE coupons SET code=?, discount_type=?, discount_value=?, min_order=?, max_discount=?, usage_limit=?, per_customer_limit=?, starts_at=?, ends_at=?, scope_type=?, scope_value=?, active=?, updated_at=? WHERE id=?`)
-          .bind(coupon.code, coupon.discountType, coupon.discountValue, coupon.minOrder, coupon.maxDiscount, coupon.usageLimit, coupon.perCustomerLimit, coupon.startsAt, coupon.endsAt || null, coupon.scopeType, coupon.scopeValue, coupon.active ? 1 : 0, coupon.updatedAt, id).run();
+        await env.DB.prepare(`UPDATE coupons SET code=?, discount_type=?, discount_value=?, min_order=?, max_discount=?, usage_limit=?, per_customer_limit=?, starts_at=?, ends_at=?, scope_type=?, scope_value=?, active=?, updated_at=?, customer_email=? WHERE id=?`)
+          .bind(coupon.code, coupon.discountType, coupon.discountValue, coupon.minOrder, coupon.maxDiscount, coupon.usageLimit, coupon.perCustomerLimit, coupon.startsAt, coupon.endsAt || null, coupon.scopeType, coupon.scopeValue, coupon.active ? 1 : 0, coupon.updatedAt, coupon.customerEmail, id).run();
       } catch (error) {
         if (String(error?.message || '').toLowerCase().includes('unique')) return json(409, { error: 'That coupon code already exists.' });
         throw error;

@@ -199,6 +199,58 @@
     updateAccountButtons();
     await loadAccountOrders();
   }
+  function openTrackOrder() {
+    $('#mobile-nav').hidden = true;
+    $('#mobile-menu-toggle').setAttribute('aria-expanded', 'false');
+    $('#mobile-menu-toggle').setAttribute('aria-label', 'Open menu');
+    openLayer($('#track-order-modal'));
+    $('#track-order-error').textContent = '';
+    $('#track-order-result').hidden = true;
+    $('#track-order-form').reset();
+    setTimeout(() => $('#track-order-form')?.elements.namedItem('orderId')?.focus({ preventScroll: true }), 80);
+  }
+
+  function renderTrackedOrder(order) {
+    const statusSteps = ['New', 'Processing', 'Shipped', 'Delivered'];
+    const current = String(order.status || 'New');
+    const currentIndex = current === 'Cancelled' ? -1 : statusSteps.indexOf(current);
+    const steps = statusSteps.map((step, index) => {
+      const complete = currentIndex >= index;
+      const active = current === step;
+      return '<div class="track-step ' + (complete ? 'is-complete ' : '') + (active ? 'is-active' : '') + '"><span>' + (complete ? '✓' : (index + 1)) + '</span><strong>' + escapeHtml(step) + '</strong></div>';
+    }).join('');
+    const items = (order.items || []).map(item => '<div class="track-item">' + escapeHtml(item.name) + ' × ' + (Number(item.quantity) || 1) + '</div>').join('');
+    const date = order.createdAt ? new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(order.createdAt)) : 'Recently';
+    const cancelled = current === 'Cancelled';
+    $('#track-order-result').innerHTML =
+      '<div class="track-order-summary"><div><small>ORDER NUMBER</small><strong>' + escapeHtml(order.id) + '</strong></div><div><small>PLACED</small><strong>' + escapeHtml(date) + '</strong></div><div><small>TOTAL</small><strong>' + formatMoney(order.total) + '</strong></div></div>' +
+      (cancelled ? '<div class="track-cancelled">This order has been cancelled.</div>' : '<div class="track-progress">' + steps + '</div>') +
+      '<div class="track-order-items"><strong>Your items</strong>' + items + '</div>' +
+      '<div class="track-payment"><span>Payment</span><strong>' + escapeHtml(order.paymentStatus || 'Pending') + '</strong></div>';
+    $('#track-order-result').hidden = false;
+  }
+
+  async function submitOrderTracking(form) {
+    const button = $('button[type="submit"]', form);
+    const original = button.innerHTML;
+    $('#track-order-error').textContent = '';
+    button.disabled = true;
+    button.textContent = 'Finding your order…';
+    try {
+      const values = Object.fromEntries(new FormData(form).entries());
+      const contact = String(values.contact || '').trim();
+      const payload = { orderId: String(values.orderId || '').trim(), ...(contact.includes('@') ? { email: contact } : { phone: contact }) };
+      const result = await api('/api/order-tracking', { method: 'POST', body: JSON.stringify(payload) });
+      renderTrackedOrder(result.order);
+    } catch (error) {
+      $('#track-order-error').textContent = error.message;
+      $('#track-order-result').hidden = true;
+    } finally {
+      button.disabled = false;
+      button.innerHTML = original;
+    }
+  }
+
   async function openAccount() {
     $('#mobile-nav').hidden = true;
     $('#mobile-menu-toggle').setAttribute('aria-expanded', 'false');
@@ -930,6 +982,9 @@
     if (!value) { searchTerm = ''; $('#search-input').value = ''; renderProducts(); }
   });
   $('#open-cart').addEventListener('click', openCart);
+  $('[data-open-track-order]').forEach(link => link.addEventListener('click', event => { event.preventDefault(); openTrackOrder(); }));
+  $('#track-order-form').addEventListener('submit', event => { event.preventDefault(); submitOrderTracking(event.currentTarget); });
+  $('[data-close-track-order]').forEach(button => button.addEventListener('click', () => closeLayer($('#track-order-modal'))));
   $('#open-account').addEventListener('click', openAccount);
   $('#mobile-account-link').addEventListener('click', openAccount);
   $$('[data-account-mode]').forEach(button => button.addEventListener('click', () => setAccountMode(button.dataset.accountMode)));

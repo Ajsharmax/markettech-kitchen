@@ -390,10 +390,11 @@
     set('id', product?.id || '');
     set('name', product?.name || '');
     set('sku', product?.sku || '');
+    set('brand', product?.brand || '');
     set('colors', Array.isArray(product?.colors) ? product.colors.join(', ') : (product?.colors || ''));
     set('sizes', Array.isArray(product?.sizes) ? product.sizes.join(', ') : (product?.sizes || ''));
     set('minOrderQty', product?.minOrderQty ?? 1);
-    set('quantityDiscountPercent', product?.quantityDiscountPercent ?? 5);
+    set('quantityDiscountPercent', 5);
     const categoryInput = form.elements.namedItem('category');
     const categoryList = $('#product-category-options');
     const defaultCategories = ['Cookware', 'Prep', 'Tableware', 'Storage', 'Textiles', 'Bakeware'];
@@ -886,6 +887,7 @@
     product.price = Number(product.price);
     product.compareAt = product.compareAt === '' ? null : Number(product.compareAt);
     product.stock = Number(product.stock);
+    product.quantityDiscountPercent = 5;
     product.featured = form.elements.namedItem('featured').checked;
     const button = $('#save-product-button');
     const original = button.innerHTML;

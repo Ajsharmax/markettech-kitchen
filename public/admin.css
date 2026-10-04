@@ -73,3 +73,10 @@
 .import-progress{margin-top:14px;background:#eef1e8;border:1px solid #dfe4d6;padding:10px 12px;font-size:9px;color:#5d6d5a}
 .import-progress.is-done{background:#eaf1e7;border-color:#d5e0cd;color:#4f6a4d}
 @media(max-width:760px){.import-stat-grid{grid-template-columns:1fr 1fr}.import-table-wrap{max-height:260px}.title-actions{width:100%}.title-actions .admin-button{flex:1}}
+
+.supplier-import-status{margin-top:12px;padding:12px 14px;border:1px solid #dfe4d6;background:#f7f9f3;color:#5d6d5a}
+.supplier-import-status-title{font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#4d5c4b}
+.supplier-import-progress{height:8px;margin:9px 0 7px;border-radius:99px;background:#e3e8de;overflow:hidden}
+.supplier-import-progress span{display:block;width:0;height:100%;border-radius:inherit;background:#54734f;transition:width .2s ease}
+.supplier-import-status p{margin:0;font-size:9px;line-height:1.5;font-weight:650}
+.supplier-import-status.is-done{background:#edf5e9;border-color:#d2e0ca;color:#476348}

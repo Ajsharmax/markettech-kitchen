@@ -46,7 +46,7 @@
       <nav class="primary-nav" id="primary-nav" aria-label="Main navigation">
         <a href="#shop" data-nav-filter="all">Shop all</a>
         <a href="#shop">Categories</a>
-        <a href="/contact.html">Help &amp; contact</a>
+        <a href="#track-order" data-open-track-order>Track order</a><a href="/contact.html">Help &amp; contact</a>
       </nav>
       <div class="nav-actions"><a class="header-whatsapp-support" href="https://wa.me/917827685375?text=Hi%20MarketTech%20Team%2C%20I%20need%20some%20help%20with%20your%20website.%20Could%20you%20please%20assist%20me%3F" target="_blank" rel="noopener noreferrer" aria-label="Customer support on WhatsApp" title="Customer support"><svg class="support-wa-icon" viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><path fill="currentColor" d="M12 2.25a9.75 9.75 0 0 0-8.4 14.76L2.2 21.8l4.96-1.38A9.75 9.75 0 1 0 12 2.25Zm0 17.65a7.88 7.88 0 0 1-4.02-1.1l-.29-.17-2.94.82.81-2.86-.19-.3A7.87 7.87 0 1 1 12 19.9Zm4.33-5.88c-.24-.12-1.42-.7-1.64-.78-.22-.08-.38-.12-.54.12-.16.24-.62.78-.76.94-.14.16-.28.18-.52.06-.24-.12-1.01-.37-1.92-1.18-.71-.63-1.19-1.41-1.33-1.65-.14-.24-.02-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.54-1.31-.74-1.79-.2-.47-.4-.41-.54-.42h-.46c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.69 2.58 4.1 3.62.57.25 1.02.4 1.37.51.58.18 1.11.16 1.53.1.47-.07 1.42-.58 1.62-1.14.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28Z"/></svg><span>Support</span></a>
         <button class="icon-button search-toggle" id="search-toggle" aria-label="Search products">
@@ -63,7 +63,7 @@
       <label class="search-field"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4 4"/></svg><input type="search" id="search-input" placeholder="Try ‘cast iron’ or ‘tableware’…" autocomplete="off"><button id="close-search" aria-label="Close search">×</button></label>
     </div>
     <div class="mobile-nav" id="mobile-nav" hidden><a class="mobile-whatsapp-support" href="https://wa.me/917827685375?text=Hi%20MarketTech%20Team%2C%20I%20need%20some%20help%20with%20your%20website.%20Could%20you%20please%20assist%20me%3F" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12.04 2.5a9.46 9.46 0 0 0-8.12 14.3L2.5 21.5l4.84-1.39A9.47 9.47 0 1 0 12.04 2.5Zm0 17.05a7.55 7.55 0 0 1-3.84-1.05l-.28-.17-2.87.82.84-2.8-.18-.29a7.54 7.54 0 1 1 6.33 3.49Zm4.14-5.67c-.23-.12-1.36-.67-1.57-.74-.21-.08-.36-.12-.52.12-.15.23-.59.74-.72.89-.13.16-.27.17-.5.06-.23-.12-.96-.35-1.82-1.12-.67-.6-1.12-1.34-1.25-1.57-.13-.23-.01-.36.1-.47.1-.1.23-.27.35-.4.12-.14.15-.23.23-.39.08-.16.04-.29-.02-.41-.06-.12-.52-1.25-.71-1.71-.19-.45-.38-.39-.52-.4h-.45c-.16 0-.41.06-.62.29-.21.23-.81.79-.81 1.92s.83 2.23.95 2.39c.12.15 1.63 2.49 3.95 3.49.55.24.98.38 1.32.49.56.18 1.07.15 1.47.09.45-.07 1.36-.56 1.55-1.1.19-.54.19-1 .13-1.1-.06-.1-.21-.16-.44-.28Z"/></svg><span>WhatsApp support</span></a>
-      <a href="#shop" data-nav-filter="all">Shop all</a><a href="#shop">Categories</a><a href="/contact.html">Help &amp; contact</a><button type="button" id="mobile-account-link">Your account</button><a href="/admin">Admin panel ↗</a>
+      <a href="#shop" data-nav-filter="all">Shop all</a><a href="#shop">Categories</a><a href="#track-order" data-open-track-order>Track order</a><a href="/contact.html">Help &amp; contact</a><button type="button" id="mobile-account-link">Your account</button><a href="/admin">Admin panel ↗</a>
     </div>
   </header>
 
@@ -129,6 +129,22 @@
 
   <section class="modal account-modal" id="account-modal" role="dialog" aria-modal="true" aria-labelledby="account-title" hidden><button class="close-button modal-close" data-close-account aria-label="Close account">×</button><div id="account-auth-view"><div class="eyebrow"><span class="eyebrow-line"></span> YOUR MARKETTECH ACCOUNT</div><h2 id="account-title">A little closer<br><em>to your kitchen.</em></h2><div class="account-tabs"><button type="button" class="active" data-account-mode="login">Sign in</button><button type="button" data-account-mode="register">Create account</button></div><form id="customer-login-form" class="account-form"><label class="field">Email address<input name="email" type="email" autocomplete="email" required placeholder="you@example.com"></label><label class="field">Password<input name="password" type="password" autocomplete="current-password" required placeholder="Your password"></label><p class="account-error" id="customer-login-error" role="alert"></p><button class="button button-dark" type="submit">Sign in <span>↗</span></button></form><form id="customer-register-form" class="account-form" hidden><label class="field">Full name<input name="name" autocomplete="name" required maxlength="100" placeholder="Your name"></label><label class="field">Email address<input name="email" type="email" autocomplete="email" required placeholder="you@example.com"></label><label class="field">Phone number<input name="phone" type="tel" autocomplete="tel" required placeholder="+91 98765 43210"></label><label class="field">Password <small>1 capital · 1 small · 1 number · 1 symbol</small><input name="password" type="password" autocomplete="new-password" minlength="4" maxlength="128" pattern="(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{4,128}" title="Use a password with 1 capital letter, 1 small letter, 1 number and 1 symbol. It can be short." required placeholder="e.g. Aj@1"></label><p class="account-error" id="customer-register-error" role="alert"></p><button class="button button-dark" type="submit">Create my account <span>↗</span></button><small class="account-terms">By creating an account, you agree to the store’s <a href="#policies" data-policy="terms">terms</a> and <a href="#policies" data-policy="privacy">privacy policy</a>.</small></form></div><div id="account-profile-view" hidden><div class="eyebrow"><span class="eyebrow-line"></span> YOUR MARKETTECH ACCOUNT</div><h2 id="account-greeting">Welcome back.</h2><p class="account-email" id="account-email"></p><div class="account-orders-heading"><h3>Your orders</h3><button type="button" id="account-signout">Sign out</button></div><div class="account-orders" id="account-orders"></div></div></section>
 
+
+  <section class="modal track-order-modal" id="track-order-modal" role="dialog" aria-modal="true" aria-labelledby="track-order-title" hidden>
+    <button class="close-button modal-close" data-close-track-order aria-label="Close order tracking">×</button>
+    <div class="track-order-inner">
+      <div class="eyebrow"><span class="eyebrow-line"></span> ORDER TRACKING</div>
+      <h2 id="track-order-title">Where is your<br><em>order now?</em></h2>
+      <p class="track-order-intro">Enter your order number and the phone number or email used when you placed the order.</p>
+      <form id="track-order-form" class="track-order-form">
+        <label class="field">Order number<input name="orderId" required placeholder="MT-261004-AB12" autocomplete="off"></label>
+        <label class="field">Phone number or email<input name="contact" required placeholder="+91 98765 43210 or you@example.com" autocomplete="email"></label>
+        <p class="account-error" id="track-order-error" role="alert"></p>
+        <button class="button button-dark" type="submit">Track my order <span>↗</span></button>
+      </form>
+      <div id="track-order-result" class="track-order-result" hidden></div>
+    </div>
+  </section>
 
   <section class="modal contact-modal" id="contact-modal" role="dialog" aria-modal="true" aria-labelledby="contact-title" hidden>
     <button class="close-button modal-close" data-close-contact aria-label="Close contact">×</button>

@@ -783,3 +783,101 @@ p{font-weight:500}
 @media (max-width: 600px) { .contact-modal-inner { padding: 28px 22px; } .contact-option { padding: 14px; } .contact-option-icon { width: 40px; height: 40px; flex-basis: 40px; } }
 
 .header-whatsapp-support{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;width:auto!important;min-width:84px!important;height:36px!important;padding:0 12px!important;border:1px solid #cfe3d4!important;border-radius:999px!important;background:#f4fbf5!important;color:#25D366!important;font-size:10px!important;font-weight:750!important;letter-spacing:.03em!important;line-height:1!important;white-space:nowrap!important;text-decoration:none!important;box-sizing:border-box!important;transition:background .2s,border-color .2s,transform .2s!important}.header-whatsapp-support svg,.header-whatsapp-support .support-wa-icon{display:block!important;width:19px!important;height:19px!important;min-width:19px!important;max-width:19px!important;min-height:19px!important;max-height:19px!important;color:#25D366!important;fill:currentColor!important;stroke:none!important}.header-whatsapp-support:hover{background:#e6f8e9!important;border-color:#25D366!important;transform:translateY(-1px)!important}.mobile-whatsapp-support{display:flex!important;align-items:center;gap:9px;color:#25D366;font-weight:700}.mobile-whatsapp-support svg{width:20px;height:20px;flex:0 0 auto}@media(max-width:760px){.header-whatsapp-support{min-width:36px!important;width:36px!important;height:36px!important;padding:0!important;border-radius:50%!important}.header-whatsapp-support span{display:none!important}}
+
+/* Final compact product-focused hero */
+.hero{
+  height:360px!important;
+  min-height:360px!important;
+  background:#f4f0e7!important;
+  color:var(--ink)!important;
+  align-items:center!important;
+}
+.hero-image{
+  left:auto!important;
+  right:0!important;
+  top:0!important;
+  bottom:0!important;
+  width:42%!important;
+  background-image:url('/images/hero-kitchen.jpg')!important;
+  background-size:contain!important;
+  background-repeat:no-repeat!important;
+  background-position:center right!important;
+  transform:none!important;
+  opacity:1!important;
+}
+.hero-grain{display:none!important}
+.hero-content{
+  width:min(var(--max),calc(100% - 88px))!important;
+  margin-inline:auto!important;
+  padding:0!important;
+  z-index:2!important;
+}
+.hero-content{max-width:none!important;margin-right:42%!important}
+.hero .eyebrow{color:var(--olive-dark)!important}
+.hero h1{
+  color:var(--ink)!important;
+  font-size:clamp(48px,5.6vw,78px)!important;
+  line-height:.9!important;
+  max-width:620px!important;
+  margin:16px 0 14px!important;
+}
+.hero h1 em{color:var(--clay)!important}
+.hero-content>p{
+  color:#59635a!important;
+  font-size:13px!important;
+  line-height:1.55!important;
+  max-width:430px!important;
+}
+.hero-actions{margin-top:20px!important}
+.hero-search{
+  max-width:560px!important;
+  margin-top:16px!important;
+  box-shadow:0 8px 20px rgba(18,25,20,.1)!important;
+}
+.hero-note{
+  color:var(--olive-dark)!important;
+  right:7%!important;
+  bottom:22px!important;
+}
+.hero-counter{display:none!important}
+
+@media(max-width:720px){
+  .hero{
+    height:330px!important;
+    min-height:330px!important;
+    align-items:center!important;
+    padding:0!important;
+  }
+  .hero-image{
+    width:40%!important;
+    right:0!important;
+    opacity:.92!important;
+    background-size:contain!important;
+    background-position:center right!important;
+  }
+  .hero-content{
+    width:calc(100% - 38px)!important;
+    margin:0!important;
+    padding:0!important;
+    max-width:64%!important;
+    margin-right:auto!important;
+  }
+  .hero h1{
+    font-size:clamp(38px,10.5vw,54px)!important;
+    margin:10px 0!important;
+    max-width:290px!important;
+  }
+  .hero-content>p{font-size:10px!important;line-height:1.45!important;max-width:260px!important}
+  .hero-actions{margin-top:13px!important}
+  .hero-actions .button{min-height:40px!important;padding:0 14px!important}
+  .hero-search{width:100%!important;margin-top:12px!important}
+  .hero-search input,.hero-search button{height:40px!important}
+  .hero-note{display:none!important}
+}
+@media(max-width:380px){
+  .hero{height:300px!important;min-height:300px!important}
+  .hero-content{max-width:66%!important;width:calc(100% - 28px)!important}
+  .hero h1{font-size:37px!important}
+  .hero-content>p{font-size:9px!important}
+  .hero-search{display:none!important}
+}

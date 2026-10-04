@@ -5,7 +5,9 @@
   "description": "MarketTech Kitchen storefront with Cloudflare Pages Functions, D1 and R2",
   "scripts": {
     "check": "node --check public/app.js && node --check public/admin.js && node --check \"functions/api/[[path]].js\" && node --check \"functions/uploads/[[path]].js\"",
-    "test:import": "node tests/product-import.test.mjs"
+    "test:import": "node tests/product-import.test.mjs",
+    "test:storefront": "node tests/storefront-dom.test.mjs",
+    "test": "npm run test:import && npm run test:storefront"
   },
   "engines": {
     "node": ">=18"

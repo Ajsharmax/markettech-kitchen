@@ -8,7 +8,24 @@
   <title>MarketTech Kitchen — Good things happen in the kitchen</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/styles.css?v=4">
-  <script src="/app.js" defer></script>
+  <script>
+    window.marketTechOpenAccount = function () {
+      var modal = document.getElementById('account-modal');
+      var overlay = document.getElementById('overlay');
+      var mobileNav = document.getElementById('mobile-nav');
+      if (mobileNav) mobileNav.hidden = true;
+      if (modal) modal.hidden = false;
+      if (overlay) overlay.hidden = false;
+      document.body.classList.add('locked');
+      var form = document.getElementById('customer-login-form');
+      var register = document.getElementById('customer-register-form');
+      if (register) register.hidden = true;
+      if (form) form.hidden = false;
+      var email = form && form.elements && form.elements.namedItem('email');
+      if (email) setTimeout(function(){ email.focus({preventScroll:true}); }, 50);
+    };
+  </script>
+  <script src="/app.js?v=account-fix-1" defer></script>
 </head>
 <body>
   <div class="announcement-bar">

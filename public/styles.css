@@ -973,3 +973,5 @@ p{font-weight:500}
     gap:22px 10px !important;
   }
 }
+
+.live-promo-message{margin-top:10px;padding:10px 11px;background:#eef3e9;border:1px solid #dce6d5;color:#52654d;font-size:8px;line-height:1.55}.live-promo-message strong{display:block;font-size:9px;color:#3f573f;margin-bottom:3px}.live-promo-message span{display:block;color:#778273}.live-promo-message b{color:#4e684b}

@@ -1446,8 +1446,8 @@ async function handleApi(request, env) {
       if (!product) return json(400, { error: 'One of the items in your bag is no longer available. Please refresh and try again.' });
       const minOrderQty = Number(product.minOrderQty) || 1;
       if (line.quantity < minOrderQty) return json(400, { error: `${product.name} has a minimum order quantity of ${minOrderQty}.` });
-      if (product.colors?.length && line.color && !product.colors.includes(line.color)) return json(400, { error: `Choose a valid colour for ${product.name}.` });
-      if (product.sizes?.length && line.size && !product.sizes.includes(line.size)) return json(400, { error: `Choose a valid size for ${product.name}.` });
+      if (product.colors?.length && (!line.color || !product.colors.includes(line.color))) return json(400, { error: `Choose a valid colour for ${product.name}.` });
+      if (product.sizes?.length && (!line.size || !product.sizes.includes(line.size))) return json(400, { error: `Choose a valid size for ${product.name}.` });
     }
     for (const [id, quantity] of quantities) {
       const product = products.get(id);

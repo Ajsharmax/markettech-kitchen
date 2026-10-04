@@ -925,3 +925,33 @@ p{font-weight:500}
 @media(max-width:720px){
   .product-card .product-add{width:calc(100% - 12px)!important;margin:7px 6px 0!important;min-height:38px!important;font-size:8px!important;}
 }
+
+/* FINAL: Add to bag must always be visible below the image */
+.product-card > .product-add{
+  display:flex !important;
+  position:relative !important;
+  inset:auto !important;
+  width:calc(100% - 20px) !important;
+  margin:10px 10px 0 !important;
+  min-height:40px !important;
+  height:40px !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  transform:none !important;
+  z-index:3 !important;
+  background:#f7f5f0 !important;
+  color:#18231c !important;
+  border:1px solid rgba(56,65,54,.15) !important;
+  border-radius:10px !important;
+}
+@media(max-width:720px){
+  .product-card > .product-add{
+    width:calc(100% - 12px) !important;
+    margin:7px 6px 0 !important;
+    min-height:34px !important;
+    height:34px !important;
+    padding:0 8px !important;
+    font-size:8px !important;
+  }
+  .product-card > .product-add span:last-child{font-size:14px !important;}
+}

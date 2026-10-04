@@ -1034,3 +1034,11 @@ p{font-weight:500}
   .track-step strong { font-size: 10px; }
   .track-step span { width: 30px; height: 30px; }
 }
+
+/* Header account + order tracking */
+.header-account-group { display:flex; align-items:center; gap:12px; }
+.track-order-link { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+@media (max-width: 760px) {
+  .header-account-group { gap:8px; }
+  .track-order-link { font-size:12px; }
+}

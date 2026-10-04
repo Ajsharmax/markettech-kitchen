@@ -530,19 +530,20 @@
     if (!totalDiscount || !subtotal) return 0;
     return Math.round(totalDiscount * ((Number(item.price) * item.quantity) / subtotal));
   }
-  function addToCart(product, quantity = 1, color = '', size = '') {
-    if (!product || Number(product.stock) <= 0) return showToast('That piece is currently out of stock.');
+  function addToCart(product, quantity = 1, color = '', size = '', refreshUI = true) {
+    if (!product || Number(product.stock) <= 0) { showToast('That piece is currently out of stock.'); return false; }
     const minQty = Math.max(1, Number(product.minOrderQty) || 1);
     quantity = Math.max(minQty, Math.floor(Number(quantity) || minQty));
     const existing = Number(cart[product.id]?.quantity || 0);
-    if (existing + quantity > Number(product.stock)) return showToast(`Only ${product.stock} of this piece are available.`);
-    if (product.colors?.length && !color) return showToast('Please choose a colour.');
-    if (product.sizes?.length && !size) return showToast('Please choose a size.');
+    if (existing + quantity > Number(product.stock)) { showToast(`Only ${product.stock} of this piece are available.`); return false; }
+    if (product.colors?.length && !color) { showToast('Please choose a colour.'); return false; }
+    if (product.sizes?.length && !size) { showToast('Please choose a size.'); return false; }
     cart[product.id] = { id: product.id, quantity: existing + quantity, color, size };
     saveCart();
-    updateCartUI();
+    if (refreshUI) updateCartUI();
     trackEvent('add_to_cart', { value: Number(product.price) * quantity, currency: 'INR', item_name: product.name });
     showToast(quantity > 1 || itemCount() > 1 ? `${product.name} added to your bag. Quantity discount applied.` : `${product.name} added to your bag.`);
+    return true;
   }
   function changeQuantity(id, delta) {
     const product = products.find(item => item.id === id);
@@ -825,8 +826,18 @@
       const quantity = Math.max(minQty, Math.floor(Number($('#modal-product-quantity')?.value) || minQty));
       const color = $('#modal-product-color')?.value || '';
       const size = $('#modal-product-size')?.value || '';
-      addToCart(product, quantity, color, size);
-      closeAllLayers(); openCart();
+      button.disabled = true;
+      button.classList.add('is-adding');
+      const added = addToCart(product, quantity, color, size, false);
+      if (added) {
+        // Avoid a second full cart render. The old flow rendered the cart once
+        // inside addToCart and immediately rendered it again inside openCart.
+        closeLayer($('#product-modal'));
+        openCart();
+      } else {
+        button.disabled = false;
+        button.classList.remove('is-adding');
+      }
     }
   });
   $('#product-modal-body').addEventListener('change', event => {

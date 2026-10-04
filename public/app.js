@@ -175,6 +175,10 @@
       // Products are the critical storefront data. Load and render them first so
       // a settings/payment endpoint problem cannot make the whole catalogue disappear.
       products = await api('/api/products');
+      if (!Array.isArray(products) || products.length === 0) {
+        console.warn('MarketTech product API returned no products; using storefront fallback.');
+        products = FALLBACK_PRODUCTS.map(product => ({ ...product }));
+      }
 
       const availableProductIds = new Set(products.map(product => product.id));
       const activeWishlist = wishlist.filter(id => availableProductIds.has(id));

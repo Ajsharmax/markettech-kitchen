@@ -243,6 +243,7 @@
       else console.error('MarketTech storefront settings failed:', contentResult.reason);
       if (couponsResult.status === 'fulfilled') publicCoupons = Array.isArray(couponsResult.value) ? couponsResult.value : [];
       else publicCoupons = [];
+      updateCartUI();
 
       // Settings only decorate the catalogue. If applying them fails, keep the
       // products on screen instead of replacing the whole grid with an error.

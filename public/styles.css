@@ -963,3 +963,13 @@ p{font-weight:500}
 @media screen and (max-width:420px){
   #product-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:20px 8px !important;}
 }
+
+/* MOBILE/TABLET PORTRAIT: keep catalogue readable at two columns */
+@media screen and (max-width:900px) and (orientation:portrait){
+  #product-grid.product-grid,
+  #product-grid{
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:22px 10px !important;
+  }
+}

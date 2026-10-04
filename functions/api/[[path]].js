@@ -306,7 +306,11 @@ function publicProduct(product) {
     reviews: product.reviews,
     stock: product.stock,
     featured: product.featured,
-    description: product.description
+    description: product.description,
+    colors: Array.isArray(product.colors) ? product.colors : [],
+    sizes: Array.isArray(product.sizes) ? product.sizes : [],
+    minOrderQty: Math.max(1, Number(product.minOrderQty) || 1),
+    quantityDiscountPercent: Math.max(0, Number(product.quantityDiscountPercent) || 0)
   };
 }
 

@@ -1536,6 +1536,34 @@ async function handleApi(request, env) {
     })));
   }
 
+  if (route === '/api/order-tracking' && method === 'POST') {
+    const body = await readJson(request);
+    const orderId = String(body.orderId || '').trim().toUpperCase().slice(0, 80);
+    const phone = normalizePhone(body.phone || '');
+    const email = cleanEmail(body.email || '');
+    if (!orderId || (!phone && !email)) return json(400, { error: 'Enter your order number and the phone number or email used for the order.' });
+    const row = await env.DB.prepare('SELECT id, status, payment_status, total, created_at, data FROM orders WHERE id = ?').bind(orderId).first();
+    if (!row) return json(404, { error: 'We could not find that order. Please check the order number and try again.' });
+    const order = parseOrder(row);
+    const orderPhone = normalizePhone(order.customer?.phone || '');
+    const orderEmail = cleanEmail(order.customer?.email || '');
+    const phoneMatches = phone && orderPhone && phone.replace(/\D/g, '') === orderPhone.replace(/\D/g, '');
+    const emailMatches = email && orderEmail && email === orderEmail;
+    if (!phoneMatches && !emailMatches) return json(404, { error: 'The order number does not match the contact details provided.' });
+    return json(200, {
+      ok: true,
+      order: {
+        id: order.id,
+        createdAt: order.createdAt,
+        status: order.status,
+        paymentStatus: order.paymentStatus,
+        total: order.total,
+        items: (order.items || []).map(item => ({ name: item.name, quantity: Number(item.quantity) || 1, image: item.image || '' })),
+        customerName: order.customer?.name || ''
+      }
+    });
+  }
+
   if (route === '/api/products' && method === 'GET') {
     return json(200, (await listProducts(env))
       .filter(product => String(product.status || 'active').toLowerCase() !== 'inactive')

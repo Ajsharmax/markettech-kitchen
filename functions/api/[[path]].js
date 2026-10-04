@@ -1862,13 +1862,16 @@ async function handleApi(request, env) {
       const existingRows = await env.DB.prepare('SELECT id FROM products').all();
       const existing = new Set((existingRows.results || []).map(row => row.id));
       const added = [];
-      const skipped = [];
+      const updated = [];
       for (const product of catalog) {
-        if (existing.has(product.id)) { skipped.push(product.id); continue; }
-        await saveProductSafely(env, product);
-        added.push(product.id);
+        // Deliberately use only the original D1 columns here so this loader
+        // works whether the optional SKU column has been added or not.
+        await env.DB.prepare(
+          'INSERT INTO products (id, stock, data) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET stock = excluded.stock, data = excluded.data'
+        ).bind(product.id, product.stock, JSON.stringify(product)).run();
+        (existing.has(product.id) ? updated : added).push(product.id);
       }
-      return json(200, { ok: true, added, skipped, count: added.length });
+      return json(200, { ok: true, added, updated, count: added.length + updated.length });
     }
 
 

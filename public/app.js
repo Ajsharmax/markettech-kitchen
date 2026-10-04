@@ -858,8 +858,33 @@
     const card = event.target.closest('.product-card');
     if (!card) return;
     const product = products.find(item => item.id === card.dataset.productId);
+    if (!product) return;
     if (event.target.closest('[data-action="wishlist"]')) { toggleWishlist(product.id); return; }
-    if (event.target.closest('[data-action="add"]')) { openProductModal(product); return; }
+
+    const addButton = event.target.closest('[data-action="add"]');
+    if (addButton) {
+      // One click should be enough for normal products:
+      // Add the item, then open the bag so the customer can continue to checkout.
+      // Products with required colour/size choices still open the detail modal.
+      const hasVariants = Array.isArray(product.colors) && product.colors.length ||
+                          Array.isArray(product.sizes) && product.sizes.length;
+      if (hasVariants) {
+        openProductModal(product);
+        return;
+      }
+
+      addButton.disabled = true;
+      addButton.classList.add('is-adding');
+      const minQty = Math.max(1, Number(product.minOrderQty) || 1);
+      const added = addToCart(product, minQty, '', '', false);
+      if (added) {
+        openCart();
+      }
+      addButton.disabled = false;
+      addButton.classList.remove('is-adding');
+      return;
+    }
+
     if (event.target.closest('[data-action="view"]')) openProductModal(product);
   });
   $('#product-modal-body').addEventListener('click', event => {

@@ -519,6 +519,7 @@
     $('#bag-count').textContent = count;
     $('#drawer-count').textContent = `(${count})`;
     $('#cart-subtotal').textContent = formatMoney(subtotal);
+    renderLivePromoMessage(subtotal);
     const cartPromo = $('#cart-live-promo');
     if (cartPromo) {
       cartPromo.innerHTML = $('#live-promo-message')?.innerHTML || '';

@@ -194,8 +194,14 @@
     const shippingCopy = threshold > 0 ? `Free delivery on orders over ${formatMoney(threshold)}` : 'Free delivery on every order';
     $$('[data-free-shipping-copy]').forEach(element => { element.textContent = shippingCopy; });
     $$('[data-free-shipping-benefit]').forEach(element => { element.textContent = threshold > 0 ? `Free shipping over ${formatMoney(threshold)}` : 'Free shipping on every order'; });
-    const email = site.contactEmail || 'hello@markettech.in';
-    $$('[data-contact-email]').forEach(element => { element.href = `mailto:${email}`; });
+    // MarketTech business contact details shown publicly on the storefront.
+    // Keep these values independent from older sample settings saved in D1.
+    const email = 'primecreation.selling@gmail.com';
+    $('[data-contact-email]').forEach(element => {
+      element.href = `mailto:${email}`;
+      element.textContent = email;
+    });
+    $('[data-contact-address]').forEach(element => { element.textContent = 'Delhi · 110042'; });
     const phone = String(site.contactPhone || '').trim();
     $$('[data-contact-phone]').forEach(element => {
       element.hidden = !phone;

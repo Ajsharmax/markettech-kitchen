@@ -250,8 +250,14 @@
       $('#campaign-banner-text').textContent = offerBanner || marketing.promoBanner;
       $('#campaign-coupon').textContent = marketing.couponCode ? `Use ${marketing.couponCode}` : '';
     }
-    const whatsapp = String(marketing.whatsappNumber || '').replace(/\D/g, '');
-    if (whatsapp.length >= 10) { $('#whatsapp-cta').href = `https://wa.me/${whatsapp}`; $('#whatsapp-cta').hidden = false; }
+    const whatsapp = String(marketing.whatsappNumber || '7827685375').replace(/\D/g, '');
+    const whatsappMessage = 'Hi MarketTech Team, I need some help with my order. Could you please assist me?';
+    if (whatsapp.length >= 10) {
+      const chatUrl = `https://wa.me/${whatsapp.startsWith('91') ? whatsapp : '91' + whatsapp}?text=${encodeURIComponent(whatsappMessage)}`;
+      $('#whatsapp-cta').href = chatUrl;
+      $('#whatsapp-cta').hidden = false;
+      $('[data-contact-whatsapp]').forEach(element => { element.href = chatUrl; });
+    }
     setupTracking(marketing);
   }
   function loadTrackingScripts(marketing) {

@@ -609,7 +609,15 @@
     $('#overlay').hidden = true;
     document.body.classList.remove('locked');
   }
-  function openCart() { updateCartUI(); openLayer($('#cart-drawer')); }
+  function openCart() {
+    const drawer = $('#cart-drawer');
+    if (!drawer) return;
+    // Ignore repeated clicks while the bag is already open.
+    // This prevents expensive cart re-renders and animation restarts on rapid clicks.
+    if (!drawer.hidden) return;
+    updateCartUI();
+    openLayer(drawer);
+  }
 
   function renderModalGallery() {
     if (!modalGalleryImages.length) return;

@@ -88,3 +88,69 @@
 @media(max-width:900px){
   .admin-brand-logo{width:165px}
 }
+
+/* LIGHT MODE — professional admin interface */
+:root{
+  --admin-bg:#f6f7f3;
+  --admin-paper:#ffffff;
+  --admin-ink:#26342a;
+  --admin-muted:#737d72;
+  --admin-olive:#4f664e;
+  --admin-dark:#ffffff;
+  --admin-line:#e2e6df;
+}
+.admin-sidebar{
+  background:#ffffff;
+  color:#26342a;
+  border-right:1px solid #e2e6df;
+  box-shadow:4px 0 18px rgba(38,52,42,.04);
+}
+.sidebar-brand{color:#26342a}
+.sidebar-store{
+  background:#f6f8f4;
+  border-color:#e2e6df;
+}
+.sidebar-store small{color:#788276}
+.sidebar-label{color:#7b8579}
+.admin-nav-item{color:#59665a}
+.admin-nav-item:hover{background:#f1f4ef;color:#26342a}
+.admin-nav-item.active{
+  background:#e8efe5;
+  color:#30452f;
+}
+.nav-icon{color:#647260}
+.help-card{
+  background:#f4f7f1;
+  border-color:#e1e7dd;
+}
+.help-card strong{color:#3b4d3b}
+.help-card small{color:#7c8779}
+.admin-profile{border-top-color:#e2e6df}
+.admin-profile strong{color:#39463b}
+.admin-profile small{color:#7e887d}
+.admin-profile button{color:#697568}
+.admin-topbar{
+  background:rgba(255,255,255,.94);
+  border-bottom-color:#e2e6df;
+}
+.admin-main-wrap{background:#f6f7f3}
+.stat-card,.admin-card{box-shadow:0 1px 2px rgba(38,52,42,.025)}
+.admin-button-dark{
+  background:#344a37;
+  color:#ffffff;
+}
+.admin-button-dark:hover{background:#283c2c}
+.admin-button-light{
+  background:#ffffff;
+  border-color:#dfe4dc;
+  color:#4d5d4d;
+}
+.sidebar-brand .admin-brand-logo{
+  width:185px;
+  height:auto;
+  display:block;
+  object-fit:contain;
+}
+@media(max-width:900px){
+  .sidebar-brand .admin-brand-logo{width:165px}
+}

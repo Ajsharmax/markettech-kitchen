@@ -164,17 +164,30 @@
 
   async function loadStore() {
     try {
-      const [productData, settings, content] = await Promise.all([api('/api/products'), api('/api/config'), api('/api/storefront-settings')]);
-      products = productData;
+      // Products are the critical storefront data. Load and render them first so
+      // a settings/payment endpoint problem cannot make the whole catalogue disappear.
+      products = await api('/api/products');
+
       const availableProductIds = new Set(products.map(product => product.id));
       const activeWishlist = wishlist.filter(id => availableProductIds.has(id));
       if (activeWishlist.length !== wishlist.length) { wishlist = activeWishlist; saveWishlist(); }
-      config = settings;
-      storefrontSettings = content;
+
       renderFilters();
       renderProducts();
       syncCartWithProducts();
       updateCartUI();
+
+      // Settings are secondary. Keep the catalogue visible even if one settings
+      // request fails, while retaining the last known safe defaults.
+      const [settingsResult, contentResult] = await Promise.allSettled([
+        api('/api/config'),
+        api('/api/storefront-settings')
+      ]);
+      if (settingsResult.status === 'fulfilled') config = settingsResult.value;
+      else console.error('MarketTech config failed:', settingsResult.reason);
+      if (contentResult.status === 'fulfilled') storefrontSettings = contentResult.value;
+      else console.error('MarketTech storefront settings failed:', contentResult.reason);
+
       applyStorefrontSettings();
       renderPaymentOptions();
     } catch (error) {

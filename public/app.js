@@ -271,9 +271,7 @@
     const whatsappMessage = 'Hi MarketTech Team, I need some help with my order. Could you please assist me?';
     if (whatsapp.length >= 10) {
       const chatUrl = `https://wa.me/${whatsapp.startsWith('91') ? whatsapp : '91' + whatsapp}?text=${encodeURIComponent(whatsappMessage)}`;
-      $('#whatsapp-cta').href = chatUrl;
-      $('#whatsapp-cta').hidden = false;
-      $$('[data-contact-whatsapp]').forEach(element => { element.href = chatUrl; });
+            $$('[data-contact-whatsapp]').forEach(element => { element.href = chatUrl; });
     }
     setupTracking(marketing);
   }

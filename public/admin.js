@@ -269,10 +269,15 @@
     set('id', product?.id || '');
     set('name', product?.name || '');
     set('sku', product?.sku || '');
-    const categorySelect = form.elements.namedItem('category');
-    const existingOption = [...categorySelect.options].find(option => option.value === product?.category);
-    if (product?.category && !existingOption) categorySelect.add(new Option(product.category, product.category));
-    set('category', product?.category || '');
+    const categoryInput = form.elements.namedItem('category');
+    const categoryList = $('#product-category-options');
+    const defaultCategories = ['Cookware', 'Prep', 'Tableware', 'Storage', 'Textiles', 'Bakeware'];
+    const existingCategories = products.map(item => String(item.category || '').trim()).filter(Boolean);
+    const categories = [...new Set([...defaultCategories, ...existingCategories])].sort((a, b) => a.localeCompare(b));
+    if (categoryList) {
+      categoryList.replaceChildren(...categories.map(category => new Option(category, category)));
+    }
+    if (categoryInput) categoryInput.value = product?.category || '';
     set('image', product?.image || '/images/product-pan.jpg');
     $('#product-image-preview').src = product?.image || '/images/product-pan.jpg';
     $('#product-image-file').value = '';

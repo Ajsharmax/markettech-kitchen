@@ -542,7 +542,7 @@
     saveCart();
     updateCartUI();
     trackEvent('add_to_cart', { value: Number(product.price) * quantity, currency: 'INR', item_name: product.name });
-    showToast(quantity > 1 || itemCount() > 1 ? `${product.name} added to your bag. 5% extra-unit discount applied.` : `${product.name} added to your bag.`);
+    showToast(quantity > 1 || itemCount() > 1 ? `${product.name} added to your bag. Quantity discount applied.` : `${product.name} added to your bag.`);
   }
   function changeQuantity(id, delta) {
     const product = products.find(item => item.id === id);
@@ -575,7 +575,7 @@
       const options = [item.color && `Colour: ${item.color}`, item.size && `Size: ${item.size}`].filter(Boolean).join(' · ');
       return `<div class="cart-line" data-cart-id="${escapeHtml(item.id)}">
       <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}">
-      <div class="cart-line-main"><div class="cart-line-name">${escapeHtml(item.name)}</div><div class="cart-line-category">${escapeHtml(item.category)}${options ? ` · ${escapeHtml(options)}` : ''}</div><div class="cart-line-price">${formatMoney(Number(item.price) * item.quantity - itemDiscount)} ${itemDiscount ? `<del>${formatMoney(Number(item.price) * item.quantity)}</del>` : ''}</div>
+      <div class="cart-line-main"><div class="cart-line-name">${escapeHtml(item.name)}</div><div class="cart-line-category">${escapeHtml(item.category)}${options ? ` · ${escapeHtml(options)}` : ''}</div><div class="cart-line-price">${formatMoney(Number(item.price) * item.quantity - itemDiscount)} ${itemDiscount ? `<del>${formatMoney(Number(item.price) * item.quantity)}</del><small class="cart-line-discount-label">Quantity discount</small>` : ''}</div>
       <div class="qty-stepper"><button type="button" data-cart-action="decrease" aria-label="Decrease quantity">−</button><span>${item.quantity}</span><button type="button" data-cart-action="increase" aria-label="Increase quantity">+</button></div></div>
       <button type="button" class="cart-remove" data-cart-action="remove" aria-label="Remove ${escapeHtml(item.name)}">×</button></div>`;
     }).join('');
@@ -640,7 +640,7 @@
       sizes.length ? `<label class="product-option"><span>Size</span><select id="modal-product-size"><option value="">Choose size</option>${sizes.map(value => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join('')}</select></label>` : '',
       `<label class="product-option"><span>Quantity</span><div class="modal-qty"><button type="button" id="modal-qty-minus" aria-label="Decrease quantity">−</button><input id="modal-product-quantity" type="number" min="${minQty}" max="${Math.max(minQty, Number(product.stock) || minQty)}" value="${minQty}" inputmode="numeric"><button type="button" id="modal-qty-plus" aria-label="Increase quantity">+</button></div></label>`
     ].join('');
-    const discountText = `<div class="quantity-discount-note">Add extra units and save 5% more per unit, up to 20% of the cart total.</div>`;
+    const discountText = `<div class="quantity-discount-note">Quantity discount: add extra units and save 5% more, up to 20% of the cart total.</div>`;
     $('#product-modal-body').innerHTML = `<div class="product-detail-grid"><div class="product-detail-gallery"><div class="product-detail-image"><img id="product-gallery-main-image" src="${escapeHtml(modalGalleryImages[0])}" alt="${escapeHtml(product.name)}"><button type="button" class="gallery-arrow gallery-arrow-prev" data-gallery-step="-1" aria-label="Previous product photo">‹</button><button type="button" class="gallery-arrow gallery-arrow-next" data-gallery-step="1" aria-label="Next product photo">›</button><span class="gallery-image-count" id="product-gallery-count"></span></div><div class="product-gallery-thumbs" id="product-gallery-thumbs"></div></div>` +
       `<div class="product-detail-copy"><div class="eyebrow"><span class="eyebrow-line"></span> ${escapeHtml(product.category.toUpperCase())}</div>${product.brand ? `<div class="product-brand product-detail-brand">${escapeHtml(product.brand)}</div>` : ""}<h2 id="modal-product-name">${escapeHtml(product.name)}</h2><div class="product-detail-rating">${ratingMarkup(product)}</div><div class="product-detail-price">${formatMoney(product.price)} ${compare}</div><p>${escapeHtml(product.description || '')}</p><div class="product-option-grid">${optionFields}</div>${discountText}<div class="product-detail-stock">${Number(product.stock) > 0 ? `✳ &nbsp;In stock · ${product.stock} available` : 'Currently out of stock'}</div><div class="product-detail-actions"><button class="button button-dark detail-add" type="button" data-action="modal-add" data-id="${escapeHtml(product.id)}" ${Number(product.stock) <= 0 ? 'disabled' : ''}><span>${Number(product.stock) > 0 ? 'Add to bag' : 'Sold out'}</span><span>+</span></button><button type="button" class="detail-wishlist${wishlist.includes(product.id) ? ' is-saved' : ''}" data-action="modal-wishlist" aria-pressed="${wishlist.includes(product.id)}">${wishlist.includes(product.id) ? '♥ Saved' : '♡ Save for later'}</button></div></div></div>`;
     renderModalGallery();
@@ -659,22 +659,41 @@
     const subtotal = cartSubtotal();
     const shipping = checkoutShippingFee === null ? 49 : checkoutShippingFee;
     const coupon = publicCoupons.find(item => String(item.code).toUpperCase() === String(appliedCoupon).toUpperCase());
-    const discount = coupon ? couponDiscountPreview(coupon, subtotal) : 0;
-    $('#checkout-discount-line').hidden = !discount;
-    $('#checkout-discount').textContent = `−${formatMoney(discount)}`;
+    const couponDiscount = coupon ? couponDiscountPreview(coupon, subtotal) : 0;
+    const quantityDiscount = cartQuantityDiscount();
+    const merchandiseAfterQuantity = Math.max(0, subtotal - quantityDiscount);
+    const finalPayable = Math.max(0, merchandiseAfterQuantity - couponDiscount + shipping);
+
     $('#checkout-item-count').textContent = `${items.reduce((total, item) => total + item.quantity, 0)} ${items.length === 1 ? 'item' : 'items'}`;
     $('#checkout-items').innerHTML = items.map(item => {
-      const itemDiscount = lineDiscount(item);
+      const originalLineTotal = Number(item.price) * item.quantity;
+      const itemQuantityDiscount = lineDiscount(item);
+      const itemAfterQuantity = Math.max(0, originalLineTotal - itemQuantityDiscount);
+      const couponLineDiscount = merchandiseAfterQuantity > 0
+        ? Math.round(couponDiscount * (itemAfterQuantity / merchandiseAfterQuantity))
+        : 0;
+      const itemFinalTotal = Math.max(0, itemAfterQuantity - couponLineDiscount);
       const options = [item.color && `Colour: ${item.color}`, item.size && `Size: ${item.size}`].filter(Boolean).join(' · ');
-      return `<div class="checkout-item"><img src="${escapeHtml(item.image)}" alt=""><div class="checkout-item-name">${escapeHtml(item.name)}<small>Qty ${item.quantity}${options ? ` · ${escapeHtml(options)}` : ''}</small></div><strong>${formatMoney(item.price * item.quantity - itemDiscount)}</strong></div>`;
+      const originalMarkup = originalLineTotal > itemFinalTotal
+        ? `<del>${formatMoney(originalLineTotal)}</del>`
+        : '';
+      return `<div class="checkout-item"><img src="${escapeHtml(item.image)}" alt=""><div class="checkout-item-name">${escapeHtml(item.name)}<small>Qty ${item.quantity}${options ? ` · ${escapeHtml(options)}` : ''}</small>${originalLineTotal > itemFinalTotal ? `<small class="checkout-item-savings">You pay ${formatMoney(itemFinalTotal)}${itemQuantityDiscount ? ` · quantity save ${formatMoney(itemQuantityDiscount)}` : ''}${couponLineDiscount ? ` · coupon save ${formatMoney(couponLineDiscount)}` : ''}</small>` : ''}</div><strong>${formatMoney(itemFinalTotal)} ${originalMarkup}</strong></div>`;
     }).join('');
-    const quantityDiscount = cartQuantityDiscount();
+
     $('#checkout-subtotal').textContent = formatMoney(subtotal);
-    $('#checkout-discount-line').hidden = !quantityDiscount && !discount;
-    $('#checkout-discount').textContent = quantityDiscount || discount ? `−${formatMoney(quantityDiscount + discount)}` : '−₹0';
+
+    const quantityLine = $('#checkout-quantity-discount-line');
+    const couponLine = $('#checkout-coupon-discount-line');
+    if (quantityLine) quantityLine.hidden = !quantityDiscount;
+    if (couponLine) couponLine.hidden = !couponDiscount;
+    if (quantityDiscount) $('#checkout-quantity-discount').textContent = `−${formatMoney(quantityDiscount)}`;
+    if (couponDiscount) $('#checkout-coupon-discount').textContent = `−${formatMoney(couponDiscount)}`;
+
     $('#checkout-shipping').textContent = shipping ? formatMoney(shipping) : 'On us';
-    $('#checkout-total').textContent = formatMoney(subtotal - quantityDiscount - discount + shipping);
-    $('.summary-note').textContent = 'Delivery: ₹49 Delhi NCR · ₹99 within 500 km of Delhi · ₹149 elsewhere in India.';
+    $('#checkout-total').textContent = formatMoney(finalPayable);
+    $('.summary-note').textContent = couponDiscount
+      ? `Coupon ${coupon.code} applied · you pay ${formatMoney(finalPayable)} including delivery.`
+      : 'Delivery: ₹49 Delhi NCR · ₹99 within 500 km of Delhi · ₹149 elsewhere in India.';
     renderLivePromoMessage(subtotal);
   }
   function loadExternalScript(src) {

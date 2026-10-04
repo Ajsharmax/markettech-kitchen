@@ -38,6 +38,29 @@
     const date = new Date(value);
     return new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }).format(date);
   };
+  const dateTimeShort = value => {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '—';
+    return new Intl.DateTimeFormat('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    }).format(date);
+  };
+  const timeShort = value => {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '—';
+    return new Intl.DateTimeFormat('en-IN', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    }).format(date);
+  };
   const timeAgo = value => {
     const days = Math.floor((Date.now() - new Date(value).getTime()) / 86400000);
     if (days <= 0) return 'Today';
@@ -264,7 +287,7 @@
     const customer = order.customer || {};
     const count = (order.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
     const statusOptions = statuses.map(status => `<option value="${status}"${status === order.status ? ' selected' : ''}>${status}</option>`).join('');
-    if (full) return `<tr data-order-id="${escapeHtml(order.id)}"><td><span class="order-id">${escapeHtml(order.id)}</span></td><td><div class="customer-cell"><strong>${escapeHtml(customer.name || 'Customer')}</strong><small>${escapeHtml(customer.phone || '')}</small></div></td><td class="date-cell">${escapeHtml(timeAgo(order.createdAt))}</td><td>${count} ${count === 1 ? 'item' : 'items'}</td><td><span class="order-total">${formatMoney(order.total)}</span></td><td><select class="inline-select" data-status-select aria-label="Change status for ${escapeHtml(order.id)}">${statusOptions}</select></td><td class="order-row-actions"><button type="button" data-action="view-order" aria-label="View order">↗</button></td></tr>`;
+    if (full) return `<tr data-order-id="${escapeHtml(order.id)}"><td><span class="order-id">${escapeHtml(order.id)}</span></td><td><div class="customer-cell"><strong>${escapeHtml(customer.name || 'Customer')}</strong><small>${escapeHtml(customer.phone || '')}</small></div></td><td class="date-cell"><span>${escapeHtml(timeAgo(order.createdAt))}</span><small class="order-time">${escapeHtml(timeShort(order.createdAt))}</small></td><td>${count} ${count === 1 ? 'item' : 'items'}</td><td><span class="order-total">${formatMoney(order.total)}</span></td><td><select class="inline-select" data-status-select aria-label="Change status for ${escapeHtml(order.id)}">${statusOptions}</select></td><td class="order-row-actions"><button type="button" data-action="view-order" aria-label="View order">↗</button></td></tr>`;
     return `<tr data-order-id="${escapeHtml(order.id)}"><td><span class="order-id">${escapeHtml(order.id)}</span></td><td><div class="customer-cell"><strong>${escapeHtml(customer.name || 'Customer')}</strong><small>${escapeHtml(customer.phone || '')}</small></div></td><td class="date-cell">${escapeHtml(timeAgo(order.createdAt))}</td><td><span class="order-total">${formatMoney(order.total)}</span></td><td><span class="status-pill ${statusClass(order.status)}">${escapeHtml(order.status || 'New')}</span></td><td><button type="button" class="row-view" data-action="view-order" aria-label="View order">↗</button></td></tr>`;
   }
 
@@ -429,7 +452,7 @@
     const currentPaymentStatus = order.paymentStatus || (order.paymentMethod === 'Cash on Delivery' ? 'Due on delivery' : 'Pending');
     const paymentOptions = ['Pending', 'Paid', 'Due on delivery', 'Failed'].map(status => `<option value="${status}"${status === currentPaymentStatus ? ' selected' : ''}>${status}</option>`).join('');
     $('#order-detail-content').innerHTML = `<div class="detail-topline"><strong>${escapeHtml(order.id)}</strong><span class="status-pill ${statusClass(order.status)}">${escapeHtml(order.status || 'New')}</span></div>
-      <div class="detail-customer"><div class="detail-info"><small>Placed on</small><strong>${escapeHtml(dateShort(order.createdAt))}</strong></div><div class="detail-info"><small>Payment method</small><strong>${escapeHtml(order.paymentMethod || 'Cash on Delivery')}</strong></div><div class="detail-info"><small>Customer</small><strong>${escapeHtml(customer.name || '')}</strong></div><div class="detail-info"><small>Phone</small><strong>${escapeHtml(customer.phone || '')}</strong></div>${customer.email ? `<div class="detail-info"><small>Email</small><strong>${escapeHtml(customer.email)}</strong></div>` : ''}</div>
+      <div class="detail-customer"><div class="detail-info"><small>Placed on</small><strong>${escapeHtml(dateTimeShort(order.createdAt))}</strong></div><div class="detail-info"><small>Payment method</small><strong>${escapeHtml(order.paymentMethod || 'Cash on Delivery')}</strong></div><div class="detail-info"><small>Customer</small><strong>${escapeHtml(customer.name || '')}</strong></div><div class="detail-info"><small>Phone</small><strong>${escapeHtml(customer.phone || '')}</strong></div>${customer.email ? `<div class="detail-info"><small>Email</small><strong>${escapeHtml(customer.email)}</strong></div>` : ''}</div>
       <label class="payment-status-control">Payment status<select id="detail-payment-status" data-order-id="${escapeHtml(order.id)}">${paymentOptions}</select></label>
       <div class="detail-items">${items.map(item => `<div class="detail-item"><img src="${escapeHtml(item.image || '/images/product-pan.jpg')}" alt=""><div><strong>${escapeHtml(item.name)}</strong><small>Qty ${Number(item.quantity)} × ${formatMoney(item.price)}</small></div><span>${formatMoney(Number(item.price) * Number(item.quantity))}</span></div>`).join('')}</div>
       <div class="detail-totals"><div><span>Subtotal</span><span>${formatMoney(order.subtotal)}</span></div>${Number(order.discount) ? `<div><span>Promo ${escapeHtml(order.discountCode || '')}</span><span>−${formatMoney(order.discount)}</span></div>` : ''}<div><span>Delivery</span><span>${Number(order.shipping) ? formatMoney(order.shipping) : 'On us'}</span></div><div><strong>Total due</strong><strong>${formatMoney(order.total)}</strong></div></div>

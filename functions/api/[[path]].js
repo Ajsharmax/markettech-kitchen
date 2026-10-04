@@ -1419,8 +1419,13 @@ async function handleApi(request, env) {
     const phone = normalizePhone(body.phone);
     const phoneDigits = phone.replace(/\D/g, '');
     const password = String(body.password || '');
-    if (!name || !email || phoneDigits.length < 10 || phoneDigits.length > 15 || password.length < 10 || password.length > 128) {
-      return json(400, { error: 'Enter your name, a valid email, a 10–15 digit phone number and a password of 10–128 characters.' });
+    const passwordValid = password.length >= 8 && password.length <= 128
+      && /[A-Z]/.test(password)
+      && /[a-z]/.test(password)
+      && /\d/.test(password)
+      && /[^A-Za-z0-9]/.test(password);
+    if (!name || !email || phoneDigits.length < 10 || phoneDigits.length > 15 || !passwordValid) {
+      return json(400, { error: 'Use a password with at least 8 characters, including 1 capital letter, 1 small letter, 1 number and 1 symbol.' });
     }
     const existing = await env.DB.prepare('SELECT id FROM customers WHERE email = ?').bind(email).first();
     if (existing) return json(409, { error: 'An account with that email already exists. Sign in instead.' });

@@ -1485,6 +1485,7 @@ async function handleApi(request, env) {
     const settings = await getSettings(env);
     const freeShippingAt = Number.isFinite(Number(settings.site.freeShippingAt)) ? Number(settings.site.freeShippingAt) : DEFAULT_FREE_SHIPPING_AT;
     const shippingFee = Number.isFinite(Number(settings.site.shippingFee)) ? Number(settings.site.shippingFee) : DEFAULT_SHIPPING_FEE;
+    const shipping = subtotal >= freeShippingAt ? 0 : shippingFee;
     const requestedCoupon = String(body.couponCode || '').trim();
     let discount = 0;
     if (requestedCoupon) {

@@ -602,7 +602,7 @@
     if (!card) return;
     const product = products.find(item => item.id === card.dataset.productId);
     if (event.target.closest('[data-action="wishlist"]')) { toggleWishlist(product.id); return; }
-    if (event.target.closest('[data-action="add"]')) addToCart(product);
+    if (event.target.closest('[data-action="add"]')) { openProductModal(product); return; }
     if (event.target.closest('[data-action="view"]')) openProductModal(product);
   });
   $('#product-modal-body').addEventListener('click', event => {

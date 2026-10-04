@@ -955,3 +955,11 @@ p{font-weight:500}
   }
   .product-card > .product-add span:last-child{font-size:14px !important;}
 }
+
+/* FINAL MOBILE CATALOGUE: two products per row for readability */
+@media screen and (max-width:720px){
+  #product-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:22px 10px !important;}
+}
+@media screen and (max-width:420px){
+  #product-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:20px 8px !important;}
+}

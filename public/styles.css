@@ -887,3 +887,10 @@ p{font-weight:500}
 @media (max-width: 720px){
   .product-grid{grid-template-columns:1fr !important;gap:24px !important;}
 }
+
+/* FINAL responsive catalogue layout */
+@media (max-width: 720px){
+  #product-grid.product-grid,
+  .product-grid{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-auto-flow:row!important;gap:24px!important;width:100%!important;}
+  #product-grid .product-card{width:100%!important;min-width:0!important;}
+}

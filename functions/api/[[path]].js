@@ -359,10 +359,13 @@ function productPayload(input, existing = {}) {
   const minOrderQty = Number.isInteger(rawMinQty) ? Math.min(99, Math.max(1, rawMinQty)) : 1;
   const rawDiscount = Object.hasOwn(input, 'quantityDiscountPercent') ? Number(input.quantityDiscountPercent) : Number(existing.quantityDiscountPercent ?? 5);
   const quantityDiscountPercent = Number.isFinite(rawDiscount) ? Math.min(20, Math.max(0, rawDiscount)) : 5;
+  const requestedStatus = Object.hasOwn(input, 'status') ? String(input.status || '').trim().toLowerCase() : String(existing.status || 'active').trim().toLowerCase();
+  const status = requestedStatus === 'inactive' ? 'inactive' : 'active';
   const product = {
     ...existing,
     name,
     category,
+    status,
     price: Math.round(price),
     compareAt: Number.isFinite(Number(input.compareAt)) && Number(input.compareAt) > price ? Math.round(Number(input.compareAt)) : null,
     stock,
@@ -1397,7 +1400,9 @@ async function handleApi(request, env) {
   }
 
   if (route === '/api/products' && method === 'GET') {
-    return json(200, (await listProducts(env)).filter(product => product.status !== 'inactive').map(publicProduct));
+    return json(200, (await listProducts(env))
+      .filter(product => String(product.status || 'active').toLowerCase() !== 'inactive')
+      .map(publicProduct));
   }
 
   if (route === '/api/newsletter' && method === 'POST') {
@@ -1444,7 +1449,9 @@ async function handleApi(request, env) {
 
     const productList = await productsByIds(env, [...quantities.keys()]);
     if (productList.length !== quantities.size) return json(400, { error: 'One of the items in your bag is no longer available. Please refresh and try again.' });
-    const products = new Map(productList.filter(product => product.status !== 'inactive').map(product => [product.id, product]));
+    const products = new Map(productList
+      .filter(product => String(product.status || 'active').toLowerCase() !== 'inactive')
+      .map(product => [product.id, product]));
     if (products.size !== quantities.size) return json(400, { error: 'One of the items in your bag is no longer available. Please refresh and try again.' });
     const orderItems = [];
     let subtotal = 0;

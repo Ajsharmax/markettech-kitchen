@@ -1643,7 +1643,7 @@ async function handleApi(request, env) {
     if (!batch?.[1]?.meta?.changes) return json(409, { error: 'Stock changed while you were checking out. Please refresh your bag and try again.' });
     if (couponRecord) {
       const claimed = await env.DB.prepare('UPDATE coupons SET used_count = used_count + 1, updated_at = ? WHERE id = ? AND (usage_limit = 0 OR used_count < usage_limit)').bind(new Date().toISOString(), couponRecord.id).run();
-      if (!claimed?.meta?.changes) return json(409, { error: 'That promo code was just used up. Please remove it and try again.' });
+      // The order is already committed; keep the purchase intact if another checkout won the last usage slot.
     }
 
     const responseOrder = { id: order.id, total: order.total, status: order.status, paymentMethod: order.paymentMethod, paymentStatus: order.paymentStatus };

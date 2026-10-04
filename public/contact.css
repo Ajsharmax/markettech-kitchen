@@ -1,0 +1,46 @@
+.contact-page{background:#f7f5ef;color:#172019}
+.contact-header{position:relative}
+.contact-nav-button{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 17px;border:1px solid #c9ccc2;text-decoration:none;color:#233228;font-size:11px;font-weight:800}
+.contact-nav-button:hover{background:#173126;color:#fff}
+.contact-main{min-height:calc(100vh - 190px);padding:70px 20px 90px}
+.contact-hero{width:min(980px,100%);margin:0 auto}
+.contact-eyebrow{display:flex;align-items:center;gap:10px;color:#4c5b4f;font-size:11px;font-weight:900;letter-spacing:.14em}
+.contact-eyebrow span{width:28px;height:1px;background:#607263}
+.contact-hero h1{margin:20px 0 20px;font-family:Georgia,"Times New Roman",serif;font-size:clamp(54px,7vw,88px);font-weight:400;line-height:.95;letter-spacing:-.045em}
+.contact-hero h1 em{color:#3f604c}
+.contact-lead{max-width:690px;margin:0 0 40px;color:#5b665d;font-size:17px;line-height:1.75;font-weight:500}
+.contact-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.contact-card{display:grid;grid-template-columns:58px 1fr;gap:20px;padding:28px;text-decoration:none;color:inherit;background:#fffdf8;border:1px solid #d3d5cc;border-radius:20px;box-shadow:0 12px 30px rgba(24,34,27,.06);transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+.contact-card:hover{transform:translateY(-4px);border-color:#9ead9f;box-shadow:0 18px 38px rgba(24,34,27,.10)}
+.contact-card-icon{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:#304936;color:#fff;font-size:22px}
+.contact-card-copy{min-width:0}
+.contact-card-label{font-size:10px;letter-spacing:.13em;font-weight:900;color:#788278}
+.contact-card h2{margin:7px 0 5px;font-family:Georgia,"Times New Roman",serif;font-size:30px;font-weight:400}
+.contact-card strong{display:block;color:#304936;font-size:14px;word-break:break-word}
+.contact-card p{margin:12px 0 18px;color:#687168;font-size:13px;line-height:1.65}
+.contact-card-action{font-size:12px;font-weight:900;color:#bd6f4e}
+.contact-card-action b{font-size:15px}
+.contact-help-box{display:flex;gap:15px;align-items:flex-start;margin:24px 0;padding:18px 20px;background:#edf2e9;border:1px solid #d6dfd0}
+.contact-help-mark{color:#c97854;font-size:20px}
+.contact-help-box strong{font-size:13px;color:#304936}
+.contact-help-box p{margin:4px 0 0;color:#59655c;font-size:13px;line-height:1.55}
+.contact-footer-actions{display:flex;gap:12px;flex-wrap:wrap}
+.contact-footer-actions .button{min-width:180px;justify-content:center}
+.contact-footer{margin-top:0}
+@media(max-width:760px){
+ .contact-main{padding:50px 17px 70px}
+ .contact-grid{grid-template-columns:1fr}
+ .contact-card{padding:22px}
+ .contact-hero h1{font-size:clamp(48px,13vw,70px)}
+ .contact-lead{font-size:15px}
+ .primary-nav{display:none}
+ .contact-header .nav-shell{grid-template-columns:auto 1fr auto}
+ .contact-header .brand{justify-self:start}
+}
+@media(max-width:480px){
+ .contact-card{grid-template-columns:46px 1fr;gap:13px}
+ .contact-card-icon{width:46px;height:46px;font-size:18px}
+ .contact-card h2{font-size:26px}
+ .contact-footer-actions{display:grid;grid-template-columns:1fr}
+ .contact-footer-actions .button{width:100%}
+}

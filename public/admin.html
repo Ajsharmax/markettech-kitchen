@@ -8,7 +8,9 @@
   <title>Store admin — MarketTech Kitchen</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/admin.css?v=logo-size-1">
+  <link rel="stylesheet" href="/admin-crm.css?v=1">
   <script src="/admin.js" defer></script>
+  <script src="/admin-crm.js" defer></script>
 </head>
 <body class="admin-body">
   <main id="login-screen" class="login-screen" hidden>
@@ -25,10 +27,13 @@
         <button class="admin-nav-item active" data-page="overview"><span class="nav-icon">▦</span> Overview</button>
         <button class="admin-nav-item" data-page="orders"><span class="nav-icon">▤</span> Orders <span class="nav-count" id="nav-pending-count">0</span></button>
         <button class="admin-nav-item" data-page="customers"><span class="nav-icon">♙</span> Customers</button>
+        <button class="admin-nav-item" data-page="crm"><span class="nav-icon">◎</span> CRM</button>
         <button class="admin-nav-item" data-page="products"><span class="nav-icon">◫</span> Products</button>
         <button class="admin-nav-item" data-page="inventory"><span class="nav-icon">▥</span> Inventory</button>
         <button class="admin-nav-item" data-page="website"><span class="nav-icon">✎</span> Website &amp; policies</button>
         <button class="admin-nav-item" data-page="integrations"><span class="nav-icon">⌘</span> Integrations &amp; ads</button>
+        <button class="admin-nav-item" data-page="marketing"><span class="nav-icon">✦</span> Coupons &amp; offers</button>
+        <button class="admin-nav-item" data-page="developer"><span class="nav-icon">⌘</span> Developer</button>
       </nav>
       <div class="sidebar-label sidebar-label-lower">YOUR STORE</div>
       <nav class="admin-nav"><a class="admin-nav-item" href="/"><span class="nav-icon">↗</span> View storefront</a></nav>
@@ -81,7 +86,77 @@
           <form id="policies-form" class="settings-form"><section class="admin-card settings-card"><div class="settings-card-heading"><div><h2>Website policies</h2><p>Editable policy copy shown to customers. Have local legal counsel review it before launch.</p></div><span>03</span></div><div class="settings-grid"><label class="admin-field full-field">Shipping policy<textarea name="shipping" rows="4" maxlength="8000"></textarea></label><label class="admin-field full-field">Returns &amp; refunds policy<textarea name="returns" rows="4" maxlength="8000"></textarea></label><label class="admin-field full-field">Privacy policy<textarea name="privacy" rows="4" maxlength="10000"></textarea></label><label class="admin-field full-field">Terms &amp; conditions<textarea name="terms" rows="4" maxlength="10000"></textarea></label></div><div class="settings-actions"><span>Policies open in a storefront panel when customers select a footer link.</span><button class="admin-button admin-button-dark" type="submit">Save policies ↗</button></div></section></form>
         </section>
 
-        <section class="admin-page" id="page-integrations" hidden>
+        
+        <section class="admin-page" id="page-crm" hidden>
+          <div class="page-title-row"><div><div class="admin-eyebrow">CUSTOMER RELATIONSHIP MANAGEMENT</div><h1>Customer <em>CRM.</em></h1><p>Segments, tags, notes, lifetime value and order history — built into your store.</p></div><button class="admin-button admin-button-light" id="crm-refresh">↻ &nbsp; Refresh CRM</button></div>
+          <div class="crm-kpi-grid">
+            <article class="crm-kpi"><span>Total customers</span><strong id="crm-total-customers">0</strong><small>Registered accounts</small></article>
+            <article class="crm-kpi"><span>VIP customers</span><strong id="crm-vip-customers">0</strong><small>High-value relationships</small></article>
+            <article class="crm-kpi"><span>Repeat buyers</span><strong id="crm-repeat-customers">0</strong><small>2+ non-cancelled orders</small></article>
+            <article class="crm-kpi"><span>At risk</span><strong id="crm-risk-customers">0</strong><small>No recent order</small></article>
+          </div>
+          <section class="admin-card full-table-card"><div class="table-toolbar"><div><strong>Customer workspace</strong><small>Search, segment and open a customer profile.</small></div><div class="crm-toolbar"><label class="admin-search"><span>⌕</span><input id="crm-search" type="search" placeholder="Search customer, email or phone…"></label><select id="crm-segment-filter"><option value="all">All segments</option><option>VIP</option><option>Repeat</option><option>New</option><option>At risk</option><option>General</option></select></div></div><div class="table-wrap"><table><thead><tr><th>CUSTOMER</th><th>SEGMENT</th><th>ORDERS</th><th>LIFETIME VALUE</th><th>LAST ORDER</th><th>TAGS</th><th></th></tr></thead><tbody id="crm-customer-rows"></tbody></table></div><div class="admin-empty" id="crm-empty" hidden><span>◎</span><strong>No customers match</strong><small>Try another search or segment.</small></div></section>
+        </section>
+
+        <section class="admin-page" id="page-marketing" hidden>
+          <div class="page-title-row"><div><div class="admin-eyebrow">CAMPAIGNS &amp; PROMOTIONS</div><h1>Coupons &amp; <em>offers.</em></h1><p>Create reusable coupon codes and schedule product/category offers with start and end dates.</p></div></div>
+          <div class="marketing-grid">
+            <section class="admin-card campaign-form-card"><div class="card-heading"><div><h2>Create coupon</h2><p>Flexible discount rules with usage limits and targeting.</p></div><span class="crm-badge">COUPON</span></div>
+              <form id="coupon-form" class="settings-form"><div class="settings-grid">
+                <label class="admin-field">Code<input name="code" maxlength="40" required placeholder="WELCOME10"></label>
+                <label class="admin-field">Discount type<select name="discountType"><option value="percent">Percentage</option><option value="fixed">Fixed ₹</option></select></label>
+                <label class="admin-field">Discount value<input name="discountValue" type="number" min="1" required placeholder="10"></label>
+                <label class="admin-field">Minimum order ₹<input name="minOrder" type="number" min="0" value="0"></label>
+                <label class="admin-field">Maximum discount ₹<input name="maxDiscount" type="number" min="0" value="0"><small>0 = no cap.</small></label>
+                <label class="admin-field">Usage limit<input name="usageLimit" type="number" min="0" value="0"><small>0 = unlimited.</small></label>
+                <label class="admin-field">Per customer limit<input name="perCustomerLimit" type="number" min="0" value="0"></label>
+                <label class="admin-field">Starts<input name="startsAt" type="datetime-local" required></label>
+                <label class="admin-field">Ends<input name="endsAt" type="datetime-local"></label>
+                <label class="admin-field">Applies to<select name="scopeType"><option value="all">Entire store</option><option value="category">Category</option><option value="product">Specific product</option></select></label>
+                <label class="admin-field full-field">Target<input name="scopeValue" placeholder="Category name or product ID"></label>
+              </div><div class="settings-actions"><span id="coupon-form-message">Coupon is inactive until you enable it.</span><label class="inline-toggle"><input type="checkbox" name="active" checked><span>Active</span></label><button class="admin-button admin-button-dark" type="submit">Create coupon ↗</button></div></form>
+            </section>
+            <section class="admin-card campaign-form-card"><div class="card-heading"><div><h2>Schedule an offer</h2><p>Run automatic promotions for a product or category for a defined period.</p></div><span class="crm-badge">TIMELINE</span></div>
+              <form id="offer-form" class="settings-form"><div class="settings-grid">
+                <label class="admin-field full-field">Campaign name<input name="name" maxlength="100" required placeholder="GetFit Bath Week"></label>
+                <label class="admin-field">Discount type<select name="type"><option value="percent">Percentage</option><option value="fixed">Fixed ₹</option></select></label>
+                <label class="admin-field">Discount value<input name="value" type="number" min="1" required placeholder="15"></label>
+                <label class="admin-field">Applies to<select name="scopeType"><option value="all">Entire store</option><option value="category">Category</option><option value="product">Specific product</option></select></label>
+                <label class="admin-field full-field">Target<input name="scopeValue" placeholder="Bath &amp; Personal Care or product ID"></label>
+                <label class="admin-field">Start date &amp; time<input name="startsAt" type="datetime-local" required></label>
+                <label class="admin-field">End date &amp; time<input name="endsAt" type="datetime-local" required></label>
+                <label class="admin-field full-field">Customer-facing banner<input name="banner" maxlength="180" placeholder="15% off selected bath essentials this week"></label>
+              </div><div class="settings-actions"><span>Only the best active offer is applied to eligible items.</span><label class="inline-toggle"><input type="checkbox" name="active" checked><span>Active</span></label><button class="admin-button admin-button-dark" type="submit">Schedule offer ↗</button></div></form>
+            </section>
+          </div>
+          <section class="admin-card full-table-card campaign-table-card"><div class="card-heading"><div><h2>Coupon vault</h2><p>Manage every code without touching the checkout code.</p></div></div><div class="table-wrap"><table><thead><tr><th>CODE</th><th>DISCOUNT</th><th>RULE</th><th>DATES</th><th>USAGE</th><th>STATUS</th><th></th></tr></thead><tbody id="coupon-rows"></tbody></table></div></section>
+          <section class="admin-card full-table-card campaign-table-card"><div class="card-heading"><div><h2>Offer timeline</h2><p>Upcoming, live and completed promotions.</p></div></div><div class="offer-timeline" id="offer-timeline"></div></section>
+        </section>
+
+        <section class="admin-page" id="page-developer" hidden>
+          <div class="page-title-row"><div><div class="admin-eyebrow">ADVANCED STORE CONTROLS</div><h1>Developer <em>tools.</em></h1><p>Change storefront wording and advanced configuration without editing the code for every small copy change.</p></div><span class="developer-warning">Advanced</span></div>
+          <section class="admin-card settings-card developer-card"><div class="settings-card-heading"><div><h2>Text overrides</h2><p>Override common customer-facing words and phrases. Leave a value blank to use the built-in text.</p></div><span>01</span></div>
+            <div class="settings-grid" id="developer-text-fields">
+              <label class="admin-field full-field">Announcement override<input name="announcement" maxlength="180" placeholder="Leave blank to use Website content"></label>
+              <label class="admin-field">Shop button<input name="heroPrimaryCta" maxlength="60" placeholder="Shop the collection"></label>
+              <label class="admin-field">Secondary button<input name="heroSecondaryCta" maxlength="60" placeholder="A little about us"></label>
+              <label class="admin-field">Story button<input name="storyCta" maxlength="60" placeholder="Meet your new favourite"></label>
+              <label class="admin-field">Product section label<input name="shopEyebrow" maxlength="80"></label>
+              <label class="admin-field">Product section title<input name="shopTitle1" maxlength="90"></label>
+              <label class="admin-field">Product section title 2<input name="shopTitle2" maxlength="90"></label>
+              <label class="admin-field">Newsletter title<input name="newsletterTitle1" maxlength="90"></label>
+              <label class="admin-field">Newsletter title 2<input name="newsletterTitle2" maxlength="90"></label>
+              <label class="admin-field full-field">Custom checkout reassurance<input name="checkoutReassurance" maxlength="180" placeholder="Secure checkout · Easy support"></label>
+            </div>
+            <div class="settings-actions"><span>Text overrides are stored separately from your normal website content.</span><button class="admin-button admin-button-dark" id="save-developer-text" type="button">Save text overrides ↗</button></div>
+          </section>
+          <section class="admin-card settings-card developer-card"><div class="settings-card-heading"><div><h2>Advanced configuration</h2><p>JSON is for structured settings only. Do not paste passwords, API keys or secrets here.</p></div><span>02</span></div>
+            <label class="admin-field full-field">Developer JSON<textarea id="developer-json" rows="14" spellcheck="false" placeholder='{"textOverrides":{"cartEmpty":"Your bag is ready for something good."}}'></textarea></label>
+            <div class="settings-actions"><span>We validate and store the JSON as configuration.</span><button class="admin-button admin-button-dark" id="save-developer-json" type="button">Save advanced configuration ↗</button></div>
+          </section>
+          <section class="admin-card developer-note"><strong>Safe by design</strong><p>This panel changes content/configuration. It does not execute arbitrary JavaScript or expose Cloudflare secrets in the browser.</p></section>
+        </section>
+<section class="admin-page" id="page-integrations" hidden>
           <div class="page-title-row"><div><div class="admin-eyebrow">CONNECT YOUR COMMERCE STACK</div><h1>Integrations &amp; <em>growth.</em></h1><p>Payment connections, analytics, ads and marketing details in one place.</p></div><button class="admin-button admin-button-light" id="refresh-integrations">↻ &nbsp; Refresh status</button></div>
           <div class="integration-status-grid"><article class="admin-card integration-card"><div class="integration-card-top"><span class="integration-icon payment-integration-icon">₹</span><span class="connection-pill" id="razorpay-status">Checking</span></div><h2>Razorpay payments</h2><p>Secure online checkout for cards, netbanking, wallets and UPI through Razorpay.</p><div class="integration-detail" id="razorpay-detail">Checking your server configuration…</div><div class="env-snippet"><code>RAZORPAY_KEY_ID=rzp_test_…<br>RAZORPAY_KEY_SECRET=…<br>RAZORPAY_MODE=test</code><button type="button" id="copy-env-snippet">Copy setup snippet</button></div><small class="integration-footnote">Add these in Cloudflare Pages → Settings → Variables and Secrets, then deploy again. Store the secret privately; never paste it into storefront code.</small></article>
           <article class="admin-card integration-card"><div class="integration-card-top"><span class="integration-icon upi-integration-icon">UPI</span><span class="connection-pill" id="upi-status">Checking</span></div><h2>Direct UPI</h2><p>Customers can launch their UPI app with the amount and order number pre-filled.</p><div class="integration-detail" id="upi-detail">Set your UPI ID in Website &amp; policies → Contact &amp; store operations.</div><small class="integration-footnote">Direct UPI intent is not payment verification. Confirm receipt in your bank/UPI app before marking an order paid. Razorpay provides automated verification.</small></article>

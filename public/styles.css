@@ -883,14 +883,28 @@ p{font-weight:500}
 }
 
 
-/* Mobile catalogue: one product per row */
-@media (max-width: 720px){
-  .product-grid{grid-template-columns:1fr !important;gap:24px !important;}
-}
-
 /* FINAL responsive catalogue layout */
 @media (max-width: 720px){
   #product-grid.product-grid,
   .product-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-auto-flow:row!important;gap:14px 8px!important;width:100%!important;}
   #product-grid .product-card{width:100%!important;min-width:0!important;}
+}
+
+/* MOBILE: exactly 3 product cards per row */
+@media screen and (max-width: 720px){
+  #product-grid{
+    display:grid !important;
+    grid-template-columns:repeat(3, minmax(0, 1fr)) !important;
+    grid-template-rows:none !important;
+    gap:16px 8px !important;
+    width:100% !important;
+  }
+  #product-grid > .product-card{
+    width:auto !important;
+    min-width:0 !important;
+    max-width:none !important;
+  }
+}
+@media screen and (max-width: 420px){
+  #product-grid{grid-template-columns:repeat(3, minmax(0,1fr)) !important;gap:14px 6px !important;}
 }

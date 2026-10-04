@@ -908,3 +908,20 @@ p{font-weight:500}
 @media screen and (max-width: 420px){
   #product-grid{grid-template-columns:repeat(3, minmax(0,1fr)) !important;gap:14px 6px !important;}
 }
+
+/* Product image stays fully clear; Add to bag sits below it on every device */
+.product-card .product-add{
+  position:relative!important;
+  left:auto!important;right:auto!important;bottom:auto!important;
+  width:calc(100% - 20px)!important;
+  margin:10px 10px 0!important;
+  min-height:42px!important;
+  opacity:1!important;
+  transform:none!important;
+  border:1px solid rgba(56,65,54,.12)!important;
+  border-radius:0!important;
+}
+.product-card .product-add:hover{transform:none!important;}
+@media(max-width:720px){
+  .product-card .product-add{width:calc(100% - 12px)!important;margin:7px 6px 0!important;min-height:38px!important;font-size:8px!important;}
+}

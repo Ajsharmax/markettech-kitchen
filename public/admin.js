@@ -213,7 +213,7 @@
   }
 
   function openPage(page) {
-    if (!['overview', 'products', 'orders', 'customers', 'inventory', 'website', 'integrations'].includes(page)) return;
+    if (!['overview', 'products', 'orders', 'customers', 'crm', 'inventory', 'website', 'integrations', 'marketing', 'developer'].includes(page)) return;
     currentPage = page;
     $$('.admin-page').forEach(section => { section.hidden = section.id !== `page-${page}`; });
     $$('.admin-nav-item[data-page]').forEach(button => button.classList.toggle('active', button.dataset.page === page));

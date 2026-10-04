@@ -310,6 +310,13 @@ function publicProduct(product) {
   };
 }
 
+function normaliseList(value, fallback = []) {
+  if (Array.isArray(value)) return value;
+  const text = String(value ?? '').trim();
+  if (!text) return fallback;
+  return text.split(',').map(item => item.trim()).filter(Boolean);
+}
+
 function productPayload(input, existing = {}) {
   const name = String(input.name || '').trim().slice(0, 100);
   const category = String(input.category || '').trim().slice(0, 40);
@@ -334,6 +341,12 @@ function productPayload(input, existing = {}) {
   if (images.length > 8) throw new HttpError(400, 'A product can have up to 8 photos.');
   if (images.some(value => !validImagePath(value))) throw new HttpError(400, 'One of the product photos has an invalid image path.');
   const sku = (Object.hasOwn(input, 'sku') ? String(input.sku ?? '') : String(existing.sku ?? '')).trim().slice(0, 64);
+  const colors = [...new Set(normaliseList(Object.hasOwn(input, 'colors') ? input.colors : existing.colors).map(item => String(item).trim().slice(0, 40)).filter(Boolean))].slice(0, 12);
+  const sizes = [...new Set(normaliseList(Object.hasOwn(input, 'sizes') ? input.sizes : existing.sizes).map(item => String(item).trim().slice(0, 24)).filter(Boolean))].slice(0, 12);
+  const rawMinQty = Object.hasOwn(input, 'minOrderQty') ? Number(input.minOrderQty) : Number(existing.minOrderQty || 1);
+  const minOrderQty = Number.isInteger(rawMinQty) ? Math.min(99, Math.max(1, rawMinQty)) : 1;
+  const rawDiscount = Object.hasOwn(input, 'quantityDiscountPercent') ? Number(input.quantityDiscountPercent) : Number(existing.quantityDiscountPercent ?? 5);
+  const quantityDiscountPercent = Number.isFinite(rawDiscount) ? Math.min(20, Math.max(0, rawDiscount)) : 5;
   const product = {
     ...existing,
     name,
@@ -344,6 +357,10 @@ function productPayload(input, existing = {}) {
     description,
     image,
     images,
+    colors,
+    sizes,
+    minOrderQty,
+    quantityDiscountPercent,
     tag: String(input.tag || '').trim().slice(0, 32),
     featured: Boolean(input.featured),
     rating: Number(existing.rating || 4.8),
@@ -352,6 +369,12 @@ function productPayload(input, existing = {}) {
   if (sku) product.sku = sku;
   else delete product.sku;
   return product;
+}
+
+function quantityDiscountForLine(product, quantity) {
+  const unitDiscount = Number(product.quantityDiscountPercent) || 0;
+  if (quantity < 2 || unitDiscount <= 0) return 0;
+  return Math.min(50, Math.max(0, (quantity - 1) * unitDiscount));
 }
 
 function updateSettings(current, input) {
@@ -1392,12 +1415,16 @@ async function handleApi(request, env) {
     const inputItems = Array.isArray(body.items) ? body.items : [];
     if (!inputItems.length || inputItems.length > 50) return json(400, { error: 'Your bag is empty.' });
     const quantities = new Map();
+    const requestedLines = [];
     for (const item of inputItems) {
       const id = String(item.id || '');
       const quantity = Number(item.quantity);
+      const color = String(item.color || '').trim().slice(0, 40);
+      const size = String(item.size || '').trim().slice(0, 24);
       if (!id || !Number.isInteger(quantity) || quantity < 1 || quantity > 99) {
         return json(400, { error: 'One of the items in your bag is no longer available. Please refresh and try again.' });
       }
+      requestedLines.push({ id, quantity, color, size });
       const combined = (quantities.get(id) || 0) + quantity;
       if (combined > 99) return json(400, { error: 'Please reduce the quantity of one of the items in your bag.' });
       quantities.set(id, combined);
@@ -1409,25 +1436,43 @@ async function handleApi(request, env) {
     if (products.size !== quantities.size) return json(400, { error: 'One of the items in your bag is no longer available. Please refresh and try again.' });
     const orderItems = [];
     let subtotal = 0;
+    let quantityDiscount = 0;
+    for (const line of requestedLines) {
+      const product = products.get(line.id);
+      if (!product) return json(400, { error: 'One of the items in your bag is no longer available. Please refresh and try again.' });
+      const minOrderQty = Number(product.minOrderQty) || 1;
+      if (line.quantity < minOrderQty) return json(400, { error: `${product.name} has a minimum order quantity of ${minOrderQty}.` });
+      if (product.colors?.length && line.color && !product.colors.includes(line.color)) return json(400, { error: `Choose a valid colour for ${product.name}.` });
+      if (product.sizes?.length && line.size && !product.sizes.includes(line.size)) return json(400, { error: `Choose a valid size for ${product.name}.` });
+    }
     for (const [id, quantity] of quantities) {
       const product = products.get(id);
       if (!product) return json(400, { error: 'One of the items in your bag is no longer available. Please refresh and try again.' });
       if (product.stock < quantity) return json(409, { error: `Only ${product.stock} left in stock for ${product.name}. Please update your bag.` });
-      orderItems.push({ id: product.id, name: product.name, price: product.price, image: product.image, quantity });
-      subtotal += Number(product.price) * quantity;
+    }
+    for (const line of requestedLines) {
+      const product = products.get(line.id);
+      const lineSubtotal = Number(product.price) * line.quantity;
+      const quantityDiscountPercent = quantityDiscountForLine(product, line.quantity);
+      const lineDiscount = Math.round(lineSubtotal * quantityDiscountPercent / 100);
+      orderItems.push({
+        id: product.id, name: product.name, price: product.price, image: product.image, quantity: line.quantity,
+        color: line.color, size: line.size, quantityDiscountPercent, lineDiscount
+      });
+      subtotal += lineSubtotal;
+      quantityDiscount += lineDiscount;
     }
 
     const settings = await getSettings(env);
     const freeShippingAt = Number.isFinite(Number(settings.site.freeShippingAt)) ? Number(settings.site.freeShippingAt) : DEFAULT_FREE_SHIPPING_AT;
     const shippingFee = Number.isFinite(Number(settings.site.shippingFee)) ? Number(settings.site.shippingFee) : DEFAULT_SHIPPING_FEE;
-    const shipping = subtotal >= freeShippingAt ? 0 : shippingFee;
     const requestedCoupon = String(body.couponCode || '').trim();
     let discount = 0;
     if (requestedCoupon) {
       const expectedCoupon = String(settings.marketing.couponCode || '');
       const percent = Number(settings.marketing.discountPercent) || 0;
       if (!expectedCoupon || requestedCoupon.toUpperCase() !== expectedCoupon.toUpperCase() || percent < 1) return json(400, { error: 'That promo code is not active.' });
-      discount = Math.round(subtotal * percent / 100);
+      discount = Math.round((subtotal - quantityDiscount) * percent / 100);
     }
 
     const requestedPayment = String(body.paymentMethod || 'cod').toLowerCase();
@@ -1454,7 +1499,8 @@ async function handleApi(request, env) {
       discount,
       discountCode: discount ? requestedCoupon : '',
       shipping,
-      total: subtotal - discount + shipping,
+      quantityDiscount,
+      total: subtotal - discount - quantityDiscount + shipping,
       paymentMethod: requestedPayment === 'cod' ? 'Cash on Delivery' : requestedPayment === 'upi' ? 'UPI' : 'Razorpay',
       paymentStatus: requestedPayment === 'cod' ? 'Due on delivery' : 'Pending',
       status: 'New'

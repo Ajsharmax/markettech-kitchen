@@ -188,8 +188,12 @@
       if (contentResult.status === 'fulfilled') storefrontSettings = contentResult.value;
       else console.error('MarketTech storefront settings failed:', contentResult.reason);
 
-      applyStorefrontSettings();
-      renderPaymentOptions();
+      // Settings only decorate the catalogue. If applying them fails, keep the
+      // products on screen instead of replacing the whole grid with an error.
+      try { applyStorefrontSettings(); }
+      catch (error) { console.error('MarketTech storefront content failed:', error); }
+      try { renderPaymentOptions(); }
+      catch (error) { console.error('MarketTech payment options failed:', error); }
     } catch (error) {
       $('#product-grid').innerHTML = `<div class="store-error"><span>✳</span><h3>Our shelves are getting ready.</h3><p>Please refresh in a moment.</p></div>`;
       console.error(error);
@@ -210,11 +214,11 @@
     // MarketTech business contact details shown publicly on the storefront.
     // Keep these values independent from older sample settings saved in D1.
     const email = 'primecreation.selling@gmail.com';
-    $('[data-contact-email]').forEach(element => {
+    $$('[data-contact-email]').forEach(element => {
       element.href = `mailto:${email}`;
       element.textContent = email;
     });
-    $('[data-contact-address]').forEach(element => { element.textContent = 'Delhi · 110042'; });
+    $$('[data-contact-address]').forEach(element => { element.textContent = 'Delhi · 110042'; });
     const phone = String(site.contactPhone || '').trim();
     $$('[data-contact-phone]').forEach(element => {
       element.hidden = !phone;
@@ -647,7 +651,7 @@
       closeAllLayers(); openCart();
     }
   });
-  $('#modal-product-body').addEventListener('change', event => {
+  $('#product-modal-body').addEventListener('change', event => {
     // Quantity/option controls are handled in click/change events inside the modal.
     if (event.target.id === 'modal-product-quantity' && activeModalProduct) {
       const minQty = Math.max(1, Number(activeModalProduct.minOrderQty) || 1);
@@ -829,21 +833,28 @@
     }
   });
 
-  $('#newsletter-form').addEventListener('submit', async event => {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const email = $('#newsletter-email').value;
-    const message = $('#newsletter-message');
-    const button = $('button', form);
-    button.disabled = true;
-    try {
-      const result = await api('/api/newsletter', { method: 'POST', body: JSON.stringify({ email }) });
-      message.textContent = result.message;
-      form.classList.add('is-success');
-      $('#newsletter-email').value = '';
-    } catch (error) { message.textContent = error.message; }
-    finally { button.disabled = false; }
-  });
+  // The newsletter section is optional: some storefronts are published without it.
+  // Guard the element lookups so a missing section can never stop the rest of the
+  // store (the product catalogue in particular) from loading.
+  const newsletterForm = $('#newsletter-form');
+  const newsletterEmail = $('#newsletter-email');
+  const newsletterMessage = $('#newsletter-message');
+  if (newsletterForm && newsletterEmail && newsletterMessage) {
+    newsletterForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const message = newsletterMessage;
+      const button = $('button', form);
+      button.disabled = true;
+      try {
+        const result = await api('/api/newsletter', { method: 'POST', body: JSON.stringify({ email: newsletterEmail.value }) });
+        message.textContent = result.message;
+        form.classList.add('is-success');
+        newsletterEmail.value = '';
+      } catch (error) { message.textContent = error.message; }
+      finally { button.disabled = false; }
+    });
+  }
 
   $('#year').textContent = new Date().getFullYear();
   updateAccountButtons();

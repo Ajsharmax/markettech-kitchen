@@ -75,7 +75,7 @@ Customer passwords are hashed with PBKDF2-SHA256 at a 20,000-iteration work fact
 
 ## Source checks
 
-The repository includes a dependency-free `npm run check` command for JavaScript syntax checks and `npm run test:import`, which runs the bulk importer end to end against a temporary SQLite database (needs Node 22.5+ for `node:sqlite`). The deployed site runs on Cloudflare Pages Functions; it does not run the old Node file server or use local JSON files for production data.
+The repository includes a dependency-free `npm run check` command for JavaScript syntax checks, `npm run test:import`, which runs the bulk importer end to end against a temporary SQLite database (needs Node 22.5+ for `node:sqlite`), and `npm run test:storefront`, which verifies that every element the storefront and admin scripts look up actually exists on their pages (a single typo there stops the whole script and hides the catalogue). `npm test` runs both test suites. The deployed site runs on Cloudflare Pages Functions; it does not run the old Node file server or use local JSON files for production data.
 
 ## Important launch notes
 

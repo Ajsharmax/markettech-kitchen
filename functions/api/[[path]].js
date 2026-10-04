@@ -315,6 +315,7 @@ function publicProduct(product) {
     stock: product.stock,
     featured: product.featured,
     description: product.description,
+    brand: String(product.brand || '').trim(),
     colors: Array.isArray(product.colors) ? product.colors : [],
     sizes: Array.isArray(product.sizes) ? product.sizes : [],
     minOrderQty: Math.max(1, Number(product.minOrderQty) || 1),
@@ -357,8 +358,8 @@ function productPayload(input, existing = {}) {
   const sizes = [...new Set(normaliseList(Object.hasOwn(input, 'sizes') ? input.sizes : existing.sizes).map(item => String(item).trim().slice(0, 24)).filter(Boolean))].slice(0, 12);
   const rawMinQty = Object.hasOwn(input, 'minOrderQty') ? Number(input.minOrderQty) : Number(existing.minOrderQty || 1);
   const minOrderQty = Number.isInteger(rawMinQty) ? Math.min(99, Math.max(1, rawMinQty)) : 1;
-  const rawDiscount = Object.hasOwn(input, 'quantityDiscountPercent') ? Number(input.quantityDiscountPercent) : Number(existing.quantityDiscountPercent ?? 5);
-  const quantityDiscountPercent = Number.isFinite(rawDiscount) ? Math.min(20, Math.max(0, rawDiscount)) : 5;
+  const quantityDiscountPercent = 5;
+  const brand = String(Object.hasOwn(input, 'brand') ? input.brand ?? '' : existing.brand ?? '').trim().slice(0, 64);
   const requestedStatus = Object.hasOwn(input, 'status') ? String(input.status || '').trim().toLowerCase() : String(existing.status || 'active').trim().toLowerCase();
   const status = requestedStatus === 'inactive' ? 'inactive' : 'active';
   const product = {
@@ -376,6 +377,7 @@ function productPayload(input, existing = {}) {
     sizes,
     minOrderQty,
     quantityDiscountPercent,
+    brand,
     tag: String(input.tag || '').trim().slice(0, 32),
     featured: Boolean(input.featured),
     rating: Number(existing.rating || 4.8),
@@ -386,10 +388,8 @@ function productPayload(input, existing = {}) {
   return product;
 }
 
-function quantityDiscountForLine(product, quantity) {
-  const unitDiscount = Number(product.quantityDiscountPercent) || 0;
-  if (quantity < 2 || unitDiscount <= 0) return 0;
-  return Math.min(50, Math.max(0, (quantity - 1) * unitDiscount));
+function quantityDiscountPercentForCart(totalQuantity) {
+  return Math.min(20, Math.max(0, (Math.max(0, Number(totalQuantity) - 1)) * 5));
 }
 
 function updateSettings(current, input) {
@@ -1455,31 +1455,24 @@ async function handleApi(request, env) {
     if (products.size !== quantities.size) return json(400, { error: 'One of the items in your bag is no longer available. Please refresh and try again.' });
     const orderItems = [];
     let subtotal = 0;
-    let quantityDiscount = 0;
-    for (const line of requestedLines) {
-      const product = products.get(line.id);
-      if (!product) return json(400, { error: 'One of the items in your bag is no longer available. Please refresh and try again.' });
-      const minOrderQty = Number(product.minOrderQty) || 1;
-      if (line.quantity < minOrderQty) return json(400, { error: `${product.name} has a minimum order quantity of ${minOrderQty}.` });
-      if (product.colors?.length && (!line.color || !product.colors.includes(line.color))) return json(400, { error: `Choose a valid colour for ${product.name}.` });
-      if (product.sizes?.length && (!line.size || !product.sizes.includes(line.size))) return json(400, { error: `Choose a valid size for ${product.name}.` });
-    }
-    for (const [id, quantity] of quantities) {
-      const product = products.get(id);
-      if (!product) return json(400, { error: 'One of the items in your bag is no longer available. Please refresh and try again.' });
-      if (product.stock < quantity) return json(409, { error: `Only ${product.stock} left in stock for ${product.name}. Please update your bag.` });
-    }
     for (const line of requestedLines) {
       const product = products.get(line.id);
       const lineSubtotal = Number(product.price) * line.quantity;
-      const quantityDiscountPercent = quantityDiscountForLine(product, line.quantity);
-      const lineDiscount = Math.round(lineSubtotal * quantityDiscountPercent / 100);
       orderItems.push({
         id: product.id, name: product.name, price: product.price, image: product.image, quantity: line.quantity,
-        color: line.color, size: line.size, quantityDiscountPercent, lineDiscount
+        color: line.color, size: line.size, quantityDiscountPercent: 0, lineDiscount: 0
       });
       subtotal += lineSubtotal;
-      quantityDiscount += lineDiscount;
+    }
+    const totalQuantity = requestedLines.reduce((sum, line) => sum + Number(line.quantity || 0), 0);
+    const quantityDiscountPercent = quantityDiscountPercentForCart(totalQuantity);
+    const quantityDiscount = Math.round(subtotal * quantityDiscountPercent / 100);
+    if (quantityDiscount) {
+      for (const item of orderItems) {
+        const lineSubtotal = Number(item.price) * Number(item.quantity);
+        item.quantityDiscountPercent = quantityDiscountPercent;
+        item.lineDiscount = Math.round(quantityDiscount * (lineSubtotal / subtotal));
+      }
     }
 
     const settings = await getSettings(env);

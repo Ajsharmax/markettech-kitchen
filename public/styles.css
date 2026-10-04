@@ -662,9 +662,10 @@ p{font-weight:500}
 }
 @media(max-width:800px){
   .hero{
-    min-height:560px;
-    height:auto;
-    padding:68px 0 55px;
+    min-height:500px;
+    height:500px;
+    box-sizing:border-box;
+    padding:35px 0;
   }
   .hero-search{
     width:100%;

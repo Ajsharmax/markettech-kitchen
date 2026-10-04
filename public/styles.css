@@ -708,3 +708,34 @@ p{font-weight:500}
 .checkout-brand .brand-logo{width:220px}
 @media (max-width:900px){.brand-logo{width:185px;max-height:58px}.brand-footer .brand-logo,.checkout-brand .brand-logo{width:205px}}
 @media (max-width:620px){.brand-logo{width:160px;max-height:52px}}
+
+
+/* FINAL MarketTECH logo lock — prevents clipping on desktop and mobile */
+.brand{
+  min-width:0;
+}
+.brand-logo{
+  display:block !important;
+  width:210px !important;
+  height:auto !important;
+  max-width:210px !important;
+  max-height:none !important;
+  min-width:0 !important;
+  object-fit:contain !important;
+  object-position:center !important;
+  flex:0 0 auto !important;
+}
+.brand-footer .brand-logo{width:230px !important;max-width:230px !important}
+.checkout-brand .brand-logo{width:220px !important;max-width:220px !important}
+@media(max-width:720px){
+  .brand{width:180px !important;max-width:180px !important;overflow:visible !important;justify-self:center !important}
+  .brand-logo{width:180px !important;max-width:180px !important}
+  .brand-footer{width:205px !important;max-width:205px !important;justify-self:start !important}
+  .brand-footer .brand-logo{width:205px !important;max-width:205px !important}
+  .checkout-brand{width:205px !important;max-width:205px !important}
+  .checkout-brand .brand-logo{width:205px !important;max-width:205px !important}
+}
+@media(max-width:380px){
+  .brand{width:165px !important;max-width:165px !important}
+  .brand-logo{width:165px !important;max-width:165px !important}
+}

@@ -483,14 +483,14 @@
   }
   function closeLayer(layer) {
     if (layer) layer.hidden = true;
-    const anyOpen = ['#cart-drawer', '#product-modal', '#checkout-modal', '#success-modal', '#policy-modal', '#account-modal'].some(selector => !$(selector).hidden);
+    const anyOpen = ['#cart-drawer', '#product-modal', '#checkout-modal', '#success-modal', '#policy-modal', '#account-modal', '#contact-modal'].some(selector => !$(selector).hidden);
     if (!anyOpen) {
       $('#overlay').hidden = true;
       document.body.classList.remove('locked');
     }
   }
   function closeAllLayers() {
-    ['#cart-drawer', '#product-modal', '#checkout-modal', '#success-modal', '#policy-modal', '#account-modal'].forEach(selector => { $(selector).hidden = true; });
+    ['#cart-drawer', '#product-modal', '#checkout-modal', '#success-modal', '#policy-modal', '#account-modal', '#contact-modal'].forEach(selector => { $(selector).hidden = true; });
     $('#overlay').hidden = true;
     document.body.classList.remove('locked');
   }
@@ -723,6 +723,15 @@
     document.querySelector('#shop').scrollIntoView({ behavior: 'smooth' });
   });
   document.addEventListener('click', event => {
+    const contactLink = event.target.closest('[data-contact-open]');
+    if (!contactLink) return;
+    event.preventDefault();
+    $('#mobile-nav').hidden = true;
+    $('#mobile-menu-toggle').setAttribute('aria-expanded', 'false');
+    $('#mobile-menu-toggle').setAttribute('aria-label', 'Open menu');
+    openLayer($('#contact-modal'));
+  });
+  document.addEventListener('click', event => {
     const policyLink = event.target.closest('[data-policy]');
     if (!policyLink) return;
     event.preventDefault();
@@ -821,6 +830,8 @@
     $('#mobile-menu-toggle').setAttribute('aria-expanded', 'false');
     $('#mobile-menu-toggle').setAttribute('aria-label', 'Open menu');
   });
+
+  $('[data-close-contact]').forEach(button => button.addEventListener('click', () => closeLayer($('#contact-modal'))));
 
   $('#apply-coupon').addEventListener('click', () => {
     const entered = $('#coupon-input').value.trim().toUpperCase();

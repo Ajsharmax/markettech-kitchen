@@ -1808,8 +1808,8 @@ async function handleApi(request, env) {
       const body = await readJson(request);
       const coupon = marketingPayload(body, {}, 'coupon');
       try {
-        await env.DB.prepare(`INSERT INTO coupons (id, code, discount_type, discount_value, min_order, max_discount, usage_limit, used_count, per_customer_limit, starts_at, ends_at, scope_type, scope_value, active, created_at, updated_at)
-          undefined`)
+        await env.DB.prepare(`INSERT INTO coupons (id, code, discount_type, discount_value, min_order, max_discount, usage_limit, used_count, per_customer_limit, starts_at, ends_at, scope_type, scope_value, active, created_at, updated_at, customer_email)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
           .bind(coupon.id, coupon.code, coupon.discountType, coupon.discountValue, coupon.minOrder, coupon.maxDiscount, coupon.usageLimit, 0, coupon.perCustomerLimit, coupon.startsAt, coupon.endsAt || null, coupon.scopeType, coupon.scopeValue, coupon.active ? 1 : 0, coupon.createdAt, coupon.updatedAt, coupon.customerEmail).run();
       } catch (error) {
         if (String(error?.message || '').toLowerCase().includes('unique')) return json(409, { error: 'That coupon code already exists.' });

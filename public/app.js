@@ -340,7 +340,7 @@
         <button class="product-add" type="button" data-action="add" ${outOfStock ? 'disabled' : ''}><span>${outOfStock ? 'Sold out' : 'Add to bag'}</span><span aria-hidden="true">${outOfStock ? '—' : '+'}</span></button>
       </div>
       <div class="product-info"><div class="product-meta"><h3 class="product-name">${escapeHtml(product.name)}</h3><span class="product-rating">${ratingMarkup(product)}</span></div>
-        <div class="product-category">${escapeHtml(product.category)}</div>
+        ${product.brand ? `<div class="product-brand">${escapeHtml(product.brand)}</div>` : ""}<div class="product-category">${escapeHtml(product.category)}</div>
         <div class="product-price-row"><span class="product-price">${formatMoney(product.price)}</span>${compare}<span class="product-stock">${outOfStock ? 'Out of stock' : Number(product.stock) <= 5 ? `Only ${Number(product.stock)} left` : ''}</span></div>
       </div>
     </article>`;
@@ -386,17 +386,19 @@
   function itemCount() {
     return currentCartItems().reduce((sum, item) => sum + item.quantity, 0);
   }
-  function quantityDiscountPercent(product, quantity) {
-    const perExtra = Number(product?.quantityDiscountPercent) || 0;
-    if (quantity < 2 || perExtra <= 0) return 0;
-    return Math.min(50, (quantity - 1) * perExtra);
-  }
-  function lineDiscount(item) {
-    const percent = quantityDiscountPercent(item, item.quantity);
-    return Math.round(Number(item.price) * item.quantity * percent / 100);
+  function cartDiscountPercent() {
+    const extraUnits = Math.max(0, itemCount() - 1);
+    return Math.min(20, extraUnits * 5);
   }
   function cartQuantityDiscount() {
-    return currentCartItems().reduce((sum, item) => sum + lineDiscount(item), 0);
+    const subtotal = cartSubtotal();
+    return Math.round(subtotal * cartDiscountPercent() / 100);
+  }
+  function lineDiscount(item) {
+    const totalDiscount = cartQuantityDiscount();
+    const subtotal = cartSubtotal();
+    if (!totalDiscount || !subtotal) return 0;
+    return Math.round(totalDiscount * ((Number(item.price) * item.quantity) / subtotal));
   }
   function addToCart(product, quantity = 1, color = '', size = '') {
     if (!product || Number(product.stock) <= 0) return showToast('That piece is currently out of stock.');
@@ -410,7 +412,7 @@
     saveCart();
     updateCartUI();
     trackEvent('add_to_cart', { value: Number(product.price) * quantity, currency: 'INR', item_name: product.name });
-    showToast(quantity > 1 ? `${product.name} added to your bag. Quantity discount applied.` : `${product.name} added to your bag.`);
+    showToast(quantity > 1 || itemCount() > 1 ? `${product.name} added to your bag. 5% extra-unit discount applied.` : `${product.name} added to your bag.`);
   }
   function changeQuantity(id, delta) {
     const product = products.find(item => item.id === id);
@@ -502,9 +504,9 @@
       sizes.length ? `<label class="product-option"><span>Size</span><select id="modal-product-size"><option value="">Choose size</option>${sizes.map(value => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join('')}</select></label>` : '',
       `<label class="product-option"><span>Quantity</span><div class="modal-qty"><button type="button" id="modal-qty-minus" aria-label="Decrease quantity">−</button><input id="modal-product-quantity" type="number" min="${minQty}" max="${Math.max(minQty, Number(product.stock) || minQty)}" value="${minQty}" inputmode="numeric"><button type="button" id="modal-qty-plus" aria-label="Increase quantity">+</button></div></label>`
     ].join('');
-    const discountText = Number(product.quantityDiscountPercent) > 0 ? `<div class="quantity-discount-note">Buy 2+ and save 5% for each additional unit.</div>` : '';
+    const discountText = `<div class="quantity-discount-note">Add extra units and save 5% more per unit, up to 20% of the cart total.</div>`;
     $('#product-modal-body').innerHTML = `<div class="product-detail-grid"><div class="product-detail-gallery"><div class="product-detail-image"><img id="product-gallery-main-image" src="${escapeHtml(modalGalleryImages[0])}" alt="${escapeHtml(product.name)}"><button type="button" class="gallery-arrow gallery-arrow-prev" data-gallery-step="-1" aria-label="Previous product photo">‹</button><button type="button" class="gallery-arrow gallery-arrow-next" data-gallery-step="1" aria-label="Next product photo">›</button><span class="gallery-image-count" id="product-gallery-count"></span></div><div class="product-gallery-thumbs" id="product-gallery-thumbs"></div></div>` +
-      `<div class="product-detail-copy"><div class="eyebrow"><span class="eyebrow-line"></span> ${escapeHtml(product.category.toUpperCase())}</div><h2 id="modal-product-name">${escapeHtml(product.name)}</h2><div class="product-detail-rating">${ratingMarkup(product)}</div><div class="product-detail-price">${formatMoney(product.price)} ${compare}</div><p>${escapeHtml(product.description || '')}</p><div class="product-option-grid">${optionFields}</div>${discountText}<div class="product-detail-stock">${Number(product.stock) > 0 ? `✳ &nbsp;In stock · ${product.stock} available` : 'Currently out of stock'}</div><div class="product-detail-actions"><button class="button button-dark detail-add" type="button" data-action="modal-add" data-id="${escapeHtml(product.id)}" ${Number(product.stock) <= 0 ? 'disabled' : ''}><span>${Number(product.stock) > 0 ? 'Add to bag' : 'Sold out'}</span><span>+</span></button><button type="button" class="detail-wishlist${wishlist.includes(product.id) ? ' is-saved' : ''}" data-action="modal-wishlist" aria-pressed="${wishlist.includes(product.id)}">${wishlist.includes(product.id) ? '♥ Saved' : '♡ Save for later'}</button></div></div></div>`;
+      `<div class="product-detail-copy"><div class="eyebrow"><span class="eyebrow-line"></span> ${escapeHtml(product.category.toUpperCase())}</div>${product.brand ? `<div class="product-brand product-detail-brand">${escapeHtml(product.brand)}</div>` : ""}<h2 id="modal-product-name">${escapeHtml(product.name)}</h2><div class="product-detail-rating">${ratingMarkup(product)}</div><div class="product-detail-price">${formatMoney(product.price)} ${compare}</div><p>${escapeHtml(product.description || '')}</p><div class="product-option-grid">${optionFields}</div>${discountText}<div class="product-detail-stock">${Number(product.stock) > 0 ? `✳ &nbsp;In stock · ${product.stock} available` : 'Currently out of stock'}</div><div class="product-detail-actions"><button class="button button-dark detail-add" type="button" data-action="modal-add" data-id="${escapeHtml(product.id)}" ${Number(product.stock) <= 0 ? 'disabled' : ''}><span>${Number(product.stock) > 0 ? 'Add to bag' : 'Sold out'}</span><span>+</span></button><button type="button" class="detail-wishlist${wishlist.includes(product.id) ? ' is-saved' : ''}" data-action="modal-wishlist" aria-pressed="${wishlist.includes(product.id)}">${wishlist.includes(product.id) ? '♥ Saved' : '♡ Save for later'}</button></div></div></div>`;
     renderModalGallery();
     openLayer($('#product-modal'));
   }

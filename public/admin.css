@@ -80,3 +80,11 @@
 .supplier-import-progress span{display:block;width:0;height:100%;border-radius:inherit;background:#54734f;transition:width .2s ease}
 .supplier-import-status p{margin:0;font-size:9px;line-height:1.5;font-weight:650}
 .supplier-import-status.is-done{background:#edf5e9;border-color:#d2e0ca;color:#476348}
+
+/* Unified MarketTECH v2 logo */
+.admin-brand-logo{display:block;width:185px;height:auto;max-width:100%;object-fit:contain;object-position:left center}
+.admin-mobile-logo{display:block;width:165px;height:auto;max-width:100%;object-fit:contain}
+.sidebar-brand .admin-brand-logo{width:185px}
+@media(max-width:900px){
+  .admin-brand-logo{width:165px}
+}

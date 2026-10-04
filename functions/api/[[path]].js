@@ -274,9 +274,17 @@ function parseOrder(row) {
 
 async function getSettings(env) {
   const row = await env.DB.prepare("SELECT data FROM store_settings WHERE id = 'default'").first();
-  if (!row) return normalizeSettings(DEFAULT_SETTINGS);
-  try { return normalizeSettings(JSON.parse(row.data)); }
-  catch { return normalizeSettings(DEFAULT_SETTINGS); }
+  let settings;
+  if (!row) settings = normalizeSettings(DEFAULT_SETTINGS);
+  else {
+    try { settings = normalizeSettings(JSON.parse(row.data)); }
+    catch { settings = normalizeSettings(DEFAULT_SETTINGS); }
+  }
+  // Storefront pricing uses free delivery for customers. The margin/pricing pool
+  // is intended to absorb delivery rather than adding a delivery charge at checkout.
+  settings.site.shippingFee = 0;
+  settings.site.freeShippingAt = 0;
+  return settings;
 }
 
 async function listProducts(env) {
@@ -1647,6 +1655,28 @@ async function handleApi(request, env) {
       await env.UPLOADS.put(key, bytes, { httpMetadata: { contentType: mime, cacheControl: 'public, max-age=31536000, immutable' } });
       return json(201, { ok: true, url: `/uploads/${key}` });
     }
+    if (route === '/api/admin/uploads/batch' && method === 'POST') {
+      if (!env.UPLOADS) return json(503, { error: 'Image storage is not connected. Add the R2 bucket binding named UPLOADS in Cloudflare Pages settings, then redeploy.' });
+      const form = await request.formData();
+      const files = form.getAll('files').filter(value => value && typeof value.arrayBuffer === 'function').slice(0, 20);
+      if (!files.length) return json(400, { error: 'No images were included in this upload batch.' });
+      const uploaded = [];
+      for (const file of files) {
+        const type = String(file.type || '').toLowerCase();
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(type)) continue;
+        const bytes = await file.arrayBuffer();
+        if (!bytes.byteLength || bytes.byteLength > 5 * 1024 * 1024) continue;
+        const extension = type === 'image/jpeg' ? 'jpg' : type.slice('image/'.length);
+        const safeName = String(file.name || 'image').replace(/[^a-zA-Z0-9._-]/g, '-').slice(-100);
+        const key = `catalog/${Date.now()}-${hex(crypto.getRandomValues(new Uint8Array(4)))}-${safeName}.${extension}`;
+        await env.UPLOADS.put(key, bytes, {
+          httpMetadata: { contentType: type, cacheControl: 'public, max-age=31536000, immutable' }
+        });
+        uploaded.push({ name: String(file.name || ''), url: `/uploads/${key}` });
+      }
+      return json(200, { ok: true, uploaded });
+    }
+
 
     if (route === '/api/admin/subscribers' && method === 'GET') {
       const result = await env.DB.prepare('SELECT email FROM subscribers ORDER BY created_at DESC').all();
@@ -1753,6 +1783,32 @@ async function handleApi(request, env) {
     }
 
     if (route === '/api/admin/products' && method === 'GET') return json(200, await listProducts(env));
+
+    if (route === '/api/admin/catalog/import-products' && method === 'POST') {
+      const body = await readJson(request, 1_500_000);
+      const incoming = Array.isArray(body.products) ? body.products.slice(0, 60) : [];
+      if (!incoming.length) return json(400, { error: 'No products were included in this batch.' });
+      let created = 0;
+      let updated = 0;
+      const errors = [];
+      for (const input of incoming) {
+        try {
+          const id = String(input.id || '').trim().slice(0, 120);
+          if (!id) throw new Error('Product ID is missing.');
+          const currentRow = await env.DB.prepare('SELECT id, stock, data FROM products WHERE id = ?').bind(id).first();
+          const product = productPayload({ ...input, id }, currentRow ? parseProduct(currentRow) : {});
+          product.id = id;
+          product.sourceCost = Number(input.sourceCost) || 0;
+          product.supplierMoq = Number(input.supplierMoq) || 0;
+          product.sourcePage = Number(input.sourcePage) || 0;
+          await saveProductSafely(env, product);
+          if (currentRow) updated += 1; else created += 1;
+        } catch (error) {
+          errors.push({ id: String(input.id || ''), error: error?.message || 'Could not save product.' });
+        }
+      }
+      return json(200, { ok: true, created, updated, errors });
+    }
 
     if (route === '/api/admin/catalog/load-market-products' && method === 'POST') {
       const catalog = [

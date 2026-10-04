@@ -269,6 +269,10 @@
     set('id', product?.id || '');
     set('name', product?.name || '');
     set('sku', product?.sku || '');
+    set('colors', Array.isArray(product?.colors) ? product.colors.join(', ') : (product?.colors || ''));
+    set('sizes', Array.isArray(product?.sizes) ? product.sizes.join(', ') : (product?.sizes || ''));
+    set('minOrderQty', product?.minOrderQty ?? 1);
+    set('quantityDiscountPercent', product?.quantityDiscountPercent ?? 5);
     const categoryInput = form.elements.namedItem('category');
     const categoryList = $('#product-category-options');
     const defaultCategories = ['Cookware', 'Prep', 'Tableware', 'Storage', 'Textiles', 'Bakeware'];

@@ -3,10 +3,10 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-# This workflow will install Deno then run `deno lint` and `deno test`.
-# For more information see: https://github.com/denoland/setup-deno
+# This project is a Node.js app. Run the project checks and tests via npm,
+# not Deno, because the codebase uses Node-only APIs (node:sqlite, process, etc).
 
-name: Deno
+name: Node CI
 
 on:
   push:
@@ -25,18 +25,17 @@ jobs:
       - name: Setup repo
         uses: actions/checkout@v4
 
-      - name: Setup Deno
-        # uses: denoland/setup-deno@v1
-        uses: denoland/setup-deno@61fe2df320078202e33d7d5ad347e7dcfa0e8f31  # v1.1.2
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          deno-version: v1.x
+          node-version: '22'
+          cache: 'npm'
 
-      # Uncomment this step to verify the use of 'deno fmt' on each commit.
-      # - name: Verify formatting
-      #   run: deno fmt --check
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Run linter
-        run: deno lint
+      - name: Run code checks
+        run: npm run check
 
       - name: Run tests
-        run: deno test -A
+        run: npm test

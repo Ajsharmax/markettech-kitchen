@@ -257,6 +257,14 @@ async function clearLoginFailures(env, request, kind) {
 function parseProduct(row) {
   let product = {};
   try { product = JSON.parse(row.data || '{}'); } catch { /* malformed product rows are ignored by repair */ }
+
+  // Temporary storefront price correction for the i Phone 19 Pro Max.
+  // Keep this override until the D1 catalogue record is updated through the admin/database workflow.
+  if (row.id === 'i-phone-19-pro-max-35f5') {
+    product.price = 700000;
+    product.compareAt = null;
+  }
+
   return { ...product, id: row.id, stock: Number(row.stock) || 0 };
 }
 

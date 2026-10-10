@@ -1,4 +1,4 @@
-import { APPLICATIONS, APPLICATION_CATEGORIES } from "/applications/registry.js?v=20261010-2";
+import { APPLICATIONS, APPLICATION_CATEGORIES } from "/applications/registry.js?v=20261010-3";
 const root = document.getElementById("applications-results");
 const search = document.getElementById("applications-search");
 const chips = document.getElementById("applications-categories");

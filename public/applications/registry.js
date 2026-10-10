@@ -1,4 +1,4 @@
-export const APPLICATION_CATEGORIES = ["Organize", "Print Helpers"];
+export const APPLICATION_CATEGORIES = ["Organize", "Edit & Convert", "Security & Privacy", "Print Helpers"];
 
 export const APPLICATIONS = [
   {
@@ -11,6 +11,66 @@ export const APPLICATIONS = [
     status: "ready",
     loader: "/applications/merge-pdf",
     featured: true
+  },
+  {
+    id: "split-pdf",
+    slug: "split-pdf",
+    name: "Split PDF",
+    description: "Extract selected pages or divide a PDF into smaller documents.",
+    category: "Organize",
+    icon: "⇱",
+    status: "coming-soon",
+    loader: null
+  },
+  {
+    id: "rotate-pdf",
+    slug: "rotate-pdf",
+    name: "Rotate PDF",
+    description: "Rotate pages and correct document orientation.",
+    category: "Edit & Convert",
+    icon: "↻",
+    status: "coming-soon",
+    loader: null
+  },
+  {
+    id: "compress-pdf",
+    slug: "compress-pdf",
+    name: "Compress PDF",
+    description: "Reduce PDF file size for easier sharing and storage.",
+    category: "Edit & Convert",
+    icon: "⇣",
+    status: "coming-soon",
+    loader: null
+  },
+  {
+    id: "protect-unlock-pdf",
+    slug: "protect-unlock-pdf",
+    name: "Protect & Unlock PDF",
+    description: "Password tools require a verified client-side encryption implementation.",
+    category: "Security & Privacy",
+    icon: "♢",
+    status: "coming-soon",
+    loader: null
+  },
+  {
+    id: "redact-pdf",
+    slug: "redact-pdf",
+    name: "Redact PDF",
+    description: "Burn selected redaction boxes into page images to remove hidden content.",
+    category: "Security & Privacy",
+    icon: "▧",
+    status: "coming-soon",
+    loader: null
+  },
+  {
+    id: "repair-pdf",
+    slug: "repair-pdf",
+    name: "Repair PDF",
+    description: "Recovery of damaged PDF structures is not reliably possible in a basic browser toolkit.",
+    category: "Security & Privacy",
+    icon: "⚒",
+    status: "coming-soon",
+    loader: null
   },
   {
     id: "label-crop-4x6",

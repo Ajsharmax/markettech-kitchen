@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f6f3ed">
+<meta name="description" content="Private browser-based PDF tools from MarketTech. Your documents stay on your device.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<title>Applications — MarketTech</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/styles.css?v=21">
+<link rel="stylesheet" href="/applications/applications.css">
+<script type="module" src="/applications/applications.js"></script>
+</head>
+<body class="applications-page">
+<header class="applications-header">
+  <a class="applications-brand" href="/" aria-label="MarketTech home"><img src="/images/markettech-logo-v2.webp?v=2" alt="MarketTECH.in — Kitchen & Home Essentials" width="228" height="76"></a>
+  <nav aria-label="Applications navigation"><a href="/">Store</a><a href="/applications" aria-current="page">Applications</a></nav>
+</header>
+<main class="applications-main">
+  <section class="applications-hero">
+    <p class="applications-eyebrow">MARKETTECH · PRIVATE WORKSPACE</p>
+    <h1>Useful tools.<br><em>Your files stay yours.</em></h1>
+    <p>PDF and document helpers that process files in your browser, not on our servers.</p>
+    <div class="applications-privacy"><span aria-hidden="true">⌑</span><div><strong>Privacy first</strong><p>Your files are processed on your device and never uploaded.</p></div><span class="applications-local-badge">Browser-based</span></div>
+  </section>
+  <section class="applications-library" aria-labelledby="applications-title">
+    <div class="applications-library-heading"><div><p class="applications-eyebrow">THE TOOLKIT</p><h2 id="applications-title">Applications</h2></div><p id="applications-count" aria-live="polite">Loading tools…</p></div>
+    <label class="applications-search"><span aria-hidden="true">⌕</span><span class="sr-only">Search applications</span><input id="applications-search" type="search" placeholder="Search tools, e.g. merge or crop…" autocomplete="off"></label>
+    <div id="applications-categories" class="applications-chips" role="group" aria-label="Filter by category"></div>
+    <div id="applications-results" class="applications-results" aria-live="polite"></div>
+    <p id="applications-empty" class="applications-empty" hidden>No tools match that search. Try another word or category.</p>
+  </section>
+  <section class="applications-limits">
+    <h2>Built for privacy, with honest limits</h2>
+    <p>Available tools run locally with self-hosted libraries. Some complex conversions need dedicated document engines and remain marked Coming soon until they can be delivered reliably.</p>
+  </section>
+</main>
+<footer class="applications-footer"><span>© <span id="applications-year"></span> MarketTech</span><a href="/">Back to MarketTech ↗</a></footer>
+</body>
+</html>

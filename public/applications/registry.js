@@ -3,7 +3,7 @@ export const APPLICATION_CATEGORIES = [
 ];
 
 export const APPLICATIONS = [
-  { id:"label-crop-4x6", slug:"label-crop-4x6", name:"Label Crop 4×6", description:"Crop shipping labels from A4 PDFs into print-ready 4×6-inch labels.", category:"Print Helpers", icon:"▣", status:"ready", loader:"/applications/label-crop-4x6.html", featured:true },
+  { id:"label-crop-4x6", slug:"label-crop-4x6", name:"Label Crop 4×6", description:"Crop shipping labels from A4 PDFs into print-ready 4×6-inch labels.", category:"Print Helpers", icon:"▣", status:"ready", loader:"/applications/label-crop-4x6", featured:true },
   { id:"merge-pdf", slug:"merge-pdf", name:"Merge PDF", description:"Combine PDFs into one document and reorder files before merging.", category:"Organize", icon:"⊕", status:"coming-soon", loader:null },
   { id:"split-pdf", slug:"split-pdf", name:"Split PDF", description:"Split by page ranges, every N pages, or extract selected pages.", category:"Organize", icon:"⇱", status:"coming-soon", loader:null },
   { id:"organize-pages", slug:"organize-pages", name:"Organize pages", description:"Reorder, rotate, duplicate, or delete pages visually.", category:"Organize", icon:"▦", status:"coming-soon", loader:null },

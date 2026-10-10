@@ -1114,3 +1114,15 @@ p{font-weight:500}
 .mobile-applications-dropdown>summary::-webkit-details-marker{display:none}
 .mobile-applications-dropdown>a{padding:10px 0 10px 16px;font-size:12px}
 @media(max-width:1100px){.primary-nav{gap:18px}.applications-nav-menu{left:auto;right:0}}
+
+
+/* Applications dropdown layout fix */
+.primary-nav{gap:clamp(14px,1.65vw,26px)}
+.applications-nav-dropdown{position:relative;flex:0 0 auto;align-self:stretch}
+.applications-nav-dropdown>summary{display:flex;align-items:center;height:100%;font-size:11px;color:#4a5147;white-space:nowrap}
+.applications-nav-dropdown .applications-nav-menu{position:absolute!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:2px!important;top:calc(100% - 1px)!important;left:50%!important;right:auto!important;transform:translateX(-50%);width:220px;min-width:220px;padding:8px!important;background:#f7f5f0!important;border:1px solid #dedbd1!important;border-radius:8px;box-shadow:0 16px 36px rgba(24,35,26,.18)!important;z-index:9999!important}
+.applications-nav-dropdown .applications-nav-menu a{display:block!important;width:100%;padding:11px 12px!important;white-space:normal!important;line-height:1.4;font-size:12px!important;border-radius:5px}
+.applications-nav-dropdown .applications-nav-menu a:hover{background:#e8e9df}
+.applications-nav-dropdown .applications-nav-menu a:after{display:none!important}
+@media(min-width:1101px){.nav-shell{grid-template-columns:minmax(150px,.75fr) auto minmax(280px,.85fr)}.primary-nav{gap:clamp(12px,1.35vw,20px)}.nav-actions{gap:clamp(9px,1.1vw,16px)}}
+@media(max-width:1100px){.primary-nav{gap:14px}.applications-nav-dropdown .applications-nav-menu{left:auto!important;right:0!important;transform:none}}

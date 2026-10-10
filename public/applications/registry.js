@@ -1,6 +1,17 @@
-export const APPLICATION_CATEGORIES = ["Print Helpers"];
+export const APPLICATION_CATEGORIES = ["Organize", "Print Helpers"];
 
 export const APPLICATIONS = [
+  {
+    id: "merge-pdf",
+    slug: "merge-pdf",
+    name: "Merge PDF",
+    description: "Combine PDFs into one document and reorder files before merging.",
+    category: "Organize",
+    icon: "⊕",
+    status: "ready",
+    loader: "/applications/merge-pdf",
+    featured: true
+  },
   {
     id: "label-crop-4x6",
     slug: "label-crop-4x6",

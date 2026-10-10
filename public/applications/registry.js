@@ -9,7 +9,7 @@ export const APPLICATIONS = [
     category: "Print Helpers",
     icon: "▣",
     status: "ready",
-    loader: "/applications/label-crop-4x6",
+    loader: "/label-cropper.html",
     featured: true
   }
 ];

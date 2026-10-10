@@ -24,19 +24,16 @@ export async function loadPdf(fileOrBytes, { onPassword } = {}) {
   if (!globalThis.pdfjsLib) throw new Error("The local PDF.js library did not load.");
   const bytes = fileOrBytes instanceof Uint8Array ? fileOrBytes.slice() :
     fileOrBytes instanceof ArrayBuffer ? new Uint8Array(fileOrBytes.slice(0)) : new Uint8Array(await fileOrBytes.arrayBuffer());
-  return pdfjsLib.getDocument({
-    data: bytes,
-    isEvalSupported: false,
-    disableFontFace: true,
-    onPassword: (updatePassword, reason) => {
-      if (onPassword) onPassword(updatePassword, reason);
-      else {
-        const value = window.prompt(reason === 2 ? "Wrong password. Enter the PDF password again:" : "This PDF is password protected. Enter its password:");
-        if (value === null) throw new Error("Password entry cancelled.");
-        updatePassword(value);
-      }
+  const task = pdfjsLib.getDocument({ data: bytes, isEvalSupported: false, disableFontFace: true });
+  task.onPassword = (updatePassword, reason) => {
+    if (onPassword) onPassword(updatePassword, reason);
+    else {
+      const value = window.prompt(reason === 2 ? "Wrong password. Enter the PDF password again:" : "This PDF is password protected. Enter its password:");
+      if (value === null) { task.destroy(); return; }
+      updatePassword(value);
     }
-  }).promise.catch(error => {
+  };
+  return task.promise.catch(error => {
     if (error?.name === "PasswordException") throw new Error("Wrong password or password-protected PDF could not be opened.");
     if (error?.name === "InvalidPDFException") throw new Error("This PDF is damaged or invalid.");
     throw error;

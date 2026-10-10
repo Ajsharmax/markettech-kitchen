@@ -89,7 +89,7 @@ $('download').addEventListener('click',function(){
    }
   };
   currentWorker.onerror=function(e){status('PDF worker failed: '+(e.message||'unknown error'),'bad');finish()};
-  currentWorker.postMessage({type:'start',payload});
+  currentWorker.postMessage({type:'start',payload},payload.files.map(f=>f.bytes));
  }catch(e){status('Could not start PDF worker: '+e.message,'bad');finish()}
  function finish(){if(currentWorker){currentWorker.terminate();currentWorker=null}btn.disabled=!state.pages.some(p=>p.include);$('cancel').disabled=true;$('progress').value=0}
 });

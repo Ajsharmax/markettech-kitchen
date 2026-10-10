@@ -9,7 +9,7 @@ export const APPLICATIONS = [
     category: "Organize",
     icon: "⊕",
     status: "ready",
-    loader: "/applications/merge-pdf",
+    loader: "/applications/merge-pdf.html",
     featured: true
   },
   {

@@ -2,7 +2,8 @@
 <html lang="en-IN">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#f6f3ed"><meta name="description" content="Crop shipping labels from A4 order PDFs and download print-ready label PDFs.">
+<meta name="theme-color" content="#f6f3ed">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'"><meta name="description" content="Crop shipping labels from A4 order PDFs and download print-ready label PDFs.">
 <title>Label Cropper — MarketTech</title><link rel="stylesheet" href="/styles.css?v=21">
 <style>
 #mtlc{--lc-ink:var(--ink,#20251f);--lc-muted:var(--muted,#687067);--lc-line:var(--line,#d9d8d0);--lc-panel:var(--surface,#fffdf8);--lc-accent:var(--accent,#315b45);color:var(--lc-ink);font:14px/1.5 inherit;padding:24px 16px 48px;max-width:1500px;margin:auto}
@@ -16,19 +17,19 @@
 <aside class="lc-col">
 <section class="lc-panel"><h2>Source PDFs</h2><label class="lc-drop" id="lc-drop"><strong>Drop order PDFs here</strong><span>or click to select one or more PDFs. Each page becomes a label.</span><input id="lc-file" type="file" accept="application/pdf,.pdf" multiple style="display:block;margin-top:12px;max-width:100%"></label><p style="margin-top:12px"><button id="lc-clear" type="button">Clear all</button></p></section>
 <section class="lc-panel" id="lc-pages-panel" hidden><h2>Pages <span id="lc-count"></span></h2><ul class="lc-thumbs" id="lc-thumbs"></ul></section>
-<section class="lc-panel"><h2>Output settings</h2><div class="lc-field"><label for="lc-size">Paper size</label><select id="lc-size"><option value="288x432">4 × 6 in (288 × 432 pt)</option><option value="283.46x425.2">100 × 150 mm</option><option value="297.64x419.53">A6 (105 × 148 mm)</option></select></div><div class="lc-field"><label for="lc-fit">Placement</label><select id="lc-fit"><option value="contain">Fit whole crop on paper</option><option value="cover">Fill paper, trim edges</option></select></div><div class="lc-two"><div class="lc-field"><label for="lc-margin">Margin (pt)</label><input id="lc-margin" type="number" value="4" min="0" max="40"></div><div class="lc-field"><label for="lc-pad">Detect padding (pt)</label><input id="lc-pad" type="number" value="6" min="0" max="40"></div></div><p class="lc-small">PDFs stay on your device. Nothing is uploaded.</p></section>
+<section class="lc-panel"><h2>Output settings</h2><div class="lc-field"><label for="lc-size">Paper size</label><select id="lc-size"><option value="288x432">4 × 6 in (288 × 432 pt)</option><option value="283.46x425.2">100 × 150 mm</option><option value="297.64x419.53">A6 (105 × 148 mm)</option></select></div><div class="lc-field"><label for="lc-fit">Placement</label><select id="lc-fit"><option value="contain">Fit whole crop on paper</option><option value="cover">Fill paper, trim edges</option></select></div><div class="lc-two"><div class="lc-field"><label for="lc-margin">Margin (pt)</label><input id="lc-margin" type="number" value="4" min="0" max="40"></div><div class="lc-field"><label for="lc-pad">Detect padding (pt)</label><input id="lc-pad" type="number" value="6" min="0" max="40"></div></div><p class="lc-small">Your files are processed on your device and never uploaded.</p></section>
 </aside>
 <main class="lc-panel"><h2>Crop area</h2><p id="lc-empty" class="lc-muted">Choose a PDF to see the page and automatically detected crop box.</p><div id="lc-work" hidden><p id="lc-meta" class="lc-small" style="margin-bottom:10px"></p><div class="lc-stage" id="lc-stage"><canvas id="lc-canvas"></canvas><div id="lc-crop" tabindex="0" role="group" aria-label="Crop box"><span class="lc-handle" data-h="nw"></span><span class="lc-handle" data-h="n"></span><span class="lc-handle" data-h="ne"></span><span class="lc-handle" data-h="w"></span><span class="lc-handle" data-h="e"></span><span class="lc-handle" data-h="sw"></span><span class="lc-handle" data-h="s"></span><span class="lc-handle" data-h="se"></span></div></div><div class="lc-numbers"><div class="lc-field"><label for="lc-x">X (pt)</label><input id="lc-x" type="number" step="1"></div><div class="lc-field"><label for="lc-y">Y (pt)</label><input id="lc-y" type="number" step="1"></div><div class="lc-field"><label for="lc-w">Width (pt)</label><input id="lc-w" type="number" step="1"></div><div class="lc-field"><label for="lc-h">Height (pt)</label><input id="lc-h" type="number" step="1"></div></div><div class="lc-actions"><button id="lc-detect">Auto-detect this page</button><button id="lc-ratio">Match paper ratio</button><button id="lc-apply">Use this crop on all pages</button><button id="lc-detect-all">Auto-detect all</button></div><p class="lc-small" style="margin-top:10px">Drag the crop or handles. Arrow keys move it 1 pt; Shift + arrow moves 10 pt.</p></div></main>
 <aside class="lc-panel"><h2>Printed-page preview</h2><div class="lc-prevwrap"><canvas id="lc-preview" width="576" height="864"></canvas></div><p id="lc-preview-cap" class="lc-small">No page loaded</p><button class="lc-primary" id="lc-download" disabled>Download PDF</button><p id="lc-status" role="status" aria-live="polite"></p></aside>
 </div></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="/applications/vendor/pdfjs-3.11.174.min.js"></script>
+<script src="/applications/vendor/pdf-lib-1.10.0.min.js"></script>
+<script src="/applications/vendor/jszip-3.10.1.min.js"></script>
 <script>
 (function(){
 'use strict';
 var root=document.getElementById('mtlc'),$=function(id){return root.querySelector('#lc-'+id)},MIN=24,state={files:[],pages:[],sel:-1},drag=null;
-if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='/applications/vendor/pdfjs-3.11.174.worker.min.js';
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}function cur(){return state.pages[state.sel]||null}function num(id,d){var v=parseFloat($(id).value);return isFinite(v)?v:d}
 function size(){return $('size').value.split('x').map(Number)}function nameSize(){return $('size').selectedOptions[0].text.split(' (')[0]}
 function status(s,k){$('status').textContent=s||'';$('status').className=k||''}

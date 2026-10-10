@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f6f3ed">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="description" content="Merge multiple PDF files locally in your browser. Reorder files and download one combined PDF.">
+<title>Merge PDF — MarketTech Applications</title>
+<link rel="stylesheet" href="/styles.css?v=22">
+<link rel="stylesheet" href="/applications/applications.css">
+<style>
+.merge-tool{max-width:1000px;margin:36px auto;padding:0 22px 56px;color:var(--ink)}.merge-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;flex-wrap:wrap;margin-bottom:24px}.merge-head h1{font-size:clamp(30px,4vw,44px);margin:5px 0 8px}.merge-head p{color:var(--muted);margin:0}.merge-panel{background:var(--white);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:18px}.merge-drop{display:block;border:2px dashed var(--line);border-radius:10px;padding:28px;text-align:center;cursor:pointer;background:#fbfaf6}.merge-drop.dragover{border-color:var(--olive);background:#eef1e9}.merge-drop strong{display:block;font-size:16px}.merge-drop span{display:block;color:var(--muted);margin-top:6px;font-size:13px}.merge-file-list{list-style:none;padding:0;margin:18px 0 0;display:grid;gap:8px}.merge-file{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:12px;align-items:center;border:1px solid var(--line);border-radius:9px;padding:12px}.merge-number{display:grid;place-items:center;width:30px;height:30px;border-radius:7px;background:#e9ede5;color:var(--olive-dark);font-weight:700}.merge-filename{font-weight:650;overflow-wrap:anywhere}.merge-size{font-size:12px;color:var(--muted)}.merge-actions{display:flex;gap:6px;flex-wrap:wrap}.merge-actions button,.merge-btn{border:1px solid var(--line);border-radius:7px;background:#fff;padding:8px 11px;cursor:pointer}.merge-actions button:disabled{opacity:.4;cursor:not-allowed}.merge-btn.primary{background:var(--olive-dark);color:white;border-color:var(--olive-dark);font-weight:700;padding:12px 18px}.merge-btn:disabled{opacity:.5;cursor:not-allowed}.merge-footer{display:flex;gap:14px;align-items:center;flex-wrap:wrap}.merge-status{min-height:24px;color:var(--muted);margin-top:14px;overflow-wrap:anywhere}.merge-status.error{color:#b3261e}.merge-status.success{color:#16794a}.merge-progress{width:100%;height:8px;margin-top:10px;accent-color:var(--olive)}.merge-note{font-size:13px;color:var(--muted);line-height:1.6}.merge-back{white-space:nowrap;color:var(--olive-dark);font-weight:650}@media(max-width:560px){.merge-tool{padding-inline:14px}.merge-panel{padding:15px}.merge-file{grid-template-columns:30px minmax(0,1fr)}.merge-actions{grid-column:2}.merge-actions button{padding:7px 9px}}
+</style>
+<script src="/applications/merge-pdf.js" defer></script>
+</head>
+<body class="applications-page">
+<header class="applications-header"><a class="applications-brand" href="/" aria-label="MarketTech home"><img src="/images/markettech-logo-v2.webp?v=2" alt="MarketTECH.in — Kitchen & Home Essentials" width="228" height="76"></a><nav aria-label="Applications navigation"><a href="/">Store</a><a href="/applications">Applications</a></nav></header>
+<main class="merge-tool">
+<header class="merge-head"><div><p class="applications-eyebrow">MARKETTECH · PRIVATE WORKSPACE</p><h1>Merge PDF</h1><p>Combine multiple PDF files into one document. Reorder them before merging.</p></div><a class="merge-back" href="/applications">← All applications</a></header>
+<section class="merge-panel">
+<label class="merge-drop" id="merge-drop" for="merge-input"><strong>Drop PDF files here or click to browse</strong><span>PDF files only · Processed locally in your browser · Nothing is uploaded</span><input id="merge-input" type="file" accept="application/pdf,.pdf" multiple hidden></label>
+<ul class="merge-file-list" id="merge-file-list" aria-label="PDF files to merge"></ul>
+<p class="merge-note" id="merge-empty">Choose at least two PDFs. Use the arrows to change their order or remove a file before merging.</p>
+</section>
+<section class="merge-panel">
+<div class="merge-footer"><button class="merge-btn primary" id="merge-start" type="button" disabled>Merge PDFs and download</button><button class="merge-btn" id="merge-clear" type="button" disabled>Clear files</button><span class="merge-size" id="merge-total"></span></div>
+<progress class="merge-progress" id="merge-progress" max="100" value="0" hidden></progress>
+<p class="merge-status" id="merge-status" role="status" aria-live="polite">Add at least two PDF files to begin.</p>
+<p class="merge-note">Privacy: PDF files are read and merged on this device. Large files may take longer and require available memory. Password-protected PDFs that cannot be opened will show an error.</p>
+</section>
+</main>
+<footer class="applications-footer"><span>MarketTech Applications</span><a href="/">Back to MarketTech ↗</a></footer>
+</body></html>

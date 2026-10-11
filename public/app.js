@@ -1047,7 +1047,7 @@
   $$('[data-open-track-order]').forEach(link => link.addEventListener('click', event => { event.preventDefault(); openTrackOrder(); }));
   $('#track-order-form').addEventListener('submit', event => { event.preventDefault(); submitOrderTracking(event.currentTarget); });
   $$('[data-close-track-order]').forEach(button => button.addEventListener('click', () => closeLayer($('#track-order-modal'))));
-  $('#open-account').addEventListener('click', openAccount);
+  // Header account button is a dropdown; the dropdown's profile action opens the account modal.
   $('#mobile-account-link').addEventListener('click', openAccount);
   $$('[data-account-mode]').forEach(button => button.addEventListener('click', () => setAccountMode(button.dataset.accountMode)));
   $('#customer-login-form').addEventListener('submit', event => { event.preventDefault(); submitCustomerAuth(event.currentTarget, '/api/auth/login', '#customer-login-error'); });

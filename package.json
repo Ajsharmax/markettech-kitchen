@@ -7,7 +7,10 @@
     "check": "node --check public/app.js && node --check public/admin.js && node --check \"functions/api/[[path]].js\" && node --check \"functions/uploads/[[path]].js\"",
     "test:import": "node tests/product-import.test.mjs",
     "test:storefront": "node tests/storefront-dom.test.mjs",
-    "test": "npm run test:import && npm run test:storefront"
+    "test": "npm run test:import && npm run test:storefront",
+    "test:applications": "node tests/applications.test.mjs",
+    "build:tools": "node scripts/build-tool-pages.mjs",
+    "check:applications": "node scripts/check-applications.mjs"
   },
   "engines": {
     "node": ">=18"

@@ -1,4 +1,4 @@
-import { APPLICATIONS, APPLICATION_CATEGORIES } from "/applications/registry.js?v=20261010-3";
+import { APPLICATIONS, APPLICATION_CATEGORIES } from "/applications/registry.js?v=2";
 const root = document.getElementById("applications-results");
 const search = document.getElementById("applications-search");
 const chips = document.getElementById("applications-categories");
@@ -15,9 +15,10 @@ allCategories.forEach(category => {
   chips.append(button);
 });
 function makeCard(tool) {
-  const card = document.createElement(tool.status === "ready" && tool.loader ? "a" : "div");
+  const live = tool.status === "ready";
+  const card = document.createElement(live ? "a" : "div");
   card.className = "application-card" + (tool.status === "ready" ? "" : " is-coming");
-  if (tool.status === "ready" && tool.loader) card.href = tool.loader;
+  if (live) card.href = "/applications/" + tool.slug;
   else { card.setAttribute("aria-disabled", "true"); card.tabIndex = -1; }
   const top = document.createElement("div"); top.className = "application-card-top";
   const icon = document.createElement("span"); icon.className = "application-icon"; icon.textContent = tool.icon; icon.setAttribute("aria-hidden","true");
@@ -26,10 +27,10 @@ function makeCard(tool) {
   if (tool.status !== "ready") { const coming = document.createElement("span"); coming.className = "application-badge"; coming.textContent = "Coming soon"; badges.append(coming); }
   top.append(icon,badges);
   const title = document.createElement("h4"); title.textContent = tool.name;
-  const description = document.createElement("p"); description.textContent = tool.description;
+  const description = document.createElement("p"); description.textContent = live ? tool.description : (tool.reason || tool.description);
   const offline = document.createElement("div"); offline.className = "application-offline";
-  const dot = document.createElement("span"); dot.setAttribute("aria-hidden","true"); offline.append(dot,document.createTextNode("Works offline in your browser"));
-  card.append(top,title,description,offline);
+  const dot = document.createElement("span"); dot.setAttribute("aria-hidden","true"); if (live) offline.append(dot,document.createTextNode("Works in your browser. No upload."));
+  card.append(top,title,description); if (live) card.append(offline);
   return card;
 }
 function render() {

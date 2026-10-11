@@ -18,6 +18,9 @@ for (const t of APPLICATIONS) {
       assert.ok(existsSync(standalonePath), "missing standalone page for " + t.slug);
       const html = readFileSync(standalonePath, "utf8");
       assert.ok(html.includes("<title>") && html.includes('type="file"'), t.slug + " standalone page is missing its title or file input");
+      assert.ok(html.includes('addEventListener("click",e=>e.stopPropagation())'), t.slug + " file picker click bubbles into its container");
+      assert.ok(html.includes("worker-src 'self' blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net;"), t.slug + " CSP blocks its PDF/OCR workers");
+      assert.ok(html.includes("const isPdf=f.type==="), t.slug + " rejects PDFs with an empty MIME type");
     } else {
       assert.ok(existsSync(path.join(dir, t.slug + ".html")), "missing page for " + t.slug + " (run node scripts/build-tool-pages.mjs)");
       const src = readFileSync(path.join(dir, "tools", t.module + ".js"), "utf8");

@@ -23,11 +23,6 @@
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
 
-/applications/vendor/*
-  Cache-Control: public, max-age=31536000, immutable
-
-/applications/*.js
-  Cache-Control: no-cache
-
-/applications/*.css
-  Cache-Control: no-cache
+/label-cropper.html
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'
+  X-Content-Type-Options: nosniff

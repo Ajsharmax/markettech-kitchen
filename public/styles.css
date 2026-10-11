@@ -1244,3 +1244,13 @@ p{font-weight:500}
   .hero-actions{margin-top:13px!important}
   .hero-search{display:flex!important;width:100%!important;max-width:560px!important;margin-top:14px!important}
 }
+
+/* HERO FINAL CLEANUP: no search field in hero; compact single-column content */
+.hero{padding:24px 0 26px!important}
+.hero-content{display:block!important;width:min(var(--max),calc(100% - 48px))!important;max-width:none!important;margin:0 auto!important}
+.hero .eyebrow,.hero h1,.hero-content>p,.hero-actions{grid-column:auto!important;grid-row:auto!important}
+.hero h1{max-width:850px!important;font-size:clamp(42px,5.2vw,70px)!important;margin:10px 0 8px!important}
+.hero-content>p{max-width:600px!important;margin:0!important}
+.hero-actions{margin-top:16px!important}
+.hero-search{display:none!important}
+@media(max-width:720px){.hero{padding:22px 0 24px!important}.hero-content{width:calc(100% - 32px)!important}.hero h1{font-size:clamp(38px,9vw,54px)!important}}

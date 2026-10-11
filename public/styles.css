@@ -1191,3 +1191,56 @@ p{font-weight:500}
   .hero h1{font-size:36px!important}
   .hero-search{display:flex!important}
 }
+
+
+/* HERO COMPACT PASS: remove the unused photo column and reduce vertical footprint */
+.hero{
+  padding:24px 0 22px!important;
+}
+.hero-content{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(320px,42%)!important;
+  grid-template-rows:auto auto auto auto!important;
+  column-gap:28px!important;
+  align-content:center!important;
+}
+.hero .eyebrow{grid-column:1/-1!important;margin:0!important}
+.hero h1{
+  grid-column:1!important;
+  grid-row:2!important;
+  font-size:clamp(42px,5vw,68px)!important;
+  line-height:.92!important;
+  margin:10px 0 8px!important;
+}
+.hero-content>p{
+  grid-column:1!important;
+  grid-row:3!important;
+  margin:0!important;
+  font-size:12px!important;
+  max-width:480px!important;
+}
+.hero-actions{
+  grid-column:1!important;
+  grid-row:4!important;
+  margin-top:14px!important;
+}
+.hero-search{
+  grid-column:2!important;
+  grid-row:2 / span 3!important;
+  align-self:center!important;
+  width:100%!important;
+  max-width:560px!important;
+  margin:0!important;
+}
+@media(max-width:720px){
+  .hero{padding:22px 0 20px!important}
+  .hero-content{
+    display:block!important;
+    width:calc(100% - 32px)!important;
+    margin:0 auto!important;
+  }
+  .hero h1{font-size:clamp(38px,9vw,54px)!important;line-height:.94!important;margin:10px 0!important}
+  .hero-content>p{font-size:12px!important;line-height:1.45!important}
+  .hero-actions{margin-top:13px!important}
+  .hero-search{display:flex!important;width:100%!important;max-width:560px!important;margin-top:14px!important}
+}

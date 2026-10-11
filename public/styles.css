@@ -1254,3 +1254,19 @@ p{font-weight:500}
 .hero-actions{margin-top:16px!important}
 .hero-search{display:none!important}
 @media(max-width:720px){.hero{padding:22px 0 24px!important}.hero-content{width:calc(100% - 32px)!important}.hero h1{font-size:clamp(38px,9vw,54px)!important}}
+
+
+/* HERO REMOVED: collapse the empty gap before the shop toolbar */
+.shop-section{
+  padding-top:0!important;
+  margin-top:0!important;
+}
+.shop-section>.page-width{
+  padding-top:0!important;
+}
+.shop-toolbar{
+  margin-top:0!important;
+}
+@media(max-width:720px){
+  .shop-section{padding-top:0!important}
+}

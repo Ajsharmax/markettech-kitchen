@@ -1147,3 +1147,47 @@ p{font-weight:500}
 .nav-actions{gap:clamp(10px,1.1vw,16px)}
 .bag-button{font-size:12px;font-weight:600}
 @media(max-width:1100px){.primary-nav{gap:14px}.primary-nav>a,.applications-nav-dropdown>summary{font-size:11px!important}.account-button{font-size:11px!important}}
+
+
+/* HOMEPAGE HERO: remove the decorative kitchen photo and reclaim the full width */
+.hero{
+  height:auto!important;
+  min-height:0!important;
+  padding:36px 0 30px!important;
+  display:block!important;
+  background:#f4f0e7!important;
+  overflow:hidden!important;
+}
+.hero-image,
+.hero-grain,
+.hero-note,
+.hero-counter{display:none!important}
+.hero-content{
+  width:min(var(--max),calc(100% - 48px))!important;
+  max-width:none!important;
+  margin:0 auto!important;
+  padding:0!important;
+}
+.hero h1{
+  max-width:1000px!important;
+  font-size:clamp(48px,6.2vw,82px)!important;
+  line-height:.94!important;
+  margin:14px 0 16px!important;
+}
+.hero-content>p{max-width:620px!important;font-size:14px!important}
+.hero-actions{margin-top:20px!important}
+.hero-search{width:min(560px,100%)!important;max-width:560px!important;margin-top:16px!important}
+@media(max-width:720px){
+  .hero{height:auto!important;min-height:0!important;padding:28px 0 24px!important}
+  .hero-content{width:calc(100% - 32px)!important;max-width:none!important;margin:0 auto!important}
+  .hero h1{font-size:clamp(38px,9vw,58px)!important;max-width:100%!important;margin:12px 0!important}
+  .hero-content>p{font-size:12px!important;max-width:520px!important}
+  .hero-actions{margin-top:16px!important}
+  .hero-search{display:flex!important;width:100%!important;max-width:560px!important;margin-top:14px!important}
+  .hero-search input,.hero-search button{height:44px!important}
+}
+@media(max-width:380px){
+  .hero{padding:24px 0 20px!important}
+  .hero h1{font-size:36px!important}
+  .hero-search{display:flex!important}
+}

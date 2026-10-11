@@ -18,7 +18,7 @@ function makeCard(tool) {
   const live = tool.status === "ready";
   const card = document.createElement(live ? "a" : "div");
   card.className = "application-card" + (tool.status === "ready" ? "" : " is-coming");
-  if (live) card.href = "/applications/" + tool.slug;
+  if (live) card.href = tool.url || ("/applications/" + tool.slug);
   else { card.setAttribute("aria-disabled", "true"); card.tabIndex = -1; }
   const top = document.createElement("div"); top.className = "application-card-top";
   const icon = document.createElement("span"); icon.className = "application-icon"; icon.textContent = tool.icon; icon.setAttribute("aria-hidden","true");

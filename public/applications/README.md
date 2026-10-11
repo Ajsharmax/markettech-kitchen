@@ -14,13 +14,13 @@ Private, in-browser PDF tools. Files are processed on the visitor's device and a
 2. Run `npm run build:tools` to create its page, then `npm run test:applications` and `npm run check:applications`.
 
 ## Privacy
-- pdf.js 3.11.174, pdf-lib 1.10.0 and JSZip 3.10.1 are self-hosted in `vendor/`. No CDN is used.
-- Pages carry a Content-Security-Policy with `connect-src 'self'` (meta tag and `_headers`), so the page cannot send data elsewhere.
-- Verify in the browser Network tab while running a tool: there should be no requests after the page loads.
+- The core Applications tools use self-hosted pdf.js 3.11.174, pdf-lib 1.10.0 and JSZip 3.10.1 in `vendor/`.
+- PDF to PowerPoint and PDF to Excel are standalone pages using pdf.js plus PptxGenJS / SheetJS from cdnjs. OCR PDF uses pdf.js and Tesseract.js from cdnjs; Tesseract downloads its language data from jsDelivr on first use. These three pages have a scoped Content-Security-Policy allowing only those required CDN sources.
+- The PDF content is processed locally in the browser and is not uploaded by these tools. CDN requests download library and language files only. For the strictest offline/self-hosted deployment, vendor these dependencies and OCR language data locally before enabling these three tools.
 
 ## Known limits
 - pdf-lib cannot read password-protected PDFs. The tools say so; Unlock PDF is marked Coming soon.
 - Compress (Balanced and Strong), Grayscale and Redact turn pages into images, so text is no longer selectable.
 - PDF to Word keeps text only. Word, Excel and PowerPoint to PDF, PDF to Excel/PowerPoint, OCR, Protect/Unlock, Repair and HTML to PDF are Coming soon with the reason shown on each card.
-- Tools run on the main thread with progress and a Cancel button between pages; very large files (100 MB+) can be slow.
+- Tools run in the browser; very large files can be slow. The standalone PDF to PowerPoint, PDF to Excel and OCR pages have their own progress and file-size limits.
 - Signature is an image, not a certified digital signature.

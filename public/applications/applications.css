@@ -12,3 +12,15 @@
 .applications-local-badge{font-size:10px;padding:4px 7px}
 .applications-library{padding-top:4px}
 @media(max-width:560px){.applications-main{padding-top:8px}.applications-hero{padding:8px 0 12px}.applications-hero h1{font-size:clamp(32px,9vw,44px)}.applications-hero>p:not(.applications-eyebrow){font-size:14px}.applications-privacy{padding:9px 11px}}
+
+/* Compact logo-only header for Applications; bring the tools directly beneath it */
+.applications-header{min-height:0;padding:10px 24px;gap:16px}
+.applications-brand img{width:clamp(145px,18vw,195px)}
+.applications-header nav{display:none}
+.applications-main{padding-top:8px}
+.applications-library{padding-top:0}
+.applications-library-heading .applications-eyebrow{display:none}
+.applications-library-heading h2{font-size:clamp(28px,3.2vw,38px);line-height:1.15;margin:0}
+.applications-library-heading>p{margin:0;font-size:12px}
+.applications-search{margin-top:12px}
+@media(max-width:560px){.applications-header{padding:8px 16px}.applications-brand img{width:155px}.applications-main{padding:8px 16px 36px}}

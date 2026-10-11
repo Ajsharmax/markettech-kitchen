@@ -11,7 +11,7 @@ Private, in-browser PDF tools. Files are processed on the visitor's device and a
 
 ## Adding a tool
 1. Add an entry to `registry.js` and a spec in the matching `tools/*.js` file. A simple tool is a spec with `accept`, `options` and `run()`; a visual tool sets `custom: true` and `mount(root)`.
-2. Run `npm run build:tools` to create its page, then `npm test`.
+2. Run `npm run build:tools` to create its page, then `npm run test:applications` and `npm run check:applications`.
 
 ## Privacy
 - pdf.js 3.11.174, pdf-lib 1.10.0 and JSZip 3.10.1 are self-hosted in `vendor/`. No CDN is used.

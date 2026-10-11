@@ -4,12 +4,13 @@
   "private": true,
   "description": "MarketTech Kitchen storefront with Cloudflare Pages Functions, D1 and R2",
   "scripts": {
-    "check": "node --check public/app.js && node --check public/admin.js && node --check \"functions/api/[[path]].js\" && node --check \"functions/uploads/[[path]].js\" && node --check public/applications/core.js && node --check public/applications/stage.js && node --check public/applications/tool.js && node --check public/applications/applications.js && for f in public/applications/tools/*.js; do node --check $f; done",
+    "check": "node --check public/app.js && node --check public/admin.js && node --check \"functions/api/[[path]].js\" && node --check \"functions/uploads/[[path]].js\"",
     "test:import": "node tests/product-import.test.mjs",
     "test:storefront": "node tests/storefront-dom.test.mjs",
-    "test": "npm run test:import && npm run test:storefront && npm run test:applications",
+    "test": "npm run test:import && npm run test:storefront",
     "test:applications": "node tests/applications.test.mjs",
-    "build:tools": "node scripts/build-tool-pages.mjs"
+    "build:tools": "node scripts/build-tool-pages.mjs",
+    "check:applications": "node scripts/check-applications.mjs"
   },
   "engines": {
     "node": ">=18"

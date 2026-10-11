@@ -22,7 +22,7 @@ const page = t => `<!doctype html>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/styles.css?v=24">
 <link rel="stylesheet" href="/applications/applications.css">
-<link rel="stylesheet" href="/applications/toolkit.css?v=1">
+<link rel="stylesheet" href="/applications/toolkit.css?v=1">${t.css ? `\n<link rel="stylesheet" href="${t.css}">` : ""}
 <script type="module" src="/applications/tool.js?v=1"></script>
 </head>
 <body class="applications-page tk-page" data-tool="${t.slug}">

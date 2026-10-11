@@ -30,9 +30,9 @@ export const APPLICATIONS = [
   ready("pdf-to-images", "convert", "PDF to JPG / PNG", "Convert from PDF", "▨", "Turn each page into an image at the quality you choose."),
   ready("extract-text", "convert", "PDF to text", "Convert from PDF", "¶", "Copy out all selectable text as a .txt file."),
   ready("pdf-to-word", "convert", "PDF to Word (text)", "Convert from PDF", "W", "Get the text of a PDF as an editable .docx. Layout and pictures are not kept."),
-  soon("pdf-to-powerpoint", "PDF to PowerPoint", "Convert from PDF", "P", "Turn pages into slides.", "Not built yet."),
-  soon("pdf-to-excel", "PDF to Excel", "Convert from PDF", "X", "Pull tables into a spreadsheet.", "Reliable table detection needs a server-side engine, which would mean uploading your files."),
-  soon("ocr-pdf", "OCR PDF", "Convert from PDF", "◎", "Make scanned PDFs searchable.", "Needs the Tesseract engine and language data (several MB) to be added and self-hosted."),
+  ready("pdf-to-powerpoint", null, "PDF to PowerPoint", "Convert from PDF", "P", "Turn each PDF page into an image-based PowerPoint slide.", { url: "/pdf-to-powerpoint.html" }),
+  ready("pdf-to-excel", null, "PDF to Excel", "Convert from PDF", "X", "Extract selectable PDF text into an Excel workbook; review estimated rows and columns.", { url: "/pdf-to-excel.html" }),
+  ready("ocr-pdf", null, "OCR PDF", "Convert from PDF", "◎", "Recognize text in scanned PDFs in English or Hindi and export it as a text file.", { url: "/ocr-pdf.html" }),
 
   /* Convert to PDF */
   ready("images-to-pdf", "convert", "JPG / PNG to PDF", "Convert to PDF", "▤", "Put one or many images into a PDF, in the order you choose."),

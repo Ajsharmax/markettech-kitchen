@@ -13,11 +13,18 @@ for (const t of APPLICATIONS) {
   assert.ok(!slugs.has(t.slug), "duplicate slug " + t.slug); slugs.add(t.slug);
   assert.ok(APPLICATION_CATEGORIES.includes(t.category), t.slug + " has unknown category " + t.category);
   if (t.status === "ready") {
-    assert.ok(existsSync(path.join(dir, t.slug + ".html")), "missing page for " + t.slug + " (run node scripts/build-tool-pages.mjs)");
-    const src = readFileSync(path.join(dir, "tools", t.module + ".js"), "utf8");
-    assert.ok(src.includes('["' + t.slug + '"]') || src.includes('"' + t.slug + '": {'), t.module + ".js has no spec for " + t.slug);
-    const html = readFileSync(path.join(dir, t.slug + ".html"), "utf8");
-    assert.ok(html.includes('data-tool="' + t.slug + '"') && html.includes("connect-src 'self'"), t.slug + " page lacks tool id or privacy CSP");
+    if (t.url) {
+      const standalonePath = path.resolve("public", "." + t.url);
+      assert.ok(existsSync(standalonePath), "missing standalone page for " + t.slug);
+      const html = readFileSync(standalonePath, "utf8");
+      assert.ok(html.includes("<title>") && html.includes('type="file"'), t.slug + " standalone page is missing its title or file input");
+    } else {
+      assert.ok(existsSync(path.join(dir, t.slug + ".html")), "missing page for " + t.slug + " (run node scripts/build-tool-pages.mjs)");
+      const src = readFileSync(path.join(dir, "tools", t.module + ".js"), "utf8");
+      assert.ok(src.includes('["' + t.slug + '"]') || src.includes('"' + t.slug + '": {'), t.module + ".js has no spec for " + t.slug);
+      const html = readFileSync(path.join(dir, t.slug + ".html"), "utf8");
+      assert.ok(html.includes('data-tool="' + t.slug + '"') && html.includes("connect-src 'self'"), t.slug + " page lacks tool id or privacy CSP");
+    }
   } else assert.ok(t.reason, t.slug + " is coming soon but has no reason");
 }
 assert.equal(existsSync(path.join(dir, "tool-2.html")), false, "placeholder pages must be gone");

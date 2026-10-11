@@ -84,3 +84,4 @@ The repository includes a dependency-free `npm run check` command for JavaScript
 - UPI payment is manual: confirm the transfer in your bank/UPI app before dispatching.
 - The newsletter form stores email addresses in D1; it does not send emails automatically.
 - Take periodic backups of your D1 data and exported product/order records. Do not treat the sample catalogue as real inventory.
+

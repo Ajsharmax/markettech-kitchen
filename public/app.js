@@ -160,9 +160,45 @@
   function updateAccountButtons() {
     const firstName = currentCustomer?.name?.trim().split(/\s+/)[0] || '';
     $('#open-account').textContent = firstName ? `Hi, ${firstName}` : 'Account';
-    $('#open-account').setAttribute('aria-label', firstName ? `Open ${firstName}'s account` : 'Open your account');
-    $('#mobile-account-link').textContent = firstName ? `Your account · ${firstName}` : 'Your account';
+    $('#open-account').setAttribute('aria-label', firstName ? `Open ${firstName}'s account menu` : 'Open account menu');
+    $('#open-account').setAttribute('aria-expanded', 'false');
+    $('#open-account').innerHTML = (firstName ? 'Hi, ' + escapeHtml(firstName) : 'Account') + ' <span class="account-chevron" aria-hidden="true">⌄</span>';
+    const mobileAccount = $('#mobile-account-link');
+    if (mobileAccount) mobileAccount.textContent = firstName ? `Your account · ${firstName}` : 'Your account';
   }
+  function closeAccountMenu() {
+    const button = $('#open-account');
+    const menu = $('#account-menu');
+    if (button) button.setAttribute('aria-expanded', 'false');
+    if (menu) menu.hidden = true;
+  }
+  function toggleAccountMenu() {
+    const button = $('#open-account');
+    const menu = $('#account-menu');
+    if (!button || !menu) return;
+    const opening = menu.hidden;
+    menu.hidden = !opening;
+    button.setAttribute('aria-expanded', String(opening));
+  }
+  $('#open-account')?.addEventListener('click', event => {
+    event.preventDefault();
+    event.stopPropagation();
+    toggleAccountMenu();
+  });
+  $('#account-profile-link')?.addEventListener('click', () => {
+    closeAccountMenu();
+    window.marketTechOpenAccount?.();
+  });
+  $('#account-menu')?.addEventListener('click', event => {
+    if (event.target.closest('[data-open-track-order]')) closeAccountMenu();
+  });
+  document.addEventListener('click', event => {
+    if (!event.target.closest('.account-menu-wrap')) closeAccountMenu();
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') closeAccountMenu();
+  });
+
   function setAccountMode(mode = 'login') {
     const register = mode === 'register';
     $('#customer-login-form').hidden = register;

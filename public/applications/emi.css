@@ -1,0 +1,21 @@
+/* Financial tools: EMI calculator additions */
+.emi-layout { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(300px, .95fr); gap: 18px; align-items: stretch; }
+.emi-inputs { display: grid; gap: 18px; padding: 4px; }
+.emi-input-wrap { display: flex; align-items: center; gap: 8px; padding: 0 11px; min-height: 42px; border: 1px solid var(--line, #dedbd1); border-radius: 8px; background: #fff; }
+.emi-input-wrap input { border: 0 !important; padding: 9px 0 !important; min-height: 40px !important; }
+.emi-input-wrap span { color: var(--muted, #72776c); font-size: 13px; white-space: nowrap; }
+.emi-result-card { display: grid; align-content: center; gap: 10px; padding: 28px; border-radius: 12px; background: var(--olive-dark, #344535); color: #fff; }
+.emi-label { margin: 0; color: #cbd8c9; font-size: 11px; font-weight: 800; letter-spacing: .12em; }
+.emi-value { font-size: clamp(32px, 5vw, 52px); font-weight: 750; letter-spacing: -.04em; }
+.emi-breakdown { display: grid; gap: 10px; margin-top: 16px; padding-top: 17px; border-top: 1px solid #ffffff33; }
+.emi-breakdown div { display: flex; justify-content: space-between; gap: 15px; font-size: 12px; }
+.emi-breakdown span { color: #d0dbcf; } .emi-breakdown strong { font-variant-numeric: tabular-nums; }
+.emi-schedule-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.emi-schedule-head h2 { margin: 0; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted, #72776c); }
+.emi-table-scroll { overflow-x: auto; max-height: 480px; margin-top: 16px; border: 1px solid var(--line, #dedbd1); border-radius: 10px; }
+.emi-table-scroll table { width: 100%; min-width: 620px; border-collapse: collapse; background: #fff; font-size: 12px; font-variant-numeric: tabular-nums; }
+.emi-table-scroll th, .emi-table-scroll td { padding: 10px 12px; text-align: right; border-bottom: 1px solid var(--line, #dedbd1); white-space: nowrap; }
+.emi-table-scroll th:first-child, .emi-table-scroll td:first-child { text-align: left; }
+.emi-table-scroll th { position: sticky; top: 0; background: #f1efe7; color: var(--muted, #72776c); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+.emi-table-scroll tr:last-child td { border-bottom: 0; }
+@media (max-width: 760px) { .emi-layout { grid-template-columns: 1fr; } .emi-result-card { padding: 22px; } }

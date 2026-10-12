@@ -261,3 +261,13 @@
 .tpl-harvard .tpl-skill-item { display: inline; }
 .tpl-harvard .tpl-skill-item::after { content: " · "; }
 .tpl-harvard .tpl-skill-item:last-child::after { content: ""; }
+
+
+/* CV builder: paper-like panels and subtle step-by-step reveal. */
+.cvrc-layout{animation:mt-cv-enter .45s ease-out both}
+.cvrc-form-panel,.cvrc-preview-panel{transition:box-shadow .2s ease,border-color .2s ease}
+.cvrc-form-panel:focus-within{box-shadow:0 0 0 3px rgba(53,102,233,.07);border-color:#c4d1f4}
+.cvrc-section{transition:border-color .2s ease,background .2s ease}
+.cvrc-section:focus-within{border-color:#b7c8f5;background:#fffefa}
+@keyframes mt-cv-enter{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.cvrc-layout{animation:none!important}.cvrc-form-panel,.cvrc-preview-panel,.cvrc-section{transition:none!important}}

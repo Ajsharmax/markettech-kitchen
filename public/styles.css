@@ -1270,3 +1270,26 @@ p{font-weight:500}
 @media(max-width:720px){
   .shop-section{padding-top:0!important}
 }
+
+
+/* TEMPORARY STOREFRONT PAUSE: hide customer-facing products without changing stored data. */
+.shop-section .shop-toolbar,
+.shop-section .search-result-note,
+.shop-section #product-grid,
+.shop-section #empty-products {
+  display: none !important;
+}
+.shop-section .page-width::before {
+  content: "We’re updating our collection. Our website tools and other pages remain available. Please check back soon.";
+  display: block;
+  max-width: 720px;
+  margin: 56px auto 72px;
+  padding: 48px 28px;
+  border: 1px solid var(--line, #dedbd1);
+  border-radius: 18px;
+  background: var(--white, #fffefa);
+  color: var(--ink, #202a23);
+  text-align: center;
+  font-size: clamp(18px, 2.5vw, 25px);
+  line-height: 1.6;
+}

@@ -247,3 +247,12 @@ tbody td{font-size:11px}
 .admin-body .admin-brand:hover .admin-brand-logo{transform:scale(1.025)}
 @keyframes mt-admin-enter{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.admin-body .login-panel,.admin-body .login-card,.admin-body .admin-main,.admin-body .dashboard-main{animation:none!important}.admin-body .stat-card,.admin-body .metric-card,.admin-body .dashboard-card,.admin-body .admin-brand-logo{transition:none!important}}
+
+
+/* Target the actual admin dashboard components. */
+.admin-body .login-box{animation:mt-admin-enter .55s cubic-bezier(.2,.7,.2,1) both}
+.admin-body .admin-content{animation:mt-admin-enter .4s ease-out both}
+.admin-body .stat-card,.admin-body .admin-card,.admin-body .integration-card,.admin-body .settings-card{transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+.admin-body .stat-card:hover,.admin-body .admin-card:hover,.admin-body .integration-card:hover,.admin-body .settings-card:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(39,53,42,.08)}
+.admin-body .admin-brand-logo{transition:transform .3s ease}
+.admin-body .admin-brand:hover .admin-brand-logo{transform:scale(1.025)}

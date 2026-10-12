@@ -141,3 +141,17 @@
 #more-tools { display: flex; flex-wrap: wrap; gap: 8px; }
 #more-tools a { padding: 7px 12px; border: 1px solid var(--line, #dedbd1); border-radius: 999px; background: #fff; color: var(--ink, #202a23); text-decoration: none; font-size: 13px; font-weight: 600; }
 #more-tools a:hover { border-color: var(--olive, #4f624b); }
+
+
+/* Focused tool-page motion: calm file processing, not distracting from work. */
+.tk-page .tk-head{animation:mt-tool-head-in .55s ease-out both}
+.tk-page .tk-drop,.tk-page .drop-zone,.tk-page .upload-zone,.tk-page .tk-panel{transition:border-color .2s ease,box-shadow .2s ease,transform .2s ease}
+.tk-page .tk-drop:hover,.tk-page .drop-zone:hover,.tk-page .upload-zone:hover{border-color:#6d8df0;box-shadow:0 0 0 4px rgba(65,105,225,.07)}
+.tk-page .tk-drop.is-dragover,.tk-page .drop-zone.is-dragover,.tk-page .upload-zone.is-dragover{border-color:#3566e9;background:rgba(53,102,233,.06);box-shadow:0 0 0 5px rgba(53,102,233,.1)}
+.tk-page .tk-privacy{animation:mt-privacy-glow 4s ease-in-out infinite}
+.tk-page .tk-progress,.tk-page progress{accent-color:#3566e9}
+.tk-page .tk-result,.tk-page .tk-output,.tk-page .result-panel{animation:mt-result-in .35s ease-out both}
+@keyframes mt-tool-head-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes mt-privacy-glow{0%,100%{box-shadow:0 0 0 rgba(53,102,233,0)}50%{box-shadow:0 0 0 4px rgba(53,102,233,.055)}}
+@keyframes mt-result-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.tk-page .tk-head,.tk-page .tk-privacy,.tk-page .tk-result,.tk-page .tk-output,.tk-page .result-panel{animation:none!important;transition:none!important}}

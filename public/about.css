@@ -7,3 +7,15 @@
 .about-contact{padding:95px 0}.about-contact-card{display:grid;grid-template-columns:1.4fr 1fr;gap:55px;align-items:center;padding:48px;border-radius:28px;background:#173126;color:#fff;box-shadow:0 20px 45px rgba(24,42,31,.14)}.about-contact h2{font-size:clamp(38px,4.5vw,58px);margin-top:14px}.about-contact p{color:rgba(255,255,255,.75);line-height:1.75;font-weight:500}.about-contact-actions{display:flex;flex-direction:column;align-items:flex-start;gap:13px}.contact-email{font-size:18px;font-weight:800;color:#f0c298;word-break:break-word}.contact-instagram,.contact-location{font-size:12px;font-weight:700;color:rgba(255,255,255,.78)}
 @media(max-width:800px){.about-page .primary-nav{display:none}.about-hero-inner,.about-story-grid,.about-contact-card{grid-template-columns:1fr}.about-profile-card{min-height:250px}.value-grid{grid-template-columns:1fr}.about-hero{padding:72px 0 80px}.about-story,.about-contact{padding:75px 0}.about-contact-card{padding:32px}.about-hero-copy>p{font-size:16px}}
 @media(max-width:520px){.about-actions{align-items:flex-start;flex-direction:column}.about-hero h1{font-size:56px}.about-profile-card{min-height:220px}.about-story h2,.about-contact h2{font-size:40px}.value-grid article{padding:26px}}
+
+
+/* About page: slow ambient halo and gentle reveal for the founder story. */
+.about-page .about-hero-orb{animation:mt-about-breathe 9s ease-in-out infinite}
+.about-page .about-hero-inner{animation:mt-about-reveal .85s cubic-bezier(.2,.7,.2,1) both}
+.about-page .about-hero h1 em{background:linear-gradient(90deg,#e4b28b,#fff0dc,#e4b28b);background-size:200% auto;background-clip:text;-webkit-background-clip:text;color:transparent;animation:mt-about-shimmer 8s linear infinite}
+.about-page .about-portrait,.about-page .about-photo{transition:transform .5s cubic-bezier(.2,.7,.2,1),filter .5s ease}
+.about-page .about-portrait:hover,.about-page .about-photo:hover{transform:translateY(-4px) rotate(.3deg);filter:saturate(1.04)}
+@keyframes mt-about-breathe{0%,100%{transform:scale(1);opacity:.65}50%{transform:scale(1.12);opacity:1}}
+@keyframes mt-about-reveal{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes mt-about-shimmer{to{background-position:200% center}}
+@media(prefers-reduced-motion:reduce){.about-page .about-hero-orb,.about-page .about-hero-inner,.about-page .about-hero h1 em{animation:none!important}.about-page .about-portrait,.about-page .about-photo{transition:none!important}}

@@ -19,3 +19,13 @@
 .emi-table-scroll th { position: sticky; top: 0; background: #f1efe7; color: var(--muted, #72776c); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
 .emi-table-scroll tr:last-child td { border-bottom: 0; }
 @media (max-width: 760px) { .emi-layout { grid-template-columns: 1fr; } .emi-result-card { padding: 22px; } }
+
+
+/* EMI calculator: a subtle focus on the result, without moving form controls. */
+.emi-layout{animation:mt-emi-enter .45s ease-out both}
+.emi-result-card{position:relative;overflow:hidden;box-shadow:0 14px 34px rgba(52,69,53,.12)}
+.emi-result-card:after{content:"";position:absolute;inset:-40% auto -40% -55%;width:35%;transform:rotate(18deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.13),transparent);animation:mt-emi-sheen 7s ease-in-out infinite;pointer-events:none}
+.emi-value{transition:color .2s ease}
+@keyframes mt-emi-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes mt-emi-sheen{0%,25%{left:-55%}70%,100%{left:130%}}
+@media(prefers-reduced-motion:reduce){.emi-layout,.emi-result-card:after{animation:none!important}.emi-value{transition:none!important}}

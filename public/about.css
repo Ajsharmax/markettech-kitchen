@@ -19,3 +19,8 @@
 @keyframes mt-about-reveal{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 @keyframes mt-about-shimmer{to{background-position:200% center}}
 @media(prefers-reduced-motion:reduce){.about-page .about-hero-orb,.about-page .about-hero-inner,.about-page .about-hero h1 em{animation:none!important}.about-page .about-portrait,.about-page .about-photo{transition:none!important}}
+
+
+.about-page .about-profile-card{animation:mt-about-reveal .9s .08s both;transition:transform .35s ease,box-shadow .35s ease}
+.about-page .about-profile-card:hover{transform:translateY(-4px);box-shadow:0 20px 55px rgba(0,0,0,.14)}
+.about-page .about-story{animation:mt-about-reveal .8s .12s both}

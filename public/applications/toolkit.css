@@ -155,3 +155,14 @@
 @keyframes mt-privacy-glow{0%,100%{box-shadow:0 0 0 rgba(53,102,233,0)}50%{box-shadow:0 0 0 4px rgba(53,102,233,.055)}}
 @keyframes mt-result-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.tk-page .tk-head,.tk-page .tk-privacy,.tk-page .tk-result,.tk-page .tk-output,.tk-page .result-panel{animation:none!important;transition:none!important}}
+
+
+/* Live PDF tool classes: motion feedback on the actual upload and result elements. */
+.tk-page .tk-head{animation:mt-tool-head-in .5s ease-out both}
+.tk-page .tk-drop,.tk-page .drop-zone{transition:border-color .2s ease,box-shadow .2s ease,background .2s ease}
+.tk-page .tk-drop:hover,.tk-page .drop-zone:hover{border-color:#6d8df0;box-shadow:0 0 0 4px rgba(65,105,225,.07)}
+.tk-page .tk-drop:focus-within,.tk-page .drop-zone:focus-within{border-color:#3566e9;box-shadow:0 0 0 4px rgba(53,102,233,.09)}
+.tk-page .tk-status:empty{display:none}
+.tk-page .tk-results:not(:empty){animation:mt-result-in .35s ease-out both}
+.tk-page .tk-panel{transition:border-color .2s ease,box-shadow .2s ease}
+.tk-page .tk-panel:focus-within{border-color:#c4d1f4;box-shadow:0 0 0 3px rgba(53,102,233,.05)}

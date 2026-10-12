@@ -1,7 +1,7 @@
 /* Single source of truth for the Applications hub and the tool pages.
  * status "ready"  = built, runs entirely in the browser, has its own page at /applications/<slug>.
  * status "coming-soon" = not available yet; `reason` says why. Nothing is faked. */
-export const APPLICATION_CATEGORIES = ["Print Helpers", "Organize PDF", "Edit PDF", "Convert from PDF", "Convert to PDF", "Optimize PDF", "Security", "Career Tools"];
+export const APPLICATION_CATEGORIES = ["Print Helpers", "Organize PDF", "Edit PDF", "Convert from PDF", "Convert to PDF", "Optimize PDF", "Security", "Career Tools", "Financial Tools"];
 
 const ready = (slug, module, name, category, icon, description, extra = {}) => ({ id: slug, slug, name, category, icon, description, status: "ready", module, ...extra });
 const soon = (slug, name, category, icon, description, reason) => ({ id: slug, slug, name, category, icon, description, status: "coming-soon", module: null, reason });
@@ -52,5 +52,8 @@ export const APPLICATIONS = [
   soon("unlock-pdf", "Unlock PDF", "Security", "⚷", "Remove a password you know.", "Needs a vetted WebAssembly decryption module."),
 
   /* Career Tools */
-  ready("cv-resume-creator", "cv-resume", "CV / Resume Creator", "Career Tools", "▦", "Build a professional CV or resume with 12 stunning templates. Fill in your details, pick a style, and download as PDF.", { featured: true, wide: true, css: "/applications/cv-resume.css?v=1" })
+  ready("cv-resume-creator", "cv-resume", "CV / Resume Creator", "Career Tools", "▦", "Build a professional CV or resume with 12 stunning templates. Fill in your details, pick a style, and download as PDF.", { featured: true, wide: true, css: "/applications/cv-resume.css?v=1" }),
+
+  /* Financial Tools */
+  ready("emi-calculator", "emi", "EMI Calculator", "Financial Tools", "₹", "Calculate monthly loan EMI, total interest, total repayment, and view a month-by-month amortization schedule.", { featured: true, wide: true })
 ];

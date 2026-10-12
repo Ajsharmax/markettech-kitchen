@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Choose a MarketTech Kitchen membership plan.">
+  <title>Membership plans | MarketTech Kitchen</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/subscription.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="MarketTech Kitchen home">
+      <span class="brand-mark">M</span>
+      <span>MarketTech <small>KITCHEN</small></span>
+    </a>
+    <a class="back-link" href="/">Back to shop <span aria-hidden="true">↗</span></a>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="page-title">
+      <p class="eyebrow"><span></span> MEMBERSHIP, MADE SIMPLE</p>
+      <h1>Stock your kitchen<br><em>with more confidence.</em></h1>
+      <p class="hero-copy">Get practical perks, early access to useful tools, and member-only savings. Pick a plan that fits the way you shop.</p>
+      <div class="billing-toggle" role="group" aria-label="Billing frequency">
+        <button class="billing-option active" type="button" data-billing="monthly" aria-pressed="true">Monthly</button>
+        <button class="billing-option" type="button" data-billing="yearly" aria-pressed="false">Yearly <b>Save 20%</b></button>
+      </div>
+    </section>
+
+    <section class="plans" aria-label="Membership plans">
+      <article class="plan-card">
+        <p class="plan-kicker">FOR STARTING OUT</p>
+        <h2>Starter</h2>
+        <p class="plan-description">Simple savings for occasional kitchen upgrades.</p>
+        <p class="price"><span class="currency">₹</span><span data-monthly="199" data-yearly="159">199</span><small>/month</small></p>
+        <button class="plan-button" type="button" data-plan="Starter">Choose Starter <span>→</span></button>
+        <ul class="features">
+          <li>5% member savings on every order</li>
+          <li>Early access to new arrivals</li>
+          <li>Priority order updates</li>
+        </ul>
+      </article>
+
+      <article class="plan-card featured">
+        <div class="popular">MOST POPULAR</div>
+        <p class="plan-kicker">FOR REGULAR COOKS</p>
+        <h2>Growth</h2>
+        <p class="plan-description">More value and more room to build your kitchen.</p>
+        <p class="price"><span class="currency">₹</span><span data-monthly="499" data-yearly="399">499</span><small>/month</small></p>
+        <button class="plan-button" type="button" data-plan="Growth">Choose Growth <span>→</span></button>
+        <ul class="features">
+          <li>10% member savings on every order</li>
+          <li>Free standard delivery</li>
+          <li>Monthly members-only offers</li>
+          <li>Priority support</li>
+        </ul>
+      </article>
+
+      <article class="plan-card">
+        <p class="plan-kicker">FOR SERIOUS SETUPS</p>
+        <h2>Pro</h2>
+        <p class="plan-description">The complete membership for ambitious kitchens.</p>
+        <p class="price"><span class="currency">₹</span><span data-monthly="999" data-yearly="799">999</span><small>/month</small></p>
+        <button class="plan-button" type="button" data-plan="Pro">Choose Pro <span>→</span></button>
+        <ul class="features">
+          <li>15% member savings on every order</li>
+          <li>Free express delivery</li>
+          <li>Exclusive product previews</li>
+          <li>Dedicated member support</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="trust-row" aria-label="Membership benefits">
+      <div><span>✦</span><strong>Cancel anytime</strong><small>No lock-in for this demo</small></div>
+      <div><span>◎</span><strong>Secure by design</strong><small>Payments are not connected</small></div>
+      <div><span>♡</span><strong>Made for real kitchens</strong><small>Useful perks, no clutter</small></div>
+    </section>
+
+    <section class="faq" aria-labelledby="faq-title">
+      <div><p class="eyebrow"><span></span> GOOD TO KNOW</p><h2 id="faq-title">Questions,<br><em>answered.</em></h2></div>
+      <div class="faq-list">
+        <details open><summary>Can I change plans later?</summary><p>Yes. In a live version, you would be able to upgrade or downgrade from your account at any time.</p></details>
+        <details><summary>Are these real subscription payments?</summary><p>No. This is a presentation-only demo page. No payment gateway or recurring billing is connected.</p></details>
+        <details><summary>What happens after I choose a plan?</summary><p>A demo confirmation appears so you can test the experience. A production version can connect this step to Razorpay or Stripe.</p></details>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" role="status" aria-live="polite"></div>
+  <footer><span>© MarketTech Kitchen</span><span>Thoughtful tools for everyday cooking.</span></footer>
+  <script>
+    const billingButtons = document.querySelectorAll('[data-billing]');
+    const prices = document.querySelectorAll('[data-monthly]');
+    const toast = document.querySelector('.toast');
+    billingButtons.forEach(button => button.addEventListener('click', () => {
+      const billing = button.dataset.billing;
+      billingButtons.forEach(item => { item.classList.toggle('active', item === button); item.setAttribute('aria-pressed', item === button); });
+      prices.forEach(price => { price.textContent = price.dataset[billing]; });
+    }));
+    document.querySelectorAll('[data-plan]').forEach(button => button.addEventListener('click', () => {
+      toast.textContent = `${button.dataset.plan} selected — this is a demo, so no payment is taken.`;
+      toast.classList.add('show');
+      window.setTimeout(() => toast.classList.remove('show'), 4200);
+    }));
+  </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 150" role="img" aria-labelledby="title desc">
+<title id="title">MarketTech</title><desc id="desc">MarketTech — Smart Shopping, Smart Tools, Smart You</desc>
+<defs><linearGradient id="blue" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#087bff"/><stop offset="1" stop-color="#16b9e8"/></linearGradient></defs>
+<g transform="translate(14 12)">
+<path d="M22 34h18l13 57h82l17-43H48" fill="none" stroke="#0b1c35" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M49 36l28 26 35-38" fill="none" stroke="url(#blue)" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M10 47h21M4 63h29M0 79h33" fill="none" stroke="url(#blue)" stroke-width="7" stroke-linecap="round"/>
+<circle cx="67" cy="106" r="8" fill="#0b1c35"/><circle cx="122" cy="106" r="8" fill="#0b1c35"/>
+</g>
+<text x="180" y="78" font-family="Arial,Helvetica,sans-serif" font-size="65" font-weight="800" letter-spacing="-2"><tspan fill="#0b1c35">Market</tspan><tspan fill="#087bff">Tech</tspan></text>
+<text x="182" y="111" font-family="Arial,Helvetica,sans-serif" font-size="16" letter-spacing="3.2" fill="#0b1c35">SMART SHOPPING <tspan fill="#087bff">•</tspan> SMART TOOLS <tspan fill="#087bff">•</tspan> SMART YOU</text>
+</svg>

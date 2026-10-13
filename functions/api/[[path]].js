@@ -1816,6 +1816,16 @@ async function handleApi(request, env) {
   if (route.startsWith('/api/admin/')) {
     if (!await sessionUser(request, env, 'admin')) return json(401, { error: 'Please sign in to continue.' });
 
+    if (route === '/api/admin/flipkart/status' && method === 'GET') {
+      return json(200, {
+        ok: true,
+        authenticated: true,
+        credentialsConfigured: Boolean(String(env.FLIPKART_APP_ID || '').trim() && String(env.FLIPKART_APP_SECRET || '')),
+        authEndpoint: 'https://api.flipkart.net/oauth-service/oauth/token',
+        testMethod: 'POST'
+      });
+    }
+
     if (route === '/api/admin/flipkart/test' && method === 'POST') {
       const clientId = String(env.FLIPKART_APP_ID || '').trim();
       const clientSecret = String(env.FLIPKART_APP_SECRET || '');

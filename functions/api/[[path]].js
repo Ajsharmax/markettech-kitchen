@@ -1816,6 +1816,50 @@ async function handleApi(request, env) {
   if (route.startsWith('/api/admin/')) {
     if (!await sessionUser(request, env, 'admin')) return json(401, { error: 'Please sign in to continue.' });
 
+    if (route === '/api/admin/flipkart/test' && method === 'POST') {
+      const clientId = String(env.FLIPKART_APP_ID || '').trim();
+      const clientSecret = String(env.FLIPKART_APP_SECRET || '');
+      if (!clientId || !clientSecret) {
+        return json(503, { ok: false, error: 'Flipkart credentials are not configured in this environment.' });
+      }
+
+      const tokenUrl = new URL('https://api.flipkart.net/oauth-service/oauth/token');
+      tokenUrl.searchParams.set('grant_type', 'client_credentials');
+      tokenUrl.searchParams.set('scope', 'Seller_Api,Default');
+
+      let response;
+      try {
+        response = await fetch(tokenUrl.toString(), {
+          method: 'GET',
+          headers: {
+            Authorization: 'Basic ' + btoa(clientId + ':' + clientSecret),
+            Accept: 'application/json'
+          }
+        });
+      } catch {
+        return json(502, { ok: false, error: 'Could not reach Flipkart authentication service.' });
+      }
+
+      let tokenData = {};
+      try { tokenData = await response.json(); } catch {}
+      if (!response.ok || !tokenData.access_token) {
+        return json(502, {
+          ok: false,
+          error: 'Flipkart authentication failed. Check the saved credentials and API approval.',
+          providerStatus: response.status
+        });
+      }
+
+      return json(200, {
+        ok: true,
+        connected: true,
+        message: 'Flipkart authentication succeeded. The access token was not returned to the browser.',
+        tokenType: String(tokenData.token_type || 'bearer'),
+        expiresIn: Number(tokenData.expires_in || 0),
+        scope: String(tokenData.scope || 'Seller_Api')
+      });
+    }
+
     if (route === '/api/admin/settings' && method === 'GET') return json(200, await getSettings(env));
     if (route === '/api/admin/settings' && method === 'PUT') {
       const body = await readJson(request);

@@ -1826,15 +1826,15 @@ async function handleApi(request, env) {
       });
     }
 
-    if (route === '/api/admin/flipkart/test' && method === 'GET') {
+    if (route === '/api/admin/flipkart/test' && method === 'GET' && url.searchParams.get('run') !== 'oauth') {
       return json(200, {
         ok: true,
         diagnosticCode: 'FLIPKART_TEST_ROUTE_REACHED',
-        message: 'The authenticated test route is running. Use the admin integration test action to perform the OAuth request with POST.'
+        message: 'The authenticated test route is running. Add ?run=oauth to perform the read-only authentication test.'
       });
     }
 
-    if (route === '/api/admin/flipkart/test' && method === 'POST') {
+    if (route === '/api/admin/flipkart/test' && (method === 'POST' || (method === 'GET' && url.searchParams.get('run') === 'oauth'))) {
       const clientId = String(env.FLIPKART_APP_ID || '').trim();
       const clientSecret = String(env.FLIPKART_APP_SECRET || '');
       if (!clientId || !clientSecret) {

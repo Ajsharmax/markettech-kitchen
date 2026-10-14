@@ -1826,7 +1826,15 @@ async function handleApi(request, env) {
       });
     }
 
-    if (route === '/api/admin/flipkart/test' && ['GET', 'POST'].includes(method)) {
+    if (route === '/api/admin/flipkart/test' && method === 'GET') {
+      return json(200, {
+        ok: true,
+        diagnosticCode: 'FLIPKART_TEST_ROUTE_REACHED',
+        message: 'The authenticated test route is running. Use the admin integration test action to perform the OAuth request with POST.'
+      });
+    }
+
+    if (route === '/api/admin/flipkart/test' && method === 'POST') {
       const clientId = String(env.FLIPKART_APP_ID || '').trim();
       const clientSecret = String(env.FLIPKART_APP_SECRET || '');
       if (!clientId || !clientSecret) {

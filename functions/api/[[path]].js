@@ -1865,7 +1865,17 @@ async function handleApi(request, env) {
       }
 
       let tokenData = {};
-      try { tokenData = await response.json(); } catch {}
+      try {
+        tokenData = await response.json();
+      } catch (error) {
+        console.error('Flipkart OAuth response could not be read:', error?.name || 'ResponseReadError');
+        return json(502, {
+          ok: false,
+          error: 'Flipkart responded, but its authentication response could not be read.',
+          diagnosticCode: 'FLIPKART_RESPONSE_READ_FAILED',
+          providerStatus: response.status
+        });
+      }
       if (!response.ok || !tokenData.access_token) {
         return json(502, {
           ok: false,

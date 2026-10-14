@@ -1826,11 +1826,11 @@ async function handleApi(request, env) {
       });
     }
 
-    if (route === '/api/admin/flipkart/test' && method === 'POST') {
+    if (route === '/api/admin/flipkart/test' && ['GET', 'POST'].includes(method)) {
       const clientId = String(env.FLIPKART_APP_ID || '').trim();
       const clientSecret = String(env.FLIPKART_APP_SECRET || '');
       if (!clientId || !clientSecret) {
-        return json(503, { ok: false, error: 'Flipkart credentials are not configured in this environment.' });
+        return json(503, { ok: false, error: 'Flipkart credentials are not configured in this environment.', diagnosticCode: 'CREDENTIALS_MISSING' });
       }
 
       const tokenUrl = new URL('https://api.flipkart.net/oauth-service/oauth/token');
@@ -1839,15 +1839,29 @@ async function handleApi(request, env) {
 
       let response;
       try {
+        const credentialBytes = new TextEncoder().encode(clientId + ':' + clientSecret);
+        let credentialBinary = '';
+        for (const byte of credentialBytes) credentialBinary += String.fromCharCode(byte);
+        const authorization = 'Basic ' + btoa(credentialBinary);
         response = await fetch(tokenUrl.toString(), {
           method: 'GET',
           headers: {
-            Authorization: 'Basic ' + btoa(clientId + ':' + clientSecret),
+            Authorization: authorization,
             Accept: 'application/json'
-          }
+          },
+          signal: AbortSignal.timeout(10000)
         });
-      } catch {
-        return json(502, { ok: false, error: 'Could not reach Flipkart authentication service.' });
+      } catch (error) {
+        console.error('Flipkart OAuth request failed:', error?.name || 'FetchError');
+        return json(502, {
+          ok: false,
+          error: error?.name === 'TimeoutError' || error?.name === 'AbortError'
+            ? 'Flipkart authentication request timed out.'
+            : 'Could not reach Flipkart authentication service.',
+          diagnosticCode: error?.name === 'TimeoutError' || error?.name === 'AbortError'
+            ? 'FLIPKART_TIMEOUT'
+            : 'FLIPKART_FETCH_FAILED'
+        });
       }
 
       let tokenData = {};
@@ -1855,8 +1869,10 @@ async function handleApi(request, env) {
       if (!response.ok || !tokenData.access_token) {
         return json(502, {
           ok: false,
-          error: 'Flipkart authentication failed. Check the saved credentials and API approval.',
-          providerStatus: response.status
+          error: 'Flipkart authentication failed.',
+          diagnosticCode: 'FLIPKART_AUTH_REJECTED',
+          providerStatus: response.status,
+          providerError: String(tokenData.error || tokenData.error_description || 'No access token returned').slice(0, 240)
         });
       }
 

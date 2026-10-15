@@ -118,9 +118,9 @@ function friendly(error, name) {
   if (error instanceof UserError) return error;
   return new UserError("“" + name + "” could not be read: " + msg);
 }
-export async function openPdfJs(bytes, name) {
+export async function openPdfJs(bytes, name, { disableFontFace = true } = {}) {
   const pdfjs = await lib("pdfjs");
-  const task = pdfjs.getDocument({ data: bytes.slice(), isEvalSupported: false, disableFontFace: true });
+  const task = pdfjs.getDocument({ data: bytes.slice(), isEvalSupported: false, disableFontFace });
   task.onPassword = async (update, reason) => {
     const pw = await askPassword(name, reason === 2);
     if (pw === null) { task.destroy(); return; }
@@ -138,14 +138,27 @@ export async function openPdfLib(bytes, name) {
     throw new UserError("“" + name + "” could not be read. It may be damaged or not a real PDF.");
   }
 }
-export async function renderPage(pdf, pageNumber, { scale = 1, canvas } = {}) {
+export async function renderPage(pdf, pageNumber, { scale = 1, canvas, skipText = false } = {}) {
   const page = await pdf.getPage(pageNumber);
   const viewport = page.getViewport({ scale });
   const c = canvas || document.createElement("canvas");
   c.width = Math.max(1, Math.round(viewport.width)); c.height = Math.max(1, Math.round(viewport.height));
   const ctx = c.getContext("2d", { willReadFrequently: true });
   ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height);
-  await page.render({ canvasContext: ctx, viewport }).promise;
+  if (!skipText) await page.render({ canvasContext: ctx, viewport }).promise;
+  else {
+    /* Keep vector lines and images as artwork while text is rebuilt as editable PowerPoint boxes. */
+    const fillText = ctx.fillText, strokeText = ctx.strokeText, suppressText = () => {};
+    try {
+      try { ctx.fillText = suppressText; ctx.strokeText = suppressText; }
+      catch { throw new UserError("This browser cannot isolate PDF text for editable conversion."); }
+      if (ctx.fillText !== suppressText || ctx.strokeText !== suppressText) throw new UserError("This browser cannot isolate PDF text for editable conversion.");
+      await page.render({ canvasContext: ctx, viewport }).promise;
+    } finally {
+      try { ctx.fillText = fillText; } catch {}
+      try { ctx.strokeText = strokeText; } catch {}
+    }
+  }
   return c;
 }
 export function canvasBlob(canvas, type = "image/png", quality = 0.92) {

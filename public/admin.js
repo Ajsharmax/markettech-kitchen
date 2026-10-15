@@ -13,6 +13,9 @@
   let integrationStatus = {};
   let flipkartListingBatch = 0;
   let flipkartListingsLoading = false;
+  let flipkartOrderCursor = '';
+  let flipkartOrderPage = 0;
+  let flipkartOrdersLoading = false;
   let currentPage = 'overview';
   let toastTimer;
   let previewToken = '';
@@ -392,6 +395,67 @@
       flipkartListingsLoading = false;
       button.disabled = false;
       button.textContent = 'Load listings ↗';
+    }
+  }
+
+
+  async function loadFlipkartOrders(reset = false) {
+    if (flipkartOrdersLoading) return;
+    if (reset) {
+      flipkartOrderCursor = '';
+      flipkartOrderPage = 0;
+    }
+    flipkartOrdersLoading = true;
+    const button = $('#load-flipkart-orders');
+    const nextButton = $('#flipkart-orders-next');
+    const rows = $('#flipkart-orders-rows');
+    const summary = $('#flipkart-orders-summary');
+    const error = $('#flipkart-orders-error');
+    button.disabled = true;
+    nextButton.disabled = true;
+    button.textContent = 'Loading…';
+    error.textContent = '';
+    if (reset) rows.innerHTML = '<tr><td colspan="5">Loading orders from Flipkart…</td></tr>';
+    try {
+      const params = new URLSearchParams({ view: $('#flipkart-order-view').value });
+      if (flipkartOrderCursor) params.set('cursor', flipkartOrderCursor);
+      const result = await api('/api/admin/flipkart/orders?' + params.toString());
+      const shipments = Array.isArray(result.shipments) ? result.shipments : [];
+      const newRows = shipments.map(shipment => {
+        const orderItems = Array.isArray(shipment.orderItems) ? shipment.orderItems : [];
+        const orderIds = [...new Set(orderItems.map(item => item.orderId || item.order_id).filter(Boolean))];
+        const orderLabel = orderIds.length ? orderIds.join(', ') : (shipment.orderId || shipment.order_id || '—');
+        const itemLabels = orderItems.map(item => {
+          const title = item.title || item.productTitle || item.productName || item.sku || item.sellerSku || item.fsn || 'Order item';
+          const sku = item.sku || item.sellerSku || item.sellerSkuId || '';
+          const quantity = item.quantity ?? item.quantityToShip;
+          return escapeHtml(title) + (sku ? '<br><small>SKU: ' + escapeHtml(sku) + '</small>' : '') + (quantity !== undefined ? ' × ' + escapeHtml(quantity) : '');
+        });
+        const itemLabel = itemLabels.length ? itemLabels.join('<hr style="border:0;border-top:1px solid #eee;margin:6px 0">') : '—';
+        return '<tr>' +
+          '<td><strong>' + escapeHtml(orderLabel) + '</strong><br><small>Shipment: ' + escapeHtml(shipment.shipmentId || shipment.shipment_id || '—') + '</small></td>' +
+          '<td>' + itemLabel + '</td>' +
+          '<td>' + escapeHtml(shipment.status || shipment.state || shipment.shipmentState || '—') + '</td>' +
+          '<td>' + escapeHtml(dateTimeShort(shipment.dispatchByDate || shipment.dispatch_by_date)) + '</td>' +
+          '<td>' + escapeHtml(dateTimeShort(shipment.updatedAt || shipment.updated_at)) + '</td>' +
+          '</tr>';
+      });
+      if (reset) rows.innerHTML = newRows.length ? newRows.join('') : '<tr><td colspan="5">No orders found for this status.</td></tr>';
+      else if (newRows.length) rows.insertAdjacentHTML('beforeend', newRows.join(''));
+      summary.textContent = shipments.length + ' shipment' + (shipments.length === 1 ? '' : 's') + ' on this page. Flipkart returns up to 20 per page.';
+      flipkartOrderCursor = result.nextCursor || '';
+      flipkartOrderPage += 1;
+      $('#flipkart-orders-page-label').textContent = 'Page ' + flipkartOrderPage;
+      nextButton.disabled = !result.hasMore || !flipkartOrderCursor;
+      showToast('Flipkart orders loaded.');
+    } catch (loadError) {
+      if (reset) rows.innerHTML = '<tr><td colspan="5">Orders could not be loaded.</td></tr>';
+      error.textContent = loadError.message || 'Could not load Flipkart orders.';
+      summary.textContent = 'Unable to load orders.';
+    } finally {
+      flipkartOrdersLoading = false;
+      button.disabled = false;
+      button.textContent = 'Load orders ↗';
     }
   }
 
@@ -835,6 +899,10 @@
   $('#policies-form').addEventListener('submit', event => { event.preventDefault(); saveSettingsForm(event.currentTarget, 'policies'); });
   $('#marketing-settings-form').addEventListener('submit', event => { event.preventDefault(); saveSettingsForm(event.currentTarget, 'marketing', ['discountPercent']); });
   $('#refresh-integrations').addEventListener('click', refreshAll);
+
+  $('#load-flipkart-orders').addEventListener('click', () => loadFlipkartOrders(true));
+  $('#flipkart-order-view').addEventListener('change', () => loadFlipkartOrders(true));
+  $('#flipkart-orders-next').addEventListener('click', () => loadFlipkartOrders(false));
   $('#load-flipkart-listings').addEventListener('click', () => loadFlipkartListings(true));
   $('#flipkart-listing-status').addEventListener('change', () => loadFlipkartListings(true));
   $('#flipkart-listing-search').addEventListener('keydown', event => {

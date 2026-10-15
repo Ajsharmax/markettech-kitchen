@@ -256,3 +256,138 @@ tbody td{font-size:11px}
 .admin-body .stat-card:hover,.admin-body .admin-card:hover,.admin-body .integration-card:hover,.admin-body .settings-card:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(39,53,42,.08)}
 .admin-body .admin-brand-logo{transition:transform .3s ease}
 .admin-body .admin-brand:hover .admin-brand-logo{transform:scale(1.025)}
+
+/* Multi-select orders, bulk status actions & order deletion */
+.orders-bulk-bar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px 16px;
+  flex-wrap:wrap;
+  padding:10px 18px;
+  border-top:1px solid #ecefe8;
+  background:#fafbf8;
+  transition:background .2s ease,border-color .2s ease;
+}
+.orders-bulk-bar.has-selection{
+  background:#eff5ec;
+  border-top-color:#dce6d6;
+}
+.orders-bulk-selection{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.orders-bulk-count{
+  font-size:10px;
+  font-weight:600;
+  color:#586856;
+}
+.orders-bulk-bar.has-selection .orders-bulk-count{
+  color:#2d432c;
+}
+.orders-bulk-clear{
+  border:0;
+  background:none;
+  color:#6a7967;
+  font-size:10px;
+  text-decoration:underline;
+  cursor:pointer;
+  padding:0;
+}
+.orders-bulk-clear:hover{
+  color:#2d432c;
+}
+.orders-bulk-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.orders-bulk-actions select{
+  height:33px;
+  border:1px solid #dfe4dc;
+  background:#fffefa;
+  color:#4d5d4d;
+  padding:0 24px 0 10px;
+  font-size:10px;
+}
+.orders-bulk-btn{
+  min-height:33px;
+  padding:0 13px;
+  font-size:10px;
+}
+.admin-button-danger{
+  background:#fff7f5;
+  border-color:#e4bfb6;
+  color:#9c473b;
+}
+.admin-button-danger:hover:not(:disabled){
+  background:#fbeae6;
+  border-color:#d19b8e;
+  color:#833429;
+}
+.order-select-th,
+.order-select-td{
+  width:38px;
+  padding-left:18px!important;
+  padding-right:4px!important;
+  text-align:center;
+}
+.order-select-th input,
+.order-row-checkbox{
+  width:15px;
+  height:15px;
+  accent-color:#4f664e;
+  cursor:pointer;
+  margin:0;
+  vertical-align:middle;
+}
+#order-rows tr.is-selected{
+  background:#f3f7f0;
+}
+#order-rows tr.is-selected:hover{
+  background:#ebf2e7;
+}
+td.order-row-actions{
+  display:table-cell;
+  text-align:right;
+  padding-right:10px;
+}
+.order-row-actions .table-actions button{
+  height:26px;
+  border:1px solid #e2e5dc;
+  background:#fffefa;
+  color:#5f705c;
+  padding:0 9px;
+  font-size:9px;
+  cursor:pointer;
+}
+.order-row-actions .table-actions button:hover{
+  border-color:#8d9b85;
+  color:#364935;
+}
+.order-row-actions .table-actions button.delete-action:hover{
+  border-color:#d6aaa0;
+  color:#a45e52;
+  background:#fdf6f4;
+}
+.order-detail-actions{
+  justify-content:space-between;
+  margin-top:18px;
+}
+@media(max-width:760px){
+  .orders-bulk-bar{
+    padding:11px 12px;
+    align-items:flex-start;
+    flex-direction:column;
+  }
+  .orders-bulk-actions{
+    width:100%;
+  }
+  .orders-bulk-actions select,
+  .orders-bulk-btn{
+    flex:1;
+  }
+}

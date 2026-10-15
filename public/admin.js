@@ -18,6 +18,9 @@
   let flipkartOrdersLoading = false;
   let currentPage = 'overview';
   let toastTimer;
+  const selectedOrderIds = new Set();
+  let lastClickedOrderId = null;
+  let ordersBulkBusy = false;
   let previewToken = '';
   try { previewToken = sessionStorage.getItem('mt-admin-preview-token') || ''; } catch { /* storage may be disabled */ }
 
@@ -292,7 +295,10 @@
     const customer = order.customer || {};
     const count = (order.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
     const statusOptions = statuses.map(status => `<option value="${status}"${status === order.status ? ' selected' : ''}>${status}</option>`).join('');
-    if (full) return `<tr data-order-id="${escapeHtml(order.id)}"><td><span class="order-id">${escapeHtml(order.id)}</span></td><td><div class="customer-cell"><strong>${escapeHtml(customer.name || 'Customer')}</strong><small>${escapeHtml(customer.phone || '')}</small></div></td><td class="date-cell"><span>${escapeHtml(timeAgo(order.createdAt))}</span><small class="order-time">${escapeHtml(timeShort(order.createdAt))}</small></td><td>${count} ${count === 1 ? 'item' : 'items'}</td><td><span class="order-total">${formatMoney(order.total)}</span></td><td><select class="inline-select" data-status-select aria-label="Change status for ${escapeHtml(order.id)}">${statusOptions}</select></td><td class="order-row-actions"><button type="button" data-action="view-order" aria-label="View order">↗</button></td></tr>`;
+    if (full) {
+      const isSelected = selectedOrderIds.has(order.id);
+      return `<tr data-order-id="${escapeHtml(order.id)}" class="${isSelected ? 'is-selected' : ''}"><td class="order-select-td"><input type="checkbox" class="order-row-checkbox" data-order-select value="${escapeHtml(order.id)}" aria-label="Select order ${escapeHtml(order.id)}"${isSelected ? ' checked' : ''}></td><td><span class="order-id">${escapeHtml(order.id)}</span></td><td><div class="customer-cell"><strong>${escapeHtml(customer.name || 'Customer')}</strong><small>${escapeHtml(customer.phone || '')}</small></div></td><td class="date-cell"><span>${escapeHtml(timeAgo(order.createdAt))}</span><small class="order-time">${escapeHtml(timeShort(order.createdAt))}</small></td><td>${count} ${count === 1 ? 'item' : 'items'}</td><td><span class="order-total">${formatMoney(order.total)}</span></td><td><select class="inline-select" data-status-select aria-label="Change status for ${escapeHtml(order.id)}">${statusOptions}</select></td><td class="order-row-actions"><div class="table-actions"><button type="button" data-action="view-order" aria-label="View order ${escapeHtml(order.id)}">View ↗</button><button type="button" class="delete-action" data-action="delete-order" aria-label="Delete order ${escapeHtml(order.id)}">Delete</button></div></td></tr>`;
+    }
     return `<tr data-order-id="${escapeHtml(order.id)}"><td><span class="order-id">${escapeHtml(order.id)}</span></td><td><div class="customer-cell"><strong>${escapeHtml(customer.name || 'Customer')}</strong><small>${escapeHtml(customer.phone || '')}</small></div></td><td class="date-cell">${escapeHtml(timeAgo(order.createdAt))}</td><td><span class="order-total">${formatMoney(order.total)}</span></td><td><span class="status-pill ${statusClass(order.status)}">${escapeHtml(order.status || 'New')}</span></td><td><button type="button" class="row-view" data-action="view-order" aria-label="View order">↗</button></td></tr>`;
   }
 
@@ -483,14 +489,49 @@
     URL.revokeObjectURL(link.href);
   }
 
-  function renderOrders() {
+  function visibleOrders() {
     const search = ($('#order-search')?.value || '').trim().toLowerCase();
     const status = $('#order-status-filter')?.value || 'all';
-    const list = orders.filter(order => {
+    return orders.filter(order => {
       const customer = order.customer || {};
       const searchable = `${order.id} ${customer.name || ''} ${customer.phone || ''} ${customer.email || ''}`.toLowerCase();
       return (!search || searchable.includes(search)) && (status === 'all' || order.status === status);
     });
+  }
+
+  function syncOrdersBulkUi(list = visibleOrders()) {
+    const existingIds = new Set(orders.map(order => order.id));
+    for (const id of [...selectedOrderIds]) {
+      if (!existingIds.has(id)) selectedOrderIds.delete(id);
+    }
+    const selectedCount = selectedOrderIds.size;
+    const countLabel = $('#orders-selected-count');
+    if (countLabel) {
+      countLabel.textContent = selectedCount === 0
+        ? '0 selected — tick orders below for bulk actions'
+        : `${selectedCount} ${selectedCount === 1 ? 'order' : 'orders'} selected`;
+    }
+    $('#orders-bulk-bar')?.classList.toggle('has-selection', selectedCount > 0);
+    const clearButton = $('#orders-clear-selection');
+    if (clearButton) clearButton.hidden = selectedCount === 0;
+    const applyButton = $('#orders-bulk-status-apply');
+    if (applyButton) applyButton.disabled = selectedCount === 0 || ordersBulkBusy;
+    const deleteButton = $('#orders-bulk-delete');
+    if (deleteButton) deleteButton.disabled = selectedCount === 0 || ordersBulkBusy;
+
+    const selectAll = $('#orders-select-all');
+    if (selectAll) {
+      const visibleSelectedCount = list.filter(order => selectedOrderIds.has(order.id)).length;
+      const allVisibleSelected = list.length > 0 && visibleSelectedCount === list.length;
+      selectAll.checked = allVisibleSelected;
+      selectAll.indeterminate = visibleSelectedCount > 0 && !allVisibleSelected;
+      selectAll.disabled = list.length === 0 || ordersBulkBusy;
+    }
+  }
+
+  function renderOrders() {
+    const list = visibleOrders();
+    syncOrdersBulkUi(list);
     $('#orders-count-label').textContent = `${list.length} ${list.length === 1 ? 'order' : 'orders'} · all payment methods`;
     $('#order-rows').innerHTML = list.map(order => orderRow(order, true)).join('');
     $('#empty-orders-admin').hidden = list.length > 0;
@@ -574,8 +615,10 @@
       <label class="payment-status-control">Payment status<select id="detail-payment-status" data-order-id="${escapeHtml(order.id)}">${paymentOptions}</select></label>
       <div class="detail-items">${items.map(item => `<div class="detail-item"><img src="${escapeHtml(item.image || '/images/product-pan.jpg')}" alt=""><div><strong>${escapeHtml(item.name)}</strong><small>Qty ${Number(item.quantity)} × ${formatMoney(item.price)}</small></div><span>${formatMoney(Number(item.price) * Number(item.quantity))}</span></div>`).join('')}</div>
       <div class="detail-totals"><div><span>Subtotal</span><span>${formatMoney(order.subtotal)}</span></div>${Number(order.discount) ? `<div><span>Promo ${escapeHtml(order.discountCode || '')}</span><span>−${formatMoney(order.discount)}</span></div>` : ''}<div><span>Delivery</span><span>${Number(order.shipping) ? formatMoney(order.shipping) : 'On us'}</span></div><div><strong>Total due</strong><strong>${formatMoney(order.total)}</strong></div></div>
-      <div class="detail-address"><strong>Deliver to</strong><p>${escapeHtml(customer.name || '')}<br>${fullAddress}<br>${escapeHtml(customer.phone || '')}</p></div>${customer.note ? `<p class="detail-note">Customer note: “${escapeHtml(customer.note)}”</p>` : ''}`;
+      <div class="detail-address"><strong>Deliver to</strong><p>${escapeHtml(customer.name || '')}<br>${fullAddress}<br>${escapeHtml(customer.phone || '')}</p></div>${customer.note ? `<p class="detail-note">Customer note: “${escapeHtml(customer.note)}”</p>` : ''}
+      <div class="admin-modal-actions order-detail-actions"><button type="button" class="admin-button admin-button-danger" id="detail-delete-order" data-order-id="${escapeHtml(order.id)}">Delete order</button><button type="button" class="admin-button admin-button-light" data-close-admin-modal>Close</button></div>`;
     $('#detail-payment-status').addEventListener('change', event => updatePaymentStatus(order.id, event.target.value, event.target));
+    $('#detail-delete-order').addEventListener('click', event => deleteOrder(order.id, event.currentTarget, true));
     openAdminModal('#order-detail-modal');
   }
 
@@ -608,6 +651,108 @@
       if (select) select.value = orders.find(item => item.id === id)?.status || 'New';
       showToast(error.message);
     } finally { if (select) select.disabled = false; }
+  }
+
+  async function deleteOrder(id, button, closeModalOnDelete = false) {
+    const order = orders.find(item => item.id === id);
+    if (!order) return;
+    const message = order.status !== 'Cancelled'
+      ? `Delete order ${id}? Its reserved items will be returned to stock and this cannot be undone.`
+      : `Delete order ${id}? This action cannot be undone.`;
+    if (!window.confirm(message)) return;
+    if (button) button.disabled = true;
+    try {
+      await api(`/api/admin/orders/${encodeURIComponent(id)}`, { method: 'DELETE' });
+      selectedOrderIds.delete(id);
+      if (closeModalOnDelete) closeAdminModals();
+      await refreshAll();
+      showToast(`Order ${id} deleted.`);
+    } catch (error) {
+      if (button) button.disabled = false;
+      showToast(error.message);
+    }
+  }
+
+  async function bulkUpdateOrderStatus() {
+    if (ordersBulkBusy) return;
+    const ids = [...selectedOrderIds].filter(id => orders.some(order => order.id === id));
+    if (!ids.length) {
+      showToast('Select at least one order first.');
+      return;
+    }
+    const statusSelect = $('#orders-bulk-status');
+    const status = statusSelect?.value || '';
+    if (!statuses.includes(status)) {
+      showToast('Choose a status to apply to the selected orders.');
+      statusSelect?.focus();
+      return;
+    }
+    if (status === 'Cancelled') {
+      const nonCancelledCount = ids.filter(id => orders.find(order => order.id === id)?.status !== 'Cancelled').length;
+      if (nonCancelledCount > 0 && !window.confirm(`Cancel ${ids.length} selected ${ids.length === 1 ? 'order' : 'orders'}? Items from non-cancelled orders will be returned to stock.`)) {
+        return;
+      }
+    }
+    const applyButton = $('#orders-bulk-status-apply');
+    const originalLabel = applyButton.textContent;
+    ordersBulkBusy = true;
+    applyButton.textContent = 'Updating…';
+    syncOrdersBulkUi();
+    try {
+      const result = await api('/api/admin/orders/bulk-status', {
+        method: 'POST',
+        body: JSON.stringify({ ids, status })
+      });
+      await refreshAll();
+      if (statusSelect) statusSelect.value = '';
+      const updatedCount = Number(result.updated) || 0;
+      const failedCount = Array.isArray(result.errors) ? result.errors.length : 0;
+      if (failedCount > 0) {
+        showToast(`Updated ${updatedCount} ${updatedCount === 1 ? 'order' : 'orders'} to ${status}. ${failedCount} could not be updated.`);
+      } else {
+        showToast(`${updatedCount} ${updatedCount === 1 ? 'order' : 'orders'} updated to ${status}.`);
+      }
+    } catch (error) {
+      showToast(error.message);
+    } finally {
+      ordersBulkBusy = false;
+      applyButton.textContent = originalLabel;
+      syncOrdersBulkUi();
+    }
+  }
+
+  async function bulkDeleteOrders() {
+    if (ordersBulkBusy) return;
+    const ids = [...selectedOrderIds].filter(id => orders.some(order => order.id === id));
+    if (!ids.length) {
+      showToast('Select at least one order to delete.');
+      return;
+    }
+    if (!window.confirm(`Delete ${ids.length} selected ${ids.length === 1 ? 'order' : 'orders'}? Reserved items from non-cancelled orders will be returned to stock. This cannot be undone.`)) {
+      return;
+    }
+    const deleteButton = $('#orders-bulk-delete');
+    const originalLabel = deleteButton.textContent;
+    ordersBulkBusy = true;
+    deleteButton.textContent = 'Deleting…';
+    syncOrdersBulkUi();
+    try {
+      const result = await api('/api/admin/orders/bulk-delete', {
+        method: 'POST',
+        body: JSON.stringify({ ids })
+      });
+      for (const id of ids) selectedOrderIds.delete(id);
+      lastClickedOrderId = null;
+      await refreshAll();
+      const deletedCount = Number(result.deleted) || ids.length;
+      showToast(`${deletedCount} ${deletedCount === 1 ? 'order' : 'orders'} deleted.`);
+    } catch (error) {
+      showToast(error.message);
+    } finally {
+      ordersBulkBusy = false;
+      deleteButton.textContent = originalLabel;
+      syncOrdersBulkUi();
+    }
   }
 
   async function saveSettingsForm(form, section, numericFields = []) {
@@ -1061,12 +1206,66 @@
   });
 
   document.addEventListener('click', event => {
+    const closeModal = event.target.closest('[data-close-admin-modal]');
+    if (closeModal) {
+      closeAdminModals();
+      return;
+    }
     const view = event.target.closest('[data-action="view-order"]');
     if (view) {
       const order = orders.find(item => item.id === view.closest('[data-order-id]')?.dataset.orderId);
       openOrderDetails(order);
+      return;
+    }
+    const del = event.target.closest('[data-action="delete-order"]');
+    if (del) {
+      const orderId = del.closest('[data-order-id]')?.dataset.orderId;
+      if (orderId) deleteOrder(orderId, del);
     }
   });
+  $('#order-rows').addEventListener('click', event => {
+    const checkbox = event.target.closest('[data-order-select]');
+    if (!checkbox) return;
+    const orderId = checkbox.value;
+    const checked = checkbox.checked;
+    const list = visibleOrders();
+    if (event.shiftKey && lastClickedOrderId && lastClickedOrderId !== orderId) {
+      const startIndex = list.findIndex(order => order.id === lastClickedOrderId);
+      const endIndex = list.findIndex(order => order.id === orderId);
+      if (startIndex >= 0 && endIndex >= 0) {
+        const [from, to] = startIndex < endIndex ? [startIndex, endIndex] : [endIndex, startIndex];
+        for (let index = from; index <= to; index++) {
+          const id = list[index].id;
+          if (checked) selectedOrderIds.add(id);
+          else selectedOrderIds.delete(id);
+        }
+        lastClickedOrderId = orderId;
+        renderOrders();
+        return;
+      }
+    }
+    if (checked) selectedOrderIds.add(orderId);
+    else selectedOrderIds.delete(orderId);
+    lastClickedOrderId = orderId;
+    checkbox.closest('tr')?.classList.toggle('is-selected', checked);
+    syncOrdersBulkUi(list);
+  });
+  $('#orders-select-all').addEventListener('change', event => {
+    const checked = event.target.checked;
+    const list = visibleOrders();
+    for (const order of list) {
+      if (checked) selectedOrderIds.add(order.id);
+      else selectedOrderIds.delete(order.id);
+    }
+    renderOrders();
+  });
+  $('#orders-clear-selection').addEventListener('click', () => {
+    selectedOrderIds.clear();
+    lastClickedOrderId = null;
+    renderOrders();
+  });
+  $('#orders-bulk-status-apply').addEventListener('click', bulkUpdateOrderStatus);
+  $('#orders-bulk-delete').addEventListener('click', bulkDeleteOrders);
   $('#order-rows').addEventListener('change', event => {
     const select = event.target.closest('[data-status-select]');
     if (select) updateOrderStatus(select.closest('[data-order-id]').dataset.orderId, select.value, select);

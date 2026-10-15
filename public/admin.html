@@ -7,9 +7,9 @@
   <meta name="description" content="MarketTech website administration">
   <title>MarketTech Admin</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/admin.css?v=motion-2">
+  <link rel="stylesheet" href="/admin.css?v=orders-bulk-1">
   <link rel="stylesheet" href="/admin-crm.css?v=1">
-  <script src="/admin.js" defer></script>
+  <script src="/admin.js?v=orders-bulk-1" defer></script>
   <script src="/admin-crm.js" defer></script>
 </head>
 <body class="admin-body">
@@ -64,7 +64,7 @@
 
         <section class="admin-page" id="page-orders" hidden>
           <div class="page-title-row"><div><div class="admin-eyebrow">FROM YOUR DOOR TO THEIRS</div><h1>All <em>orders.</em></h1><p>Keep every parcel moving and every customer in the loop.</p></div><button class="admin-button admin-button-light" id="refresh-orders">↻ &nbsp; Refresh orders</button></div>
-          <section class="admin-card full-table-card"><div class="table-toolbar orders-toolbar"><div><strong>Order book</strong><small id="orders-count-label">All orders, in one place.</small></div><div class="order-controls"><label class="admin-search"><span>⌕</span><input id="order-search" type="search" placeholder="Search name or order…"></label><select id="order-status-filter" aria-label="Filter orders by status"><option value="all">All statuses</option><option>New</option><option>Processing</option><option>Shipped</option><option>Delivered</option><option>Cancelled</option></select></div></div><div class="table-wrap"><table><thead><tr><th>ORDER</th><th>CUSTOMER</th><th>DATE</th><th>ITEMS</th><th>TOTAL</th><th>STATUS</th><th></th></tr></thead><tbody id="order-rows"></tbody></table></div><div class="admin-empty" id="empty-orders-admin" hidden><span>▤</span><strong>No orders found</strong><small>Orders placed by your customers will show up here.</small></div></section>
+          <section class="admin-card full-table-card"><div class="table-toolbar orders-toolbar"><div><strong>Order book</strong><small id="orders-count-label">All orders, in one place.</small></div><div class="order-controls"><label class="admin-search"><span>⌕</span><input id="order-search" type="search" placeholder="Search name or order…"></label><select id="order-status-filter" aria-label="Filter orders by status"><option value="all">All statuses</option><option>New</option><option>Processing</option><option>Shipped</option><option>Delivered</option><option>Cancelled</option></select></div></div><div class="orders-bulk-bar" id="orders-bulk-bar"><div class="orders-bulk-selection"><span class="orders-bulk-count" id="orders-selected-count">0 selected — tick orders below for bulk actions</span><button type="button" class="orders-bulk-clear" id="orders-clear-selection" hidden>Clear selection</button></div><div class="orders-bulk-actions"><select id="orders-bulk-status" aria-label="Change status for selected orders"><option value="">Change status to…</option><option value="New">New</option><option value="Processing">Processing</option><option value="Shipped">Shipped</option><option value="Delivered">Delivered</option><option value="Cancelled">Cancelled</option></select><button type="button" class="admin-button admin-button-dark orders-bulk-btn" id="orders-bulk-status-apply" disabled>Update status</button><button type="button" class="admin-button admin-button-danger orders-bulk-btn" id="orders-bulk-delete" disabled>Delete selected</button></div></div><div class="table-wrap"><table><thead><tr><th class="order-select-th"><input type="checkbox" id="orders-select-all" aria-label="Select all visible orders"></th><th>ORDER</th><th>CUSTOMER</th><th>DATE</th><th>ITEMS</th><th>TOTAL</th><th>STATUS</th><th class="actions-th">ACTIONS</th></tr></thead><tbody id="order-rows"></tbody></table></div><div class="admin-empty" id="empty-orders-admin" hidden><span>▤</span><strong>No orders found</strong><small>Orders placed by your customers will show up here.</small></div></section>
         </section>
 
         <section class="admin-page" id="page-customers" hidden>

@@ -53,9 +53,27 @@ function renderTemplatePicker() {
 function renderPreview() {
   const preview = document.getElementById("cvrc-preview-content");
   if (!preview) return;
-  const tpl = TEMPLATES.find(t => t.id === state.activeTemplate);
+  const tpl = TEMPLATES.find(t => t.id === state.activeTemplate) || TEMPLATES[0];
   preview.className = "cvrc-preview " + tpl.tplClass;
   preview.innerHTML = buildResumeHTML(state, tpl);
+}
+
+export function sanitizeResumeData(data) {
+  if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("This is not a resume data object.");
+  const text = (value, max = 5000) => (typeof value === "string" || typeof value === "number") ? String(value).slice(0, max) : "";
+  const entries = (key, fields) => Array.isArray(data[key])
+    ? data[key].filter(entry => entry && typeof entry === "object" && !Array.isArray(entry)).slice(0, 100).map(entry => Object.fromEntries(fields.map(field => [field, text(entry[field])])))
+    : [];
+  return {
+    fullName: text(data.fullName, 200), jobTitle: text(data.jobTitle, 200), email: text(data.email, 320), phone: text(data.phone, 80),
+    location: text(data.location, 200), website: text(data.website, 500), linkedin: text(data.linkedin, 500), summary: text(data.summary),
+    experience: entries("experience", ["title", "company", "startDate", "endDate", "description"]),
+    education: entries("education", ["degree", "institution", "startDate", "endDate", "gpa", "description"]),
+    skills: Array.isArray(data.skills) ? data.skills.filter(value => typeof value === "string").slice(0, 100).map(value => text(value, 200)) : [],
+    certifications: entries("certifications", ["name", "issuer", "date"]),
+    languages: entries("languages", ["name", "level"]),
+    activeTemplate: TEMPLATES.some(template => template.id === data.activeTemplate) ? data.activeTemplate : "classic"
+  };
 }
 
 function escapeHTML(s) {
@@ -451,7 +469,7 @@ function refreshAll() {
 function exportPDF() {
   const preview = document.getElementById("cvrc-preview-content");
   if (!preview) return;
-  const tpl = TEMPLATES.find(t => t.id === state.activeTemplate);
+  const tpl = TEMPLATES.find(t => t.id === state.activeTemplate) || TEMPLATES[0];
   const printArea = document.getElementById("cvrc-print-area");
   printArea.innerHTML = `<div class="${tpl.tplClass}" style="padding:48px 56px;">${preview.innerHTML}</div>`;
   printArea.classList.add("active");
@@ -459,17 +477,26 @@ function exportPDF() {
   setTimeout(() => { window.print(); printArea.classList.remove("active"); }, 100);
 }
 
-function exportHTML() {
+async function exportHTML() {
   const preview = document.getElementById("cvrc-preview-content");
   if (!preview) return;
-  const tpl = TEMPLATES.find(t => t.id === state.activeTemplate);
-  const styles = document.querySelector('link[href*="cv-resume.css"]');
-  const html = `<!doctype html><html><head><meta charset="utf-8"><title>${state.fullName || 'Resume'} - CV</title><style>body{margin:0;background:#fff;}${styles ? '' : ''}</style><link rel="stylesheet" href="/applications/cv-resume.css"></head><body><div class="${tpl.tplClass}" style="max-width:800px;margin:0 auto;">${preview.innerHTML}</div></body></html>`;
-  const blob = new Blob([html], { type: "text/html" });
+  const tpl = TEMPLATES.find(t => t.id === state.activeTemplate) || TEMPLATES[0];
+  let css;
+  try {
+    const response = await fetch("/applications/cv-resume.css", { credentials: "same-origin" });
+    if (!response.ok) throw new Error("Stylesheet request failed.");
+    css = (await response.text()).replace(/<\/style/gi, "<\\/style");
+  } catch {
+    alert("The resume styles could not be loaded. Reload this page and try exporting again.");
+    return;
+  }
+  const title = escapeHTML(state.fullName || "Resume");
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title} - CV</title><style>html,body{margin:0;background:#fff;}${css}\n@media print{body *{visibility:visible!important}.cvrc-print-area{display:none!important}}</style></head><body><div class="${tpl.tplClass}" style="max-width:800px;margin:0 auto;">${preview.innerHTML}</div></body></html>`;
+  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = (state.fullName || "resume") + "-cv.html";
+  a.download = (state.fullName || "resume").replace(/[\\/\\:*?\"<>|]+/g, "-") + "-cv.html";
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -499,7 +526,7 @@ function importJSON() {
     try {
       const text = await file.text();
       const data = JSON.parse(text);
-      Object.assign(state, data);
+      state = sanitizeResumeData(data);
       refreshAll();
       // Also update the form inputs
       const fullnameInput = document.getElementById("cvrc-fullname");

@@ -268,6 +268,87 @@ function parseProduct(row) {
   return { ...product, id: row.id, stock: Number(row.stock) || 0 };
 }
 
+const ALLOWED_ORDER_STATUSES = ['New', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
+const ALLOWED_PAYMENT_STATUSES = ['Pending', 'Paid', 'Due on delivery', 'Failed'];
+
+function orderItemQuantities(order) {
+  const quantities = new Map();
+  for (const item of Array.isArray(order.items) ? order.items : []) {
+    const quantity = Number(item.quantity) || 0;
+    if (item.id && quantity > 0) quantities.set(item.id, (quantities.get(item.id) || 0) + quantity);
+  }
+  return quantities;
+}
+
+async function applyOrderUpdate(env, orderRow, { status, paymentStatus }) {
+  const order = parseOrder(orderRow);
+  const orderId = order.id;
+  const nextStatus = status || order.status;
+  const nextPaymentStatus = paymentStatus || order.paymentStatus;
+  const wasCancelled = order.status === 'Cancelled';
+  const isCancelled = nextStatus === 'Cancelled';
+  const quantities = orderItemQuantities(order);
+  const quantityJson = JSON.stringify(Object.fromEntries(quantities));
+  const updatedOrder = { ...order, status: nextStatus, paymentStatus: nextPaymentStatus, updatedAt: new Date().toISOString() };
+  const data = JSON.stringify(updatedOrder);
+  const changesStatus = wasCancelled !== isCancelled;
+
+  if (changesStatus && isCancelled) {
+    const restock = `UPDATE products
+      SET stock = stock + CAST((SELECT value FROM json_each(?) WHERE key = products.id) AS INTEGER)
+      WHERE id IN (SELECT key FROM json_each(?))
+      AND EXISTS (SELECT 1 FROM orders WHERE id = ? AND status <> 'Cancelled')`;
+    await env.DB.batch([
+      env.DB.prepare(restock).bind(quantityJson, quantityJson, orderId),
+      env.DB.prepare(`UPDATE orders SET status = ?, payment_status = ?, data = ? WHERE id = ? AND status <> 'Cancelled'`)
+        .bind(nextStatus, nextPaymentStatus, data, orderId)
+    ]);
+  } else if (changesStatus && wasCancelled && !isCancelled) {
+    const reserve = `UPDATE products
+      SET stock = stock - CAST((SELECT value FROM json_each(?) WHERE key = products.id) AS INTEGER)
+      WHERE id IN (SELECT key FROM json_each(?))
+      AND EXISTS (SELECT 1 FROM orders WHERE id = ? AND status = 'Cancelled')
+      AND (SELECT COUNT(*) FROM products AS p JOIN json_each(?) AS q ON p.id = q.key
+           WHERE p.stock >= CAST(q.value AS INTEGER)) = (SELECT COUNT(*) FROM json_each(?))`;
+    const updateOrder = `UPDATE orders SET status = ?, payment_status = ?, data = ?
+      WHERE id = ? AND status = 'Cancelled' AND changes() = (SELECT COUNT(*) FROM json_each(?))`;
+    const result = await env.DB.batch([
+      env.DB.prepare(reserve).bind(quantityJson, quantityJson, orderId, quantityJson, quantityJson),
+      env.DB.prepare(updateOrder).bind(nextStatus, nextPaymentStatus, data, orderId, quantityJson)
+    ]);
+    if (!result?.[1]?.meta?.changes) {
+      const current = await env.DB.prepare('SELECT status FROM orders WHERE id = ?').bind(orderId).first();
+      if (current?.status === 'Cancelled') {
+        throw new HttpError(409, 'Not enough stock to reopen this order. Restock the missing products first.');
+      }
+    }
+  } else {
+    await env.DB.prepare('UPDATE orders SET status = ?, payment_status = ?, data = ? WHERE id = ?')
+      .bind(nextStatus, nextPaymentStatus, data, orderId).run();
+  }
+  const refreshed = await env.DB.prepare('SELECT id, status, payment_status, total, created_at, data FROM orders WHERE id = ?').bind(orderId).first();
+  return refreshed ? parseOrder(refreshed) : updatedOrder;
+}
+
+async function deleteOrderRow(env, orderRow) {
+  const order = parseOrder(orderRow);
+  const orderId = order.id;
+  const quantities = orderItemQuantities(order);
+  if (order.status !== 'Cancelled' && quantities.size > 0) {
+    const quantityJson = JSON.stringify(Object.fromEntries(quantities));
+    const restock = `UPDATE products
+      SET stock = stock + CAST((SELECT value FROM json_each(?) WHERE key = products.id) AS INTEGER)
+      WHERE id IN (SELECT key FROM json_each(?))
+      AND EXISTS (SELECT 1 FROM orders WHERE id = ? AND status <> 'Cancelled')`;
+    await env.DB.batch([
+      env.DB.prepare(restock).bind(quantityJson, quantityJson, orderId),
+      env.DB.prepare('DELETE FROM orders WHERE id = ?').bind(orderId)
+    ]);
+  } else {
+    await env.DB.prepare('DELETE FROM orders WHERE id = ?').bind(orderId).run();
+  }
+}
+
 function parseOrder(row) {
   let order = {};
   try { order = JSON.parse(row.data || '{}'); } catch { /* malformed order rows are surfaced with safe columns */ }
@@ -2126,67 +2207,71 @@ async function handleApi(request, env) {
       return json(200, (result.results || []).map(parseOrder));
     }
 
+    if ((route === '/api/admin/orders/bulk-status' && method === 'POST') || (route === '/api/admin/orders/bulk' && method === 'PATCH')) {
+      const body = await readJson(request);
+      const ids = [...new Set((Array.isArray(body.ids) ? body.ids : []).map(id => String(id || '').trim()).filter(Boolean))].slice(0, 200);
+      if (!ids.length) return json(400, { error: 'Select at least one order first.' });
+      if (Object.hasOwn(body, 'status') && !ALLOWED_ORDER_STATUSES.includes(body.status)) return json(400, { error: 'Choose a valid order status.' });
+      if (Object.hasOwn(body, 'paymentStatus') && !ALLOWED_PAYMENT_STATUSES.includes(body.paymentStatus)) return json(400, { error: 'Choose a valid payment status.' });
+      if (!Object.hasOwn(body, 'status') && !Object.hasOwn(body, 'paymentStatus')) return json(400, { error: 'Nothing to update.' });
+
+      const updatedIds = [];
+      const errors = [];
+      for (const orderId of ids) {
+        const orderRow = await env.DB.prepare('SELECT id, status, payment_status, total, created_at, data FROM orders WHERE id = ?').bind(orderId).first();
+        if (!orderRow) {
+          errors.push({ id: orderId, error: 'Order not found.' });
+          continue;
+        }
+        try {
+          await applyOrderUpdate(env, orderRow, body);
+          updatedIds.push(orderId);
+        } catch (error) {
+          errors.push({ id: orderId, error: error?.message || 'Could not update order.' });
+        }
+      }
+      if (!updatedIds.length && errors.length) {
+        return json(409, { error: errors[0].error, errors });
+      }
+      return json(200, { ok: true, updated: updatedIds.length, updatedIds, errors });
+    }
+
+    if ((route === '/api/admin/orders/bulk-delete' && method === 'POST') || (route === '/api/admin/orders/bulk' && method === 'DELETE')) {
+      const body = await readJson(request);
+      const ids = [...new Set((Array.isArray(body.ids) ? body.ids : []).map(id => String(id || '').trim()).filter(Boolean))].slice(0, 200);
+      if (!ids.length) return json(400, { error: 'Select at least one order to delete.' });
+
+      const deletedIds = [];
+      for (const orderId of ids) {
+        const orderRow = await env.DB.prepare('SELECT id, status, payment_status, total, created_at, data FROM orders WHERE id = ?').bind(orderId).first();
+        if (!orderRow) continue;
+        await deleteOrderRow(env, orderRow);
+        deletedIds.push(orderId);
+      }
+      return json(200, { ok: true, deleted: deletedIds.length, deletedIds });
+    }
+
     const orderMatch = route.match(/^\/api\/admin\/orders\/([^/]+)$/);
     if (orderMatch && method === 'PATCH') {
       let orderId;
       try { orderId = decodeURIComponent(orderMatch[1]); } catch { return json(400, { error: 'Invalid order ID.' }); }
       const orderRow = await env.DB.prepare('SELECT id, status, payment_status, total, created_at, data FROM orders WHERE id = ?').bind(orderId).first();
       if (!orderRow) return json(404, { error: 'Order not found.' });
-      const order = parseOrder(orderRow);
       const body = await readJson(request);
-      const allowedStatuses = ['New', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
-      const allowedPayments = ['Pending', 'Paid', 'Due on delivery', 'Failed'];
-      if (Object.hasOwn(body, 'status') && !allowedStatuses.includes(body.status)) return json(400, { error: 'Choose a valid order status.' });
-      if (Object.hasOwn(body, 'paymentStatus') && !allowedPayments.includes(body.paymentStatus)) return json(400, { error: 'Choose a valid payment status.' });
+      if (Object.hasOwn(body, 'status') && !ALLOWED_ORDER_STATUSES.includes(body.status)) return json(400, { error: 'Choose a valid order status.' });
+      if (Object.hasOwn(body, 'paymentStatus') && !ALLOWED_PAYMENT_STATUSES.includes(body.paymentStatus)) return json(400, { error: 'Choose a valid payment status.' });
       if (!Object.hasOwn(body, 'status') && !Object.hasOwn(body, 'paymentStatus')) return json(400, { error: 'Nothing to update.' });
+      const updatedOrder = await applyOrderUpdate(env, orderRow, body);
+      return json(200, updatedOrder);
+    }
 
-      const nextStatus = body.status || order.status;
-      const nextPaymentStatus = body.paymentStatus || order.paymentStatus;
-      const wasCancelled = order.status === 'Cancelled';
-      const isCancelled = nextStatus === 'Cancelled';
-      const quantities = new Map();
-      for (const item of Array.isArray(order.items) ? order.items : []) {
-        const quantity = Number(item.quantity) || 0;
-        if (item.id && quantity > 0) quantities.set(item.id, (quantities.get(item.id) || 0) + quantity);
-      }
-      const quantityJson = JSON.stringify(Object.fromEntries(quantities));
-      const updatedOrder = { ...order, status: nextStatus, paymentStatus: nextPaymentStatus, updatedAt: new Date().toISOString() };
-      const data = JSON.stringify(updatedOrder);
-      const changesStatus = wasCancelled !== isCancelled;
-
-      if (changesStatus && isCancelled) {
-        const restock = `UPDATE products
-          SET stock = stock + CAST((SELECT value FROM json_each(?) WHERE key = products.id) AS INTEGER)
-          WHERE id IN (SELECT key FROM json_each(?))
-          AND EXISTS (SELECT 1 FROM orders WHERE id = ? AND status <> 'Cancelled')`;
-        await env.DB.batch([
-          env.DB.prepare(restock).bind(quantityJson, quantityJson, orderId),
-          env.DB.prepare(`UPDATE orders SET status = ?, payment_status = ?, data = ? WHERE id = ? AND status <> 'Cancelled'`)
-            .bind(nextStatus, nextPaymentStatus, data, orderId)
-        ]);
-      } else if (changesStatus && wasCancelled && !isCancelled) {
-        const reserve = `UPDATE products
-          SET stock = stock - CAST((SELECT value FROM json_each(?) WHERE key = products.id) AS INTEGER)
-          WHERE id IN (SELECT key FROM json_each(?))
-          AND EXISTS (SELECT 1 FROM orders WHERE id = ? AND status = 'Cancelled')
-          AND (SELECT COUNT(*) FROM products AS p JOIN json_each(?) AS q ON p.id = q.key
-               WHERE p.stock >= CAST(q.value AS INTEGER)) = (SELECT COUNT(*) FROM json_each(?))`;
-        const updateOrder = `UPDATE orders SET status = ?, payment_status = ?, data = ?
-          WHERE id = ? AND status = 'Cancelled' AND changes() = (SELECT COUNT(*) FROM json_each(?))`;
-        const result = await env.DB.batch([
-          env.DB.prepare(reserve).bind(quantityJson, quantityJson, orderId, quantityJson, quantityJson),
-          env.DB.prepare(updateOrder).bind(nextStatus, nextPaymentStatus, data, orderId, quantityJson)
-        ]);
-        if (!result?.[1]?.meta?.changes) {
-          const current = await env.DB.prepare('SELECT status FROM orders WHERE id = ?').bind(orderId).first();
-          if (current?.status === 'Cancelled') return json(409, { error: 'Not enough stock to reopen this order. Restock the missing products first.' });
-        }
-      } else {
-        await env.DB.prepare('UPDATE orders SET status = ?, payment_status = ?, data = ? WHERE id = ?')
-          .bind(nextStatus, nextPaymentStatus, data, orderId).run();
-      }
-      const refreshed = await env.DB.prepare('SELECT id, status, payment_status, total, created_at, data FROM orders WHERE id = ?').bind(orderId).first();
-      return json(200, refreshed ? parseOrder(refreshed) : updatedOrder);
+    if (orderMatch && method === 'DELETE') {
+      let orderId;
+      try { orderId = decodeURIComponent(orderMatch[1]); } catch { return json(400, { error: 'Invalid order ID.' }); }
+      const orderRow = await env.DB.prepare('SELECT id, status, payment_status, total, created_at, data FROM orders WHERE id = ?').bind(orderId).first();
+      if (!orderRow) return json(404, { error: 'Order not found.' });
+      await deleteOrderRow(env, orderRow);
+      return json(200, { ok: true, id: orderId });
     }
 
     if (route === '/api/admin/products' && method === 'GET') return json(200, await listProducts(env));

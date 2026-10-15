@@ -108,6 +108,14 @@ check(/api\('\/api\/admin\/products'\)/.test(adminJs), 'Admin: refreshAll() must
 check(/renderProducts\(\);/.test(adminJs), 'Admin: refreshAll() must call renderProducts()');
 check(/await refreshAll\(\);/.test(adminJs), 'Admin: saving a product must refresh the admin lists');
 
+// Admin orders multi-select, bulk status update, and order delete controls must exist.
+for (const orderControlId of ['orders-bulk-bar', 'orders-selected-count', 'orders-clear-selection', 'orders-bulk-status', 'orders-bulk-status-apply', 'orders-bulk-delete', 'orders-select-all']) {
+  check(adminIds.has(orderControlId), `Admin: #${orderControlId} must exist in admin.html`);
+}
+check(/\/api\/admin\/orders\/bulk-status/.test(adminJs), 'Admin: admin.js must call /api/admin/orders/bulk-status');
+check(/\/api\/admin\/orders\/bulk-delete/.test(adminJs), 'Admin: admin.js must call /api/admin/orders/bulk-delete');
+check(/data-action="delete-order"/.test(adminJs), 'Admin: order rows must render a delete action button');
+
 // Nothing may look up a single element and then loop over it as a list.
 // ($$(...) is the list version and is expected — the lookbehind excludes it.)
 for (const [label, source] of [['Storefront', appJs], ['Admin', adminJs]]) {

@@ -2048,7 +2048,9 @@ async function handleApi(request, env) {
             signal: controller.signal
           });
         }
-        const payload = await response.json().catch(() => ({}));
+        const responseText = await response.text();
+        let payload = {};
+        try { payload = responseText ? JSON.parse(responseText) : {}; } catch { payload = { message: responseText.slice(0, 200) }; }
         if (!response.ok) {
           return json(502, {
             ok: false,

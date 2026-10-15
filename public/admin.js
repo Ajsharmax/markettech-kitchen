@@ -11,6 +11,8 @@
   let summary = {};
   let settings = {};
   let integrationStatus = {};
+  let flipkartListingBatch = 0;
+  let flipkartListingsLoading = false;
   let currentPage = 'overview';
   let toastTimer;
   let previewToken = '';
@@ -341,6 +343,58 @@
     $('#analytics-detail').textContent = analyticsCount ? `${analyticsCount} analytics/ad integration${analyticsCount === 1 ? '' : 's'} configured. Trackers wait for visitor consent.` : 'Add your public measurement IDs in the Marketing & ads form below. Trackers load only after a visitor gives optional analytics consent.';
     setStatus('#email-provider-status', email.configured, email.configured ? 'Server key found' : 'Not connected');
   }
+  async function loadFlipkartListings(reset = false) {
+    if (flipkartListingsLoading) return;
+    if (reset) flipkartListingBatch = 0;
+    flipkartListingsLoading = true;
+    const button = $('#load-flipkart-listings');
+    const nextButton = $('#flipkart-listings-next');
+    const rows = $('#flipkart-listings-rows');
+    const summary = $('#flipkart-listings-summary');
+    const error = $('#flipkart-listings-error');
+    button.disabled = true;
+    nextButton.disabled = true;
+    button.textContent = 'Loading…';
+    error.textContent = '';
+    if (reset) rows.innerHTML = '<tr><td colspan="5">Loading listings from Flipkart…</td></tr>';
+    try {
+      const params = new URLSearchParams({
+        status: $('#flipkart-listing-status').value,
+        batch: String(flipkartListingBatch)
+      });
+      const searchText = $('#flipkart-listing-search').value.trim();
+      if (searchText) params.set('q', searchText);
+      const result = await api('/api/admin/flipkart/listings?' + params.toString());
+      const items = Array.isArray(result.listingData) ? result.listingData : [];
+      rows.innerHTML = items.length ? items.map(item => {
+        const description = item.product_description || {};
+        const price = description.ssp ?? item.sellingPrice ?? item.selling_price;
+        const mrp = description.mrp ?? item.mrp;
+        const priceLabel = Number.isFinite(Number(price)) && price !== null && price !== '' ? formatMoney(Number(price)) : '—';
+        const mrpLabel = Number.isFinite(Number(mrp)) && mrp !== null && mrp !== '' ? formatMoney(Number(mrp)) : '—';
+        return '<tr>' +
+          '<td><strong>' + escapeHtml(item.product_name || item.productName || 'Unnamed listing') + '</strong><br><small>SKU: ' + escapeHtml(item.sku || '—') + '</small></td>' +
+          '<td>' + escapeHtml(item.status || result.status || '—') + '</td>' +
+          '<td>' + escapeHtml(priceLabel) + '</td>' +
+          '<td>' + escapeHtml(mrpLabel) + '</td>' +
+          '<td><small>' + escapeHtml(item.listingId || item.listing_id || '—') + '</small></td>' +
+          '</tr>';
+      }).join('') : '<tr><td colspan="5">No listings found for this status and search.</td></tr>';
+      summary.textContent = Number(result.totalListingsCount || 0) + ' listing' + (Number(result.totalListingsCount || 0) === 1 ? '' : 's') + ' matching this filter.';
+      $('#flipkart-listings-page-label').textContent = 'Batch ' + (flipkartListingBatch + 1);
+      nextButton.disabled = !result.hasMore;
+      showToast('Flipkart listings loaded.');
+    } catch (loadError) {
+      if (reset) rows.innerHTML = '<tr><td colspan="5">Listings could not be loaded.</td></tr>';
+      error.textContent = loadError.message || 'Could not load Flipkart listings.';
+      summary.textContent = 'Unable to load listings.';
+    } finally {
+      flipkartListingsLoading = false;
+      button.disabled = false;
+      button.textContent = 'Load listings ↗';
+    }
+  }
+
   function renderInventory() {
     const search = ($('#inventory-search')?.value || '').trim().toLowerCase();
     const threshold = Number(settings?.site?.lowStockThreshold ?? 8);
@@ -781,6 +835,18 @@
   $('#policies-form').addEventListener('submit', event => { event.preventDefault(); saveSettingsForm(event.currentTarget, 'policies'); });
   $('#marketing-settings-form').addEventListener('submit', event => { event.preventDefault(); saveSettingsForm(event.currentTarget, 'marketing', ['discountPercent']); });
   $('#refresh-integrations').addEventListener('click', refreshAll);
+  $('#load-flipkart-listings').addEventListener('click', () => loadFlipkartListings(true));
+  $('#flipkart-listing-status').addEventListener('change', () => loadFlipkartListings(true));
+  $('#flipkart-listing-search').addEventListener('keydown', event => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      loadFlipkartListings(true);
+    }
+  });
+  $('#flipkart-listings-next').addEventListener('click', () => {
+    flipkartListingBatch += 1;
+    loadFlipkartListings(false);
+  });
   $('#export-subscribers').addEventListener('click', async () => {
     try {
       const subscribers = await api('/api/admin/subscribers');

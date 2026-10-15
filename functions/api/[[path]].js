@@ -1941,16 +1941,18 @@ async function handleApi(request, env) {
           });
         }
 
-        const listingUrl = new URL('https://api.flipkart.net/sellers/listings/v3/product/search');
-        listingUrl.searchParams.set('status', internalState);
-        listingUrl.searchParams.set('batchNo', String(batchNo));
-        if (searchText) listingUrl.searchParams.set('searchText', searchText);
-        const listingsResponse = await fetch(listingUrl.toString(), {
-          method: 'GET',
+        const listingsResponse = await fetch('https://api.flipkart.net/sellers/listings/v3/product/search', {
+          method: 'POST',
           headers: {
             Authorization: 'Bearer ' + tokenData.access_token,
-            Accept: 'application/json'
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
           },
+          body: JSON.stringify({
+            batchNo,
+            internalState,
+            ...(searchText ? { searchText } : {})
+          }),
           signal: controller.signal
         });
         const listingData = await listingsResponse.json().catch(() => ({}));

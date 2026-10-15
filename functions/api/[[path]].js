@@ -1852,6 +1852,16 @@ async function handleApi(request, env) {
       }
     }
 
+    if (route === '/api/admin/flipkart/test' && method === 'GET' && url.searchParams.get('run') === 'oauth-state') {
+      const diagnosticRow = await env.DB.prepare("SELECT data FROM store_settings WHERE id = 'flipkart_oauth_diagnostic'").first();
+      if (!diagnosticRow?.data) return json(200, { ok: true, diagnosticCode: 'NO_OAUTH_DIAGNOSTIC', message: 'No OAuth runtime checkpoint has been recorded yet.' });
+      try {
+        return json(200, { ok: true, diagnostic: JSON.parse(diagnosticRow.data) });
+      } catch {
+        return json(200, { ok: true, diagnostic: { stage: 'stored_record_unreadable' } });
+      }
+    }
+
     if (route === '/api/admin/flipkart/test' && method === 'GET' && url.searchParams.get('run') !== 'oauth') {
       return json(200, {
         ok: true,
@@ -1867,6 +1877,22 @@ async function handleApi(request, env) {
         return json(503, { ok: false, error: 'Flipkart credentials are not configured in this environment.', diagnosticCode: 'CREDENTIALS_MISSING' });
       }
 
+      const writeOAuthDiagnostic = async (stage, details = {}) => {
+        const record = { stage, updatedAt: new Date().toISOString(), ...details };
+        try {
+          await env.DB.prepare("INSERT INTO store_settings (id, data) VALUES ('flipkart_oauth_diagnostic', ?) ON CONFLICT(id) DO UPDATE SET data = excluded.data")
+            .bind(JSON.stringify(record)).run();
+        } catch (diagnosticError) {
+          console.error('Flipkart OAuth diagnostic checkpoint failed:', diagnosticError?.name || 'DatabaseError');
+        }
+      };
+      await writeOAuthDiagnostic('credentials_loaded', {
+        appIdConfigured: Boolean(clientId),
+        secretConfigured: Boolean(clientSecret),
+        appIdLength: clientId.length,
+        secretLength: clientSecret.length
+      });
+
       const tokenUrl = new URL('https://api.flipkart.net/oauth-service/oauth/token');
       tokenUrl.searchParams.set('grant_type', 'client_credentials');
       tokenUrl.searchParams.set('scope', 'Seller_Api');
@@ -1877,6 +1903,10 @@ async function handleApi(request, env) {
         let credentialBinary = '';
         for (const byte of credentialBytes) credentialBinary += String.fromCharCode(byte);
         const authorization = 'Basic ' + btoa(credentialBinary);
+        await writeOAuthDiagnostic('before_fetch', {
+          authEndpoint: tokenUrl.origin + tokenUrl.pathname,
+          scope: 'Seller_Api'
+        });
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
         try {
@@ -1893,6 +1923,10 @@ async function handleApi(request, env) {
         }
       } catch (error) {
         console.error('Flipkart OAuth request failed:', error?.name || 'FetchError');
+        await writeOAuthDiagnostic('fetch_error', {
+          errorName: String(error?.name || 'FetchError'),
+          timedOut: error?.name === 'TimeoutError' || error?.name === 'AbortError'
+        });
         return json(502, {
           ok: false,
           error: error?.message === 'FLIPKART_TIMEOUT' || error?.name === 'TimeoutError' || error?.name === 'AbortError'
@@ -1904,6 +1938,10 @@ async function handleApi(request, env) {
         });
       }
 
+      await writeOAuthDiagnostic('response_received', {
+        providerStatus: response.status,
+        providerOk: response.ok
+      });
       let tokenData = {};
       try {
         tokenData = await response.json();
@@ -1916,6 +1954,12 @@ async function handleApi(request, env) {
           providerStatus: response.status
         });
       }
+      await writeOAuthDiagnostic('response_parsed', {
+        providerStatus: response.status,
+        providerOk: response.ok,
+        tokenPresent: Boolean(tokenData.access_token),
+        providerErrorCode: String(tokenData.error || '').slice(0, 80)
+      });
       if (!response.ok || !tokenData.access_token) {
         return json(502, {
           ok: false,
@@ -1926,6 +1970,10 @@ async function handleApi(request, env) {
         });
       }
 
+      await writeOAuthDiagnostic('authenticated', {
+        providerStatus: response.status,
+        tokenPresent: true
+      });
       return json(200, {
         ok: true,
         connected: true,

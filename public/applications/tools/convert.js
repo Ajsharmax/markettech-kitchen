@@ -81,12 +81,13 @@ specs["pdf-to-images"] = {
   }
 };
 
-/* ---------- PDF to PowerPoint (one full-page image per slide) ---------- */
+/* ---------- PDF to PowerPoint (editable text + preserved page artwork) ---------- */
 const PPTX_MIME = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
 const PPTX_MAX_FILE_BYTES = 150 * 1024 * 1024;
 const PPTX_MAX_SLIDES = 200;
 const PPTX_MAX_PAGE_PIXELS = 32e6;
-const PPTX_MAX_EMBEDDED_BYTES = 80 * 1024 * 1024;
+const PPTX_MAX_ARTWORK_BYTES = 80 * 1024 * 1024;
+const PPTX_MAX_TEXT_ITEMS = 50000;
 const MAX_SLIDE_INCHES = 13.333333;
 
 function powerpointPageSize(mode, firstPageWidth, firstPageHeight) {
@@ -100,31 +101,142 @@ function powerpointPageSize(mode, firstPageWidth, firstPageHeight) {
 }
 
 function fitImageToSlide(aspect, slideWidth, slideHeight) {
+  if (!Number.isFinite(aspect) || aspect <= 0) throw new UserError("A PDF page has an invalid size.");
   let width = slideWidth, height = width / aspect;
   if (height > slideHeight) { height = slideHeight; width = height * aspect; }
   return { x: (slideWidth - width) / 2, y: (slideHeight - height) / 2, w: width, h: height };
 }
 
+function normalizePdfRgb(values) {
+  if (!values || typeof values.length !== "number" || values.length < 3) return null;
+  const channels = [0, 1, 2].map(i => Number(values[i]));
+  if (!channels.every(Number.isFinite)) return null;
+  const multiplier = Math.max(...channels) <= 1 ? 255 : 1;
+  return "#" + channels.map(v => Math.max(0, Math.min(255, Math.round(v * multiplier))).toString(16).padStart(2, "0")).join("").toUpperCase();
+}
+
+async function pdfTextAppearance(page, pdfjs, count) {
+  const defaults = Array(count).fill("#000000");
+  try {
+    const list = await page.getOperatorList(), colors = [], modes = [];
+    let fill = "#000000", renderingMode = 0;
+    const OPS = pdfjs.OPS;
+    for (let i = 0; i < list.fnArray.length; i++) {
+      const op = list.fnArray[i], args = list.argsArray[i] || [];
+      if (op === OPS.setTextRenderingMode) renderingMode = Number(args[0]) || 0;
+      else if (op === OPS.setFillRGBColor || op === OPS.setFillColor) {
+        const rgb = args.length === 1 && args[0] && typeof args[0].length === "number" ? args[0] : args;
+        fill = normalizePdfRgb(rgb) || fill;
+      } else if (op === OPS.setFillCMYKColor) {
+        const cmyk = args.length === 1 && args[0] && typeof args[0].length === "number" ? Array.from(args[0]) : args.map(Number);
+        if (cmyk.length >= 4 && cmyk.slice(0, 4).every(Number.isFinite)) {
+          const [c, m, y, k] = cmyk;
+          fill = normalizePdfRgb([(1 - c) * (1 - k), (1 - m) * (1 - k), (1 - y) * (1 - k)]);
+        }
+      }
+      if ([OPS.showText, OPS.showSpacedText, OPS.nextLineShowText, OPS.nextLineSetSpacingShowText].includes(op)) {
+        colors.push(fill);
+        modes.push(renderingMode);
+      }
+    }
+    return {
+      colors: colors.length === count ? colors : defaults,
+      hasInvisibleText: modes.includes(3)
+    };
+  } catch { return { colors: defaults, hasInvisibleText: false }; }
+}
+
+function powerpointFont(style, item) {
+  const source = String(style && style.fontFamily || "").split(",")[0].replace(/["']/g, "").trim();
+  const lower = (source + " " + String(item.fontName || "")).toLowerCase();
+  let fontFace = source || "Arial";
+  if (/sans.?serif/.test(lower)) fontFace = "Arial";
+  else if (/mono|courier/.test(lower)) fontFace = "Courier New";
+  else if (/serif/.test(lower) && !/sans/.test(lower)) fontFace = "Times New Roman";
+  return { fontFace, bold: /bold|black|heavy|demi/.test(lower), italic: /italic|oblique/.test(lower) };
+}
+
+function addEditablePdfText(slide, record, frame) {
+  const { viewport, items, styles, colors } = record;
+  const unit = frame.w / viewport.width;
+  let added = 0;
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i], text = String(item.str || "");
+    if (!text.trim()) continue;
+    const t = item.transform;
+    if (!t || t.length < 6) continue;
+    const [a, b, c, d, e, f] = t;
+    const baseline = viewport.convertToViewportPoint(e, f);
+    const next = viewport.convertToViewportPoint(e + a, f + b);
+    const vertical = viewport.convertToViewportPoint(e + c, f + d);
+    const dx = next[0] - baseline[0], dy = next[1] - baseline[1];
+    const directionLength = Math.hypot(dx, dy), fontHeight = Math.hypot(vertical[0] - baseline[0], vertical[1] - baseline[1]);
+    if ((!directionLength && !fontHeight) || !Number.isFinite(directionLength + fontHeight)) continue;
+    const angle = directionLength ? Math.atan2(dy, dx) * 180 / Math.PI : 0;
+    const angleRad = angle * Math.PI / 180;
+    const fontSize = Math.max(2, (fontHeight || directionLength) * unit * 72);
+    const style = styles[item.fontName] || {};
+    const font = powerpointFont(style, item);
+    const ascent = Number.isFinite(style.ascent) ? Math.max(0.25, Math.min(1.4, style.ascent)) : 0.8;
+    const descent = Number.isFinite(style.descent) ? Math.min(0, Math.max(-0.6, style.descent)) : -0.2;
+    const baselineX = frame.x + baseline[0] * unit;
+    const baselineY = frame.y + baseline[1] * unit;
+    const ascentIn = fontSize * ascent / 72;
+    const sourceHeight = Number(item.height) > 0 ? Number(item.height) * unit : fontSize / 72;
+    const width = Math.max((Number(item.width) || 0) * unit * 1.025, fontSize / 72 * 0.2);
+    const height = Math.max(sourceHeight * 1.15, fontSize * (ascent - descent) / 72 * 1.15, fontSize / 72 * 1.15);
+    const visualX = baselineX + Math.sin(angleRad) * ascentIn;
+    const visualY = baselineY - Math.cos(angleRad) * ascentIn;
+    const rotateOffsetX = width / 2 * (1 - Math.cos(angleRad)) + height / 2 * Math.sin(angleRad);
+    const rotateOffsetY = height / 2 * (1 - Math.cos(angleRad)) - width / 2 * Math.sin(angleRad);
+    const x = visualX - rotateOffsetX, y = visualY - rotateOffsetY;
+    slide.addText(text.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, ""), {
+      x, y, w: width, h: height, rotate: angle,
+      fontFace: font.fontFace, fontSize, bold: font.bold, italic: font.italic, rtlMode: item.dir === "rtl",
+      color: colors[i] || "#000000", margin: 0, breakLine: false,
+      valign: "mid", fit: "shrink"
+    });
+    added++;
+  }
+  return added;
+}
+
 specs["pdf-to-powerpoint"] = {
-  accept: "pdf", multiple: false, action: "Convert to PowerPoint",
-  intro: "Each selected PDF page becomes a full-slide picture. The page appearance is preserved, but its text and graphics will not be individually editable. Pages with a different shape or orientation are fitted without cropping.",
+  accept: "pdf", multiple: false, action: "Convert to editable PowerPoint",
+  intro: "Selectable PDF text becomes editable PowerPoint text boxes. Table contents stay editable; page rules, logos, barcodes, QR codes and other artwork are preserved as a separate graphic layer. Scanned PDFs need OCR; invisible OCR text over an unchanged scan cannot be separated cleanly.",
   options: [
     { id: "pages", type: "text", label: "Pages to convert", default: "all", help: "Use all, odd, even, or page ranges such as 1-4, 6." },
-    { id: "slideSize", type: "select", label: "PowerPoint slide size", default: "match", choices: [["match", "Match the first selected PDF page"], ["wide", "Widescreen (16:9)"], ["standard", "Standard (4:3)"]], help: "All slides share one size. Other page shapes are centered on a white background." },
-    { id: "dpi", type: "select", label: "Image quality", default: "200", choices: [["150", "Standard (150 DPI)"], ["200", "High (200 DPI)"], ["300", "Print (300 DPI)"]], help: "Higher resolution keeps small details clearer but uses more memory and creates a larger PowerPoint." },
-    { id: "format", type: "select", label: "Image format", default: "jpeg", choices: [["jpeg", "JPEG · smaller file"], ["png", "PNG · crisp text, larger file"]] }
+    { id: "slideSize", type: "select", label: "PowerPoint slide size", default: "match", choices: [["match", "Match the first selected PDF page"], ["wide", "Widescreen (16:9)"], ["standard", "Standard (4:3)"]], help: "All slides share one size. Other page shapes are centered without cropping." },
+    { id: "dpi", type: "select", label: "Artwork resolution", default: "200", choices: [["150", "Standard (150 DPI)"], ["200", "High (200 DPI)"], ["300", "Print (300 DPI)"]], help: "This affects logos, barcodes and non-text artwork. PowerPoint text remains editable at any setting." },
+    { id: "format", type: "select", label: "Artwork format", default: "png", choices: [["png", "PNG · crisp lines and codes"], ["jpeg", "JPEG · smaller file"]] }
   ],
   async run({ files, opts, job }) {
     const file = files[0];
     if (file.size > PPTX_MAX_FILE_BYTES) throw new UserError("This PDF is over 150 MB. Split it into smaller files before converting.");
     job.progress(1, "Opening PDF…");
-    const pdf = await openPdfJs(await file.bytes(), file.name);
+    const pdf = await openPdfJs(await file.bytes(), file.name, { disableFontFace: false });
+    const pdfjs = await lib("pdfjs");
     const pages = parseRanges(opts.pages, pdf.numPages);
     if (pages.length > PPTX_MAX_SLIDES) throw new UserError("This export has more than 200 slides. Convert a smaller page range, or split the PDF first.");
     if (!pages.length) throw new UserError("Choose at least one page to convert.");
 
-    const firstPage = await pdf.getPage(pages[0]);
-    const firstSize = firstPage.getViewport({ scale: 1 });
+    const records = [];
+    let textCount = 0;
+    for (let i = 0; i < pages.length; i++) {
+      const pageNumber = pages[i], page = await pdf.getPage(pageNumber);
+      const [viewport, content] = await Promise.all([page.getViewport({ scale: 1 }), page.getTextContent()]);
+      const items = content.items.filter(item => typeof item.str === "string" && item.str.trim() && item.width > 0 && item.height > 0);
+      if (!items.length) throw new UserError("Page " + pageNumber + " has no selectable text. It may be scanned; OCR must add visible/selectable text before conversion. Image-only scans cannot be rebuilt as editable text.");
+      textCount += items.length;
+      if (textCount > PPTX_MAX_TEXT_ITEMS) throw new UserError("This selection has too many separate text objects. Convert fewer pages at a time.");
+      const appearance = await pdfTextAppearance(page, pdfjs, items.length);
+      if (appearance.hasInvisibleText) throw new UserError("Page " + pageNumber + " contains invisible text, often from OCR over a scanned page. The text cannot be cleanly removed from the background artwork; use a PDF with visible selectable text instead.");
+      records.push({ pageNumber, viewport, items, styles: content.styles || {}, colors: appearance.colors });
+      job.progress(Math.round(3 + (i + 1) / pages.length * 14), "Reading text on page " + pageNumber + " of " + pdf.numPages + "…");
+      await job.tick();
+    }
+
+    const firstSize = records[0].viewport;
     const size = powerpointPageSize(opts.slideSize, firstSize.width, firstSize.height);
     const PptxGenJS = await lib("pptxgenjs");
     const pptx = new PptxGenJS();
@@ -133,44 +245,37 @@ specs["pdf-to-powerpoint"] = {
     pptx.author = "MarketTech Applications";
     pptx.company = "MarketTech Applications";
     pptx.title = baseName(file.name);
-    pptx.subject = "Image-based PowerPoint slides converted from a PDF";
+    pptx.subject = "Editable text PowerPoint converted from a PDF";
     pptx.lang = "en-IN";
 
-    const dpi = Number(opts.dpi);
-    const scale = dpi / 72;
-    const imageType = opts.format === "png" ? "image/png" : "image/jpeg";
-    const slideWidth = size.width, slideHeight = size.height;
-    let embeddedBytes = 0;
-
-    for (let i = 0; i < pages.length; i++) {
-      const pageNumber = pages[i];
-      const page = await pdf.getPage(pageNumber);
-      const viewport = page.getViewport({ scale });
-      const pixelWidth = Math.ceil(viewport.width), pixelHeight = Math.ceil(viewport.height);
+    const dpi = Number(opts.dpi), scale = dpi / 72;
+    const imageType = opts.format === "jpeg" ? "image/jpeg" : "image/png";
+    let artworkBytes = 0, editableTextCount = 0;
+    for (let i = 0; i < records.length; i++) {
+      const record = records[i], viewport = record.viewport;
+      const scaledViewport = (await pdf.getPage(record.pageNumber)).getViewport({ scale });
+      const pixelWidth = Math.ceil(scaledViewport.width), pixelHeight = Math.ceil(scaledViewport.height);
       if (pixelWidth > 16000 || pixelHeight > 16000 || pixelWidth * pixelHeight > PPTX_MAX_PAGE_PIXELS) {
-        throw new UserError("Page " + pageNumber + " is too large at " + dpi + " DPI. Choose a lower image quality.");
+        throw new UserError("Page " + record.pageNumber + " is too large at " + dpi + " DPI. Choose a lower artwork resolution.");
       }
-
-      job.progress(Math.round(5 + i / pages.length * 83), "Rendering page " + pageNumber + " of " + pdf.numPages + "…");
-      const canvas = await renderPage(pdf, pageNumber, { scale });
+      job.progress(Math.round(17 + i / records.length * 70), "Rebuilding page " + record.pageNumber + " of " + pdf.numPages + "…");
+      const canvas = await renderPage(pdf, record.pageNumber, { scale, skipText: true });
       let imageData;
-      try { imageData = canvas.toDataURL(imageType, 0.92); }
-      catch { canvas.width = canvas.height = 1; throw new UserError("Page " + pageNumber + " could not be encoded. Choose a lower quality or JPEG format."); }
+      try { imageData = canvas.toDataURL(imageType, 0.94); }
+      catch { canvas.width = canvas.height = 1; throw new UserError("Artwork on page " + record.pageNumber + " could not be encoded. Choose a lower resolution or JPEG."); }
       canvas.width = canvas.height = 1;
-      if (!imageData || imageData === "data:,") throw new UserError("Page " + pageNumber + " could not be encoded. Choose a lower quality or JPEG format.");
+      if (!imageData || imageData === "data:,") throw new UserError("Artwork on page " + record.pageNumber + " could not be encoded. Choose a lower resolution or JPEG.");
+      artworkBytes += Math.ceil(imageData.slice(imageData.indexOf(",") + 1).length * 0.75);
+      if (artworkBytes > PPTX_MAX_ARTWORK_BYTES) throw new UserError("The artwork would exceed 80 MB. Select fewer pages, lower its resolution, or choose JPEG.");
 
-      const payload = imageData.slice(imageData.indexOf(",") + 1);
-      embeddedBytes += Math.ceil(payload.length * 0.75);
-      if (embeddedBytes > PPTX_MAX_EMBEDDED_BYTES) {
-        throw new UserError("The slide images would exceed 80 MB. Select fewer pages, lower the image quality, or choose JPEG.");
-      }
-
-      const aspect = viewport.width / viewport.height;
-      const position = fitImageToSlide(aspect, slideWidth, slideHeight);
+      const frame = fitImageToSlide(viewport.width / viewport.height, size.width, size.height);
       const slide = pptx.addSlide();
       slide.background = { color: "FFFFFF" };
-      slide.addImage({ data: imageData, ...position });
-      job.progress(Math.round(5 + (i + 1) / pages.length * 83), "Rendered page " + pageNumber + " (" + (i + 1) + " of " + pages.length + ")");
+      slide.addImage({ data: imageData, ...frame });
+      const pageTextCount = addEditablePdfText(slide, record, frame);
+      if (!pageTextCount) throw new UserError("Selectable text on page " + record.pageNumber + " could not be positioned for editable conversion.");
+      editableTextCount += pageTextCount;
+      job.progress(Math.round(17 + (i + 1) / records.length * 70), "Rebuilt page " + record.pageNumber + " (" + (i + 1) + " of " + records.length + ")");
       await job.tick();
     }
 
@@ -178,10 +283,9 @@ specs["pdf-to-powerpoint"] = {
     const packed = await pptx.write({ outputType: "blob", compression: true });
     const data = new Blob([packed], { type: PPTX_MIME });
     const sizeLabel = opts.slideSize === "wide" ? "16:9 widescreen" : opts.slideSize === "standard" ? "4:3 standard" : "matched to the first selected PDF page";
-    const formatLabel = opts.format === "png" ? "PNG" : "JPEG";
     return {
       outputs: [{ name: baseName(file.name) + ".pptx", data, mime: PPTX_MIME }],
-      note: "Created " + pages.length + " image-based slides at " + dpi + " DPI (" + formatLabel + "); slide size " + sizeLabel + ". Text inside the slides is not individually editable."
+      note: "Created " + pages.length + " slides with " + editableTextCount + " editable text blocks (" + dpi + " DPI artwork, " + (opts.format === "jpeg" ? "JPEG" : "PNG") + "); slide size " + sizeLabel + ". Logos, barcodes, QR codes and table rules remain graphics so the original appearance is retained."
     };
   }
 };

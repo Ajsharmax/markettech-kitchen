@@ -92,10 +92,28 @@
         headers: { ...(options.body && !(options.body instanceof FormData) ? { 'Content-Type': 'application/json' } : {}), ...(previewToken ? { Authorization: `Bearer ${previewToken}` } : {}), ...(options.headers || {}) }
       });
     } catch {
-      throw new Error('Could not reach the store API. Check your internet connection and open the deployed Cloudflare Pages address.');
+      throw new Error('Could not reach the store API. The request could not connect to MarketTech.');
     }
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+
+    const responseText = await response.text();
+    let data = {};
+    try { data = responseText ? JSON.parse(responseText) : {}; }
+    catch { /* preserve status and route below without exposing arbitrary HTML */ }
+
+    if (!response.ok) {
+      let route = '/api';
+      try { route = new URL(path, window.location.origin).pathname; } catch {}
+      const details = [
+        data.diagnosticCode ? `Code: ${String(data.diagnosticCode).slice(0, 80)}` : '',
+        data.providerStatus ? `Flipkart HTTP: ${Number(data.providerStatus)}` : '',
+        data.providerError ? String(data.providerError).slice(0, 180) : '',
+        data.detail ? String(data.detail).slice(0, 180) : ''
+      ].filter(Boolean).join(' · ');
+      const message = data.error ? String(data.error).slice(0, 220) : 'The server returned a non-JSON or empty error response.';
+      throw new Error(`${message} (HTTP ${response.status}; ${route})${details ? ` — ${details}` : ''}`);
+    }
+
+    if (responseText && typeof data !== 'object') throw new Error('The store API returned an unexpected response format.');
     return data;
   }
   function readUint16(view, offset) { return view.getUint16(offset, true); }

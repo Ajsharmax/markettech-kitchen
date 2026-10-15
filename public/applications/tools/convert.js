@@ -1,4 +1,4 @@
-/* Conversion tools: images to PDF, PDF to images, text extraction, PDF to Word (text), compress, grayscale. */
+/* Conversion tools: images to PDF, PDF to images/PowerPoint, text extraction, PDF to Word (text), compress, grayscale. */
 import { lib, UserError, openPdfLib, openPdfJs, renderPage, canvasBlob, parseRanges, baseName, readBytes, isPdf, h } from "/applications/core.js";
 
 const specs = {};
@@ -78,6 +78,111 @@ specs["pdf-to-images"] = {
       job.progress(Math.round((i + 1) / sel.length * 95), "Converted page " + sel[i] + " (" + (i + 1) + " of " + sel.length + ")"); await job.tick();
     }
     return out;
+  }
+};
+
+/* ---------- PDF to PowerPoint (one full-page image per slide) ---------- */
+const PPTX_MIME = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+const PPTX_MAX_FILE_BYTES = 150 * 1024 * 1024;
+const PPTX_MAX_SLIDES = 200;
+const PPTX_MAX_PAGE_PIXELS = 32e6;
+const PPTX_MAX_EMBEDDED_BYTES = 80 * 1024 * 1024;
+const MAX_SLIDE_INCHES = 13.333333;
+
+function powerpointPageSize(mode, firstPageWidth, firstPageHeight) {
+  if (mode === "wide") return { layout: "LAYOUT_WIDE", width: 13.333333, height: 7.5 };
+  if (mode === "standard") return { layout: "LAYOUT_4x3", width: 10, height: 7.5 };
+  const aspect = firstPageWidth / firstPageHeight;
+  if (!Number.isFinite(aspect) || aspect <= 0) throw new UserError("The first selected page has an invalid size.");
+  const width = aspect >= 1 ? MAX_SLIDE_INCHES : MAX_SLIDE_INCHES * aspect;
+  const height = aspect >= 1 ? MAX_SLIDE_INCHES / aspect : MAX_SLIDE_INCHES;
+  return { layout: "pdf-first-page", width, height };
+}
+
+function fitImageToSlide(aspect, slideWidth, slideHeight) {
+  let width = slideWidth, height = width / aspect;
+  if (height > slideHeight) { height = slideHeight; width = height * aspect; }
+  return { x: (slideWidth - width) / 2, y: (slideHeight - height) / 2, w: width, h: height };
+}
+
+specs["pdf-to-powerpoint"] = {
+  accept: "pdf", multiple: false, action: "Convert to PowerPoint",
+  intro: "Each selected PDF page becomes a full-slide picture. The page appearance is preserved, but its text and graphics will not be individually editable. Pages with a different shape or orientation are fitted without cropping.",
+  options: [
+    { id: "pages", type: "text", label: "Pages to convert", default: "all", help: "Use all, odd, even, or page ranges such as 1-4, 6." },
+    { id: "slideSize", type: "select", label: "PowerPoint slide size", default: "match", choices: [["match", "Match the first selected PDF page"], ["wide", "Widescreen (16:9)"], ["standard", "Standard (4:3)"]], help: "All slides share one size. Other page shapes are centered on a white background." },
+    { id: "dpi", type: "select", label: "Image quality", default: "200", choices: [["150", "Standard (150 DPI)"], ["200", "High (200 DPI)"], ["300", "Print (300 DPI)"]], help: "Higher resolution keeps small details clearer but uses more memory and creates a larger PowerPoint." },
+    { id: "format", type: "select", label: "Image format", default: "jpeg", choices: [["jpeg", "JPEG · smaller file"], ["png", "PNG · crisp text, larger file"]] }
+  ],
+  async run({ files, opts, job }) {
+    const file = files[0];
+    if (file.size > PPTX_MAX_FILE_BYTES) throw new UserError("This PDF is over 150 MB. Split it into smaller files before converting.");
+    job.progress(1, "Opening PDF…");
+    const pdf = await openPdfJs(await file.bytes(), file.name);
+    const pages = parseRanges(opts.pages, pdf.numPages);
+    if (pages.length > PPTX_MAX_SLIDES) throw new UserError("This export has more than 200 slides. Convert a smaller page range, or split the PDF first.");
+    if (!pages.length) throw new UserError("Choose at least one page to convert.");
+
+    const firstPage = await pdf.getPage(pages[0]);
+    const firstSize = firstPage.getViewport({ scale: 1 });
+    const size = powerpointPageSize(opts.slideSize, firstSize.width, firstSize.height);
+    const PptxGenJS = await lib("pptxgenjs");
+    const pptx = new PptxGenJS();
+    if (size.layout === "pdf-first-page") pptx.defineLayout({ name: size.layout, width: size.width, height: size.height });
+    pptx.layout = size.layout;
+    pptx.author = "MarketTech Applications";
+    pptx.company = "MarketTech Applications";
+    pptx.title = baseName(file.name);
+    pptx.subject = "Image-based PowerPoint slides converted from a PDF";
+    pptx.lang = "en-IN";
+
+    const dpi = Number(opts.dpi);
+    const scale = dpi / 72;
+    const imageType = opts.format === "png" ? "image/png" : "image/jpeg";
+    const slideWidth = size.width, slideHeight = size.height;
+    let embeddedBytes = 0;
+
+    for (let i = 0; i < pages.length; i++) {
+      const pageNumber = pages[i];
+      const page = await pdf.getPage(pageNumber);
+      const viewport = page.getViewport({ scale });
+      const pixelWidth = Math.ceil(viewport.width), pixelHeight = Math.ceil(viewport.height);
+      if (pixelWidth > 16000 || pixelHeight > 16000 || pixelWidth * pixelHeight > PPTX_MAX_PAGE_PIXELS) {
+        throw new UserError("Page " + pageNumber + " is too large at " + dpi + " DPI. Choose a lower image quality.");
+      }
+
+      job.progress(Math.round(5 + i / pages.length * 83), "Rendering page " + pageNumber + " of " + pdf.numPages + "…");
+      const canvas = await renderPage(pdf, pageNumber, { scale });
+      let imageData;
+      try { imageData = canvas.toDataURL(imageType, 0.92); }
+      catch { canvas.width = canvas.height = 1; throw new UserError("Page " + pageNumber + " could not be encoded. Choose a lower quality or JPEG format."); }
+      canvas.width = canvas.height = 1;
+      if (!imageData || imageData === "data:,") throw new UserError("Page " + pageNumber + " could not be encoded. Choose a lower quality or JPEG format.");
+
+      const payload = imageData.slice(imageData.indexOf(",") + 1);
+      embeddedBytes += Math.ceil(payload.length * 0.75);
+      if (embeddedBytes > PPTX_MAX_EMBEDDED_BYTES) {
+        throw new UserError("The slide images would exceed 80 MB. Select fewer pages, lower the image quality, or choose JPEG.");
+      }
+
+      const aspect = viewport.width / viewport.height;
+      const position = fitImageToSlide(aspect, slideWidth, slideHeight);
+      const slide = pptx.addSlide();
+      slide.background = { color: "FFFFFF" };
+      slide.addImage({ data: imageData, ...position });
+      job.progress(Math.round(5 + (i + 1) / pages.length * 83), "Rendered page " + pageNumber + " (" + (i + 1) + " of " + pages.length + ")");
+      await job.tick();
+    }
+
+    job.progress(92, "Building PowerPoint…");
+    const packed = await pptx.write({ outputType: "blob", compression: true });
+    const data = new Blob([packed], { type: PPTX_MIME });
+    const sizeLabel = opts.slideSize === "wide" ? "16:9 widescreen" : opts.slideSize === "standard" ? "4:3 standard" : "matched to the first selected PDF page";
+    const formatLabel = opts.format === "png" ? "PNG" : "JPEG";
+    return {
+      outputs: [{ name: baseName(file.name) + ".pptx", data, mime: PPTX_MIME }],
+      note: "Created " + pages.length + " image-based slides at " + dpi + " DPI (" + formatLabel + "); slide size " + sizeLabel + ". Text inside the slides is not individually editable."
+    };
   }
 };
 

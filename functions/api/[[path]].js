@@ -2592,7 +2592,11 @@ export async function onRequest({ request, env }) {
     return await handleApi(request, env);
   } catch (error) {
     if (error instanceof HttpError) return json(error.status, { error: error.message });
-    console.error('MarketTech API error:', error?.message || error);
+    const message = String(error?.message || error || 'Unknown error').slice(0, 180);
+    console.error('MarketTech API error:', route.startsWith('/api/admin/flipkart/') ? route + ': ' + message : message);
+    if (route.startsWith('/api/admin/flipkart/')) {
+      return json(500, { error: 'The Flipkart integration encountered an internal error.', diagnosticCode: 'FLIPKART_INTERNAL_ERROR', detail: message });
+    }
     return json(500, { error: 'Something went wrong. Please try again.' });
   }
 }

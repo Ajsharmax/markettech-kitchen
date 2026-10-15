@@ -1905,6 +1905,103 @@ async function handleApi(request, env) {
       }
     }
 
+    if (route === '/api/admin/flipkart/orders' && method === 'GET') {
+      const clientId = String(env.FLIPKART_APP_ID || '').trim();
+      const clientSecret = String(env.FLIPKART_APP_SECRET || '');
+      if (!clientId || !clientSecret) {
+        return json(503, { ok: false, error: 'Flipkart credentials are not configured in this environment.', diagnosticCode: 'CREDENTIALS_MISSING' });
+      }
+
+      const view = String(url.searchParams.get('view') || 'pending').toLowerCase();
+      const views = {
+        pending: { type: 'preDispatch', states: ['APPROVED', 'PACKING_IN_PROGRESS', 'PACKED', 'FORM_FAILED', 'READY_TO_DISPATCH'] },
+        shipped: { type: 'postDispatch', states: ['SHIPPED', 'PICKUP_COMPLETE'], shipmentTypes: ['NORMAL'] },
+        delivered: { type: 'postDispatch', states: ['DELIVERED'], shipmentTypes: ['NORMAL'] },
+        cancelled: { type: 'cancelled', states: ['CANCELLED'], cancellationType: 'marketplaceCancellation' }
+      };
+      if (!Object.hasOwn(views, view)) return json(400, { ok: false, error: 'Unsupported order view.' });
+
+      let nextUrl = '';
+      const cursor = String(url.searchParams.get('cursor') || '');
+      if (cursor) {
+        try {
+          nextUrl = atob(cursor);
+          const parsedNext = new URL(nextUrl);
+          if (parsedNext.origin !== 'https://api.flipkart.net' || parsedNext.pathname !== '/sellers/v3/shipments/filter/') {
+            return json(400, { ok: false, error: 'Invalid pagination cursor.' });
+          }
+        } catch {
+          return json(400, { ok: false, error: 'Invalid pagination cursor.' });
+        }
+      }
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
+      try {
+        const credentialBytes = new TextEncoder().encode(clientId + ':' + clientSecret);
+        let credentialBinary = '';
+        for (const byte of credentialBytes) credentialBinary += String.fromCharCode(byte);
+        const tokenUrl = new URL('https://api.flipkart.net/oauth-service/oauth/token');
+        tokenUrl.searchParams.set('grant_type', 'client_credentials');
+        tokenUrl.searchParams.set('scope', 'Seller_Api');
+        const tokenResponse = await fetch(tokenUrl.toString(), {
+          method: 'GET',
+          headers: { Authorization: 'Basic ' + btoa(credentialBinary), Accept: 'application/json' },
+          signal: controller.signal
+        });
+        const tokenData = await tokenResponse.json().catch(() => ({}));
+        if (!tokenResponse.ok || !tokenData.access_token) {
+          return json(502, { ok: false, error: 'Flipkart authentication failed while loading orders.', diagnosticCode: 'FLIPKART_AUTH_REJECTED', providerStatus: tokenResponse.status });
+        }
+
+        const headers = { Authorization: 'Bearer ' + tokenData.access_token, Accept: 'application/json', 'Content-Type': 'application/json' };
+        let response;
+        if (nextUrl) {
+          response = await fetch(nextUrl, { method: 'GET', headers, signal: controller.signal });
+        } else {
+          const filter = { type: views[view].type, states: views[view].states, serviceProfiles: 'NON_FBF' };
+          if (views[view].shipmentTypes) filter.shipmentTypes = views[view].shipmentTypes;
+          if (views[view].cancellationType) filter.cancellationType = views[view].cancellationType;
+          response = await fetch('https://api.flipkart.net/sellers/v3/shipments/filter/', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ filter, pagination: { pageSize: 20 }, sort: { field: 'dispatchByDate', order: 'asc' } }),
+            signal: controller.signal
+          });
+        }
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          return json(502, {
+            ok: false,
+            error: 'Flipkart could not return orders.',
+            diagnosticCode: 'FLIPKART_ORDERS_FAILED',
+            providerStatus: response.status,
+            providerError: String(payload.error || payload.message || 'Provider request failed').slice(0, 200)
+          });
+        }
+        const nextPage = String(payload.nextPageUrl || '');
+        let nextCursor = '';
+        if (payload.hasMore && nextPage) {
+          try {
+            const parsedNext = new URL(nextPage);
+            if (parsedNext.origin === 'https://api.flipkart.net' && parsedNext.pathname === '/sellers/v3/shipments/filter/') {
+              nextCursor = btoa(nextPage);
+            }
+          } catch { /* invalid provider pagination URLs are not exposed or followed */ }
+        }
+        return json(200, { ok: true, view, shipments: Array.isArray(payload.shipments) ? payload.shipments : [], hasMore: Boolean(payload.hasMore && nextCursor), nextCursor });
+      } catch (error) {
+        console.error('Flipkart orders request failed:', error?.name || 'FetchError');
+        return json(502, {
+          ok: false,
+          error: error?.name === 'AbortError' ? 'Flipkart order request timed out.' : 'Could not load orders from Flipkart.',
+          diagnosticCode: error?.name === 'AbortError' ? 'FLIPKART_ORDERS_TIMEOUT' : 'FLIPKART_ORDERS_FETCH_FAILED'
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    }
+
     if (route === '/api/admin/flipkart/status' && method === 'GET') {
       return json(200, {
         ok: true,

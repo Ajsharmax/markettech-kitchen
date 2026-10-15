@@ -1955,7 +1955,13 @@ async function handleApi(request, env) {
           }),
           signal: controller.signal
         });
-        const listingData = await listingsResponse.json().catch(() => ({}));
+        const listingResponseText = await listingsResponse.text();
+        let listingData = {};
+        try {
+          listingData = listingResponseText ? JSON.parse(listingResponseText) : {};
+        } catch {
+          listingData = { message: listingResponseText.slice(0, 200) };
+        }
         if (!listingsResponse.ok) {
           return json(502, {
             ok: false,

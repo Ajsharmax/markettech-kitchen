@@ -29,3 +29,27 @@
 @keyframes mt-emi-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes mt-emi-sheen{0%,25%{left:-55%}70%,100%{left:130%}}
 @media(prefers-reduced-motion:reduce){.emi-layout,.emi-result-card:after{animation:none!important}.emi-value{transition:none!important}}
+
+/* Vibrant Kinetic EMI Calculator */
+.emi-result-card {
+  background:
+    radial-gradient(circle at 86% 18%, rgba(236, 72, 153, 0.38), transparent 44%),
+    linear-gradient(135deg, #1d4ed8 0%, #6d28d9 54%, #be185d 100%) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 22px 48px rgba(109, 40, 217, 0.28) !important;
+}
+.emi-label {
+  color: #e0e7ff !important;
+}
+.emi-breakdown span {
+  color: rgba(224, 231, 255, 0.84) !important;
+}
+.emi-table-scroll {
+  border-color: rgba(99, 102, 241, 0.2) !important;
+  border-radius: 16px !important;
+}
+.emi-table-scroll th {
+  background: linear-gradient(90deg, #eef2ff, #fdf2f8) !important;
+  color: #3730a3 !important;
+  font-weight: 800;
+}

@@ -10,3 +10,45 @@
 .crm-drawer-backdrop{position:fixed;inset:0;background:rgba(16,24,18,.35);z-index:1000}.crm-drawer{position:fixed;z-index:1001;top:0;right:0;width:min(620px,96vw);height:100vh;background:#fff;box-shadow:-18px 0 60px rgba(20,30,22,.18);overflow:auto;padding:28px}.crm-drawer h2{margin:0;color:#233328}.crm-drawer-close{position:absolute;top:18px;right:18px;border:0;background:#eef1ea;border-radius:50%;width:38px;height:38px;font-size:24px;cursor:pointer}.crm-profile-head{padding:14px 0 22px;border-bottom:1px solid #e7e9e3}.crm-profile-email{color:#697268;font-size:13px;margin-top:5px}.crm-detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0}.crm-detail-stat{background:#f6f7f2;border-radius:12px;padding:12px}.crm-detail-stat small{display:block;color:#737b71}.crm-detail-stat strong{display:block;margin-top:3px;color:#26362b}.crm-drawer-section{border-top:1px solid #e7e9e3;padding:20px 0}.crm-drawer-section h3{margin:0 0 12px;color:#2b392f;font-size:14px}.crm-order-item,.crm-note-item{border:1px solid #e5e8e1;border-radius:12px;padding:12px;margin-bottom:8px}.crm-order-item{display:flex;justify-content:space-between;gap:12px}.crm-note-item small{display:block;color:#8a9188;margin-top:6px}.crm-note-form textarea{width:100%;min-height:90px;border:1px solid #dfe3da;border-radius:10px;padding:12px;font:inherit}.crm-note-form{display:grid;gap:8px}.crm-meta-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}.crm-meta-form label{display:grid;gap:6px;font-size:11px;font-weight:700;color:#687168}.crm-meta-form input,.crm-meta-form select{height:40px;border:1px solid #dfe3da;border-radius:9px;padding:0 10px}.crm-meta-form .full{grid-column:1/-1}
 @media(max-width:900px){.crm-kpi-grid{grid-template-columns:repeat(2,1fr)}.marketing-grid{grid-template-columns:1fr}.crm-toolbar{flex-wrap:wrap}.offer-timeline-item{grid-template-columns:1fr}.offer-discount{justify-self:start}}
 @media(max-width:560px){.crm-kpi-grid{grid-template-columns:1fr}.crm-detail-grid{grid-template-columns:1fr}.crm-meta-form{grid-template-columns:1fr}.crm-meta-form .full{grid-column:auto}}
+
+/* Vibrant Kinetic / Bold Gradient overrides for Admin CRM & Marketing */
+.crm-kpi {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  box-shadow: 0 12px 30px rgba(27, 39, 94, 0.06);
+  transition: transform 0.28s cubic-bezier(0.22, 1.25, 0.36, 1), box-shadow 0.28s ease;
+}
+.crm-kpi::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #2563eb, #7c3aed, #ec4899);
+}
+.crm-kpi:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 38px rgba(79, 70, 229, 0.14);
+}
+.crm-kpi strong {
+  background: linear-gradient(110deg, #131c47, #4f46e5, #db2777);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.crm-tag,
+.crm-badge {
+  background: rgba(99, 102, 241, 0.12);
+  color: #4338ca;
+}
+.crm-segment {
+  background: rgba(236, 72, 153, 0.12);
+  color: #be185d;
+}
+.offer-discount {
+  color: #4f46e5;
+}

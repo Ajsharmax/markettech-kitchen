@@ -53,3 +53,12 @@
 .contact-page .contact-option:hover .contact-option-icon{transform:scale(1.08) rotate(-5deg)}
 @keyframes mt-contact-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.contact-page .contact-hero{animation:none!important}.contact-page .contact-option,.contact-page .contact-option-icon{transition:none!important}}
+
+/* Vibrant Kinetic / Bold Gradient overrides in contact.css */
+.contact-page {
+  background:
+    radial-gradient(circle at 12% 14%, rgba(59, 130, 246, 0.16), transparent 34%),
+    radial-gradient(circle at 88% 22%, rgba(236, 72, 153, 0.15), transparent 36%),
+    linear-gradient(145deg, #f4f7ff 0%, #eef2ff 52%, #fdf4ff 100%);
+  color: #111834;
+}

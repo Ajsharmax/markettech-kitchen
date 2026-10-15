@@ -271,3 +271,38 @@
 .cvrc-section:focus-within{border-color:#b7c8f5;background:#fffefa}
 @keyframes mt-cv-enter{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.cvrc-layout{animation:none!important}.cvrc-form-panel,.cvrc-preview-panel,.cvrc-section{transition:none!important}}
+
+/* Vibrant Kinetic CV Builder Editor Chrome (print templates remain untouched) */
+.cvrc-form-panel,
+.cvrc-preview-area {
+  background: rgba(255, 255, 255, 0.88) !important;
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(99, 102, 241, 0.2) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 16px 40px rgba(27, 39, 94, 0.08);
+}
+.cvrc-section {
+  background: rgba(244, 247, 255, 0.78) !important;
+  border: 1px solid rgba(99, 102, 241, 0.16) !important;
+  border-radius: 14px !important;
+}
+.cvrc-template-btn {
+  border-radius: 999px !important;
+  border-color: rgba(99, 102, 241, 0.24) !important;
+  transition: transform 0.24s cubic-bezier(0.22, 1.25, 0.36, 1), box-shadow 0.24s ease !important;
+}
+.cvrc-template-btn:hover {
+  transform: translateY(-2px);
+  border-color: #6366f1 !important;
+}
+.cvrc-template-btn.active {
+  background: linear-gradient(135deg, #2563eb, #7c3aed, #db2777) !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 20px rgba(124, 58, 237, 0.28);
+}
+.cvrc-skill-tag {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(124, 58, 237, 0.16)) !important;
+  color: #3730a3 !important;
+  border: 1px solid rgba(99, 102, 241, 0.24);
+}

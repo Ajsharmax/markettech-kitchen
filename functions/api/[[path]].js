@@ -1826,6 +1826,32 @@ async function handleApi(request, env) {
       });
     }
 
+    if (route === '/api/admin/flipkart/test' && method === 'GET' && url.searchParams.get('run') === 'network') {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
+      try {
+        const probe = await fetch('https://api.flipkart.net/oauth-service/oauth/token?grant_type=client_credentials&scope=Seller_Api', {
+          method: 'GET',
+          headers: { Accept: 'application/json' },
+          signal: controller.signal
+        });
+        return json(200, {
+          ok: true,
+          diagnosticCode: 'FLIPKART_NETWORK_REACHABLE',
+          providerStatus: probe.status,
+          message: 'The Flipkart host responded to a request without credentials; no credentials or token were sent.'
+        });
+      } catch (error) {
+        return json(502, {
+          ok: false,
+          diagnosticCode: controller.signal.aborted ? 'FLIPKART_NETWORK_TIMEOUT' : 'FLIPKART_NETWORK_FAILED',
+          error: controller.signal.aborted ? 'The Flipkart host did not respond within 4 seconds.' : 'The server could not reach the Flipkart host.'
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    }
+
     if (route === '/api/admin/flipkart/test' && method === 'GET' && url.searchParams.get('run') !== 'oauth') {
       return json(200, {
         ok: true,
@@ -1851,22 +1877,19 @@ async function handleApi(request, env) {
         let credentialBinary = '';
         for (const byte of credentialBytes) credentialBinary += String.fromCharCode(byte);
         const authorization = 'Basic ' + btoa(credentialBinary);
-        let timeoutId;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
         try {
-          response = await Promise.race([
-            fetch(tokenUrl.toString(), {
-              method: 'GET',
-              headers: {
-                Authorization: authorization,
-                Accept: 'application/json'
-              }
-            }),
-            new Promise((_, reject) => {
-              timeoutId = setTimeout(() => reject(new Error('FLIPKART_TIMEOUT')), 5000);
-            })
-          ]);
+          response = await fetch(tokenUrl.toString(), {
+            method: 'GET',
+            headers: {
+              Authorization: authorization,
+              Accept: 'application/json'
+            },
+            signal: controller.signal
+          });
         } finally {
-          if (timeoutId) clearTimeout(timeoutId);
+          clearTimeout(timeoutId);
         }
       } catch (error) {
         console.error('Flipkart OAuth request failed:', error?.name || 'FetchError');

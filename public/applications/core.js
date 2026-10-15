@@ -57,6 +57,13 @@ export async function lib(name) {
     return window.pdfjsLib;
   }
   if (name === "jszip") { if (!window.JSZip) await loadScript(VENDOR + "jszip-3.10.1.min.js"); return window.JSZip; }
+  if (name === "pptxgenjs") {
+    /* PptxGenJS uses the local JSZip global. Both libraries are self-hosted; no CDN or upload. */
+    await lib("jszip");
+    if (!window.PptxGenJS) await loadScript(VENDOR + "pptxgenjs-3.12.0.min.js");
+    if (typeof window.PptxGenJS !== "function") throw new UserError("The local PowerPoint library did not start. Reload the page and try again.");
+    return window.PptxGenJS;
+  }
   throw new Error("Unknown library " + name);
 }
 

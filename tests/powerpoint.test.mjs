@@ -50,11 +50,15 @@ const textByPage = {
     { str: "SKU 056", width: 36, height: 9, transform: [9, 0, 0, 9, 40, 700], fontName: "f1" }
   ],
   2: [{ str: "Editable page two", width: 92, height: 11, transform: [11, 0, 0, 11, 30, 560], fontName: "f1" }],
-  4: [{ str: "OCR text", width: 48, height: 10, transform: [10, 0, 0, 10, 30, 700], fontName: "f1" }]
+  4: [{ str: "OCR text", width: 48, height: 10, transform: [10, 0, 0, 10, 30, 700], fontName: "f1" }],
+  5: [
+    { str: "Merged", width: 40, height: 10, transform: [10, 0, 0, 10, 40, 700], fontName: "f1" },
+    { str: "line", width: 20, height: 10, transform: [10, 0, 0, 10, 83, 700], fontName: "f1" }
+  ]
 };
-const sizes = { 1: [612, 792], 2: [792, 612], 3: [612, 792], 4: [612, 792] };
+const sizes = { 1: [612, 792], 2: [792, 612], 3: [612, 792], 4: [612, 792], 5: [612, 792] };
 const fakePdf = {
-  numPages: 4,
+  numPages: 5,
   getPage(number) {
     const [width, height] = sizes[number];
     return {
@@ -66,10 +70,13 @@ const fakePdf = {
         };
       },
       async getTextContent() {
-        return { items: textByPage[number] || [], styles: { f1: fontStyle } };
+        const style = number === 5 ? { ...fontStyle, fontFamily: "Aptos" } : fontStyle;
+        return { items: textByPage[number] || [], styles: { f1: style } };
       },
       async getOperatorList() {
-        return number === 4 ? { fnArray: [38, 44], argsArray: [[3], []] } : { fnArray: [], argsArray: [] };
+        if (number === 4) return { fnArray: [38, 44], argsArray: [[3], []] };
+        if (number === 5) return { fnArray: [59, 44, 44], argsArray: [new Uint8ClampedArray([255, 0, 0]), [], []] };
+        return { fnArray: [], argsArray: [] };
       }
     };
   }
@@ -110,6 +117,8 @@ const fakeCore = `
 const convertSource = readFileSync(path.resolve("public/applications/tools/convert.js"), "utf8")
   .replace('from "/applications/core.js";', 'from "data:text/javascript;base64,' + Buffer.from(fakeCore).toString("base64") + '";');
 const convertModule = await import("data:text/javascript;base64," + Buffer.from(convertSource).toString("base64"));
+const pptxOptions = new Set(convertModule.default["pdf-to-powerpoint"].options.map(option => option.id));
+for (const id of ["artworkMode", "textGrouping", "fontMode", "colorMode"]) assert.ok(pptxOptions.has(id), "missing editable PowerPoint option " + id);
 const progress = [];
 const result = await convertModule.default["pdf-to-powerpoint"].run({
   files: [{ name: "sample.pdf", size: 1024, bytes: async () => new Uint8Array() }],
@@ -120,7 +129,7 @@ assert.equal(globalThis.__openOptions.disableFontFace, false, "editable conversi
 assert.deepEqual(globalThis.__renderCalls.map(call => call.skipText), [true, true], "the artwork layer must omit selectable PDF text");
 assert.equal(result.outputs[0].name, "sample.pptx");
 assert.equal(result.outputs[0].data.type, "application/vnd.openxmlformats-officedocument.presentationml.presentation");
-assert.match(result.note, /3 editable text blocks/, "the result summary should report the native text boxes");
+assert.match(result.note, /3 editable text boxes from 3 PDF text runs/, "the result summary should report the native text boxes");
 
 const archive = await JSZip.loadAsync(new Uint8Array(await result.outputs[0].data.arrayBuffer()));
 assert.ok(archive.file("[Content_Types].xml"));
@@ -135,7 +144,7 @@ assert.match(slideOne, /<p:pic\b/, "non-text artwork should be retained as a gra
 assert.match(slideOne, /<a:t>Order No: 12345<\/a:t>/, "PDF text should be an editable PowerPoint text run");
 assert.match(slideOne, /<a:t>SKU 056<\/a:t>/);
 assert.match(slideTwo, /<a:t>Editable page two<\/a:t>/);
-assert.ok(progress.some(([, message]) => message.includes("Rebuilding page 2")));
+assert.ok(progress.some(([, message]) => message.includes("Rebuilt page 2")));
 await assert.rejects(
   () => convertModule.default["pdf-to-powerpoint"].run({
     files: [{ name: "scan.pdf", size: 1024, bytes: async () => new Uint8Array() }],
@@ -154,6 +163,23 @@ await assert.rejects(
   /contains invisible text.*background artwork/i,
   "invisible OCR layers over page scans must not produce doubled text"
 );
+
+const renderCallsBeforeTextOnly = globalThis.__renderCalls.length;
+const textOnlyResult = await convertModule.default["pdf-to-powerpoint"].run({
+  files: [{ name: "text-only.pdf", size: 1024, bytes: async () => new Uint8Array() }],
+  opts: { pages: "5", slideSize: "match", artworkMode: "text", textGrouping: "lines", fontMode: "office", colorMode: "black" },
+  job: { progress() {}, tick: async () => {} }
+});
+assert.equal(globalThis.__renderCalls.length, renderCallsBeforeTextOnly, "text-only mode should not rasterize artwork");
+assert.match(textOnlyResult.note, /artwork omitted for a text-only deck/);
+assert.match(textOnlyResult.note, /nearby text runs grouped by line/);
+const textOnlyArchive = await JSZip.loadAsync(new Uint8Array(await textOnlyResult.outputs[0].data.arrayBuffer()));
+const textOnlySlide = await textOnlyArchive.file("ppt/slides/slide1.xml").async("string");
+assert.doesNotMatch(textOnlySlide, /<p:pic\b/, "text-only mode should not add artwork pictures");
+assert.match(textOnlySlide, /<a:t>Merged line<\/a:t>/, "nearby runs should become one editable line");
+assert.equal((textOnlySlide.match(/<a:t>/g) || []).length, 1, "grouping should reduce adjacent runs to one text box");
+assert.match(textOnlySlide, /typeface="Arial"/, "Office-safe font mode should map an unknown PDF font to Arial");
+assert.match(textOnlySlide, /srgbClr val="000000"/, "black text mode should override the source text color");
 
 // Exercise real PDF.js text extraction/operator data against an actual one-page PDF.
 const { PDFDocument, StandardFonts, rgb } = require(path.join(vendor, "pdf-lib-1.10.0.min.js"));

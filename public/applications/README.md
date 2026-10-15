@@ -15,13 +15,13 @@ Private, in-browser PDF tools. Files are processed on the visitor's device and a
 
 ## Privacy
 - The core Applications tools use self-hosted pdf.js 3.11.174, pdf-lib 1.10.0 and JSZip 3.10.1 in `vendor/`.
-- PDF to PowerPoint uses the self-hosted PptxGenJS 3.12.0 browser build (MIT-licensed, with its license in `vendor/`) and the local JSZip library. Selectable PDF text is rebuilt as editable PowerPoint text boxes; page rules, logos, barcodes, QR codes and other artwork are preserved as a separate local graphics layer. No PDF or generated slide data is uploaded.
+- PDF to PowerPoint uses the self-hosted PptxGenJS 3.12.0 browser build (MIT-licensed, with its license in `vendor/`) and the local JSZip library. Selectable PDF text is rebuilt as editable PowerPoint text boxes. Options let users omit artwork for a text-only deck, group nearby text runs, choose Office-safe font mapping, and use black text instead of PDF colors. When included, page rules, logos, barcodes, QR codes and other artwork remain a separate local graphics layer. No PDF or generated slide data is uploaded.
 - PDF to Excel uses pdf.js and SheetJS from cdnjs. OCR PDF uses pdf.js and Tesseract.js from cdnjs; Tesseract downloads its language data from jsDelivr on first use. These two pages have a scoped Content-Security-Policy allowing only those required CDN sources.
 
 ## Known limits
 - pdf-lib cannot read password-protected PDFs. The tools say so; Unlock PDF is marked Coming soon. The PDF to PowerPoint and PDF to Word tools can prompt for a PDF password.
 - Compress (Balanced and Strong), Grayscale and Redact turn pages into images, so text is no longer selectable.
-- PDF to Word keeps text only. PDF to PowerPoint makes selectable text editable; page artwork and table rules remain graphics to preserve the source layout. Scanned PDFs need OCR, but an invisible OCR layer over the original scan cannot be separated cleanly and is rejected rather than duplicated over the artwork.
+- PDF to Word keeps text only. PDF to PowerPoint offers either a text-only deck or a layout-preserving deck with editable text over a graphics layer; table rules are not native PowerPoint shapes. Scanned PDFs need OCR, but an invisible OCR layer over the original scan cannot be separated cleanly and is rejected rather than duplicated over the artwork.
 - Word, Excel and PowerPoint to PDF, Protect/Unlock, Repair and HTML to PDF are Coming soon with the reason shown on each card. PDF to Excel and OCR PDF are available as standalone tools.
 - Tools run in the browser; very large files can be slow. PDF to PowerPoint currently accepts PDFs up to 150 MB, up to 200 selected pages, 50,000 text blocks, and a maximum of 80 MB of non-text artwork per deck. Pages without selectable text or with invisible text layers are rejected with guidance.
 - Signature is an image, not a certified digital signature.

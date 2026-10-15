@@ -1851,19 +1851,28 @@ async function handleApi(request, env) {
         let credentialBinary = '';
         for (const byte of credentialBytes) credentialBinary += String.fromCharCode(byte);
         const authorization = 'Basic ' + btoa(credentialBinary);
-        response = await fetch(tokenUrl.toString(), {
-          method: 'GET',
-          headers: {
-            Authorization: authorization,
-            Accept: 'application/json'
-          },
-          signal: AbortSignal.timeout(10000)
-        });
+        let timeoutId;
+        try {
+          response = await Promise.race([
+            fetch(tokenUrl.toString(), {
+              method: 'GET',
+              headers: {
+                Authorization: authorization,
+                Accept: 'application/json'
+              }
+            }),
+            new Promise((_, reject) => {
+              timeoutId = setTimeout(() => reject(new Error('FLIPKART_TIMEOUT')), 5000);
+            })
+          ]);
+        } finally {
+          if (timeoutId) clearTimeout(timeoutId);
+        }
       } catch (error) {
         console.error('Flipkart OAuth request failed:', error?.name || 'FetchError');
         return json(502, {
           ok: false,
-          error: error?.name === 'TimeoutError' || error?.name === 'AbortError'
+          error: error?.message === 'FLIPKART_TIMEOUT' || error?.name === 'TimeoutError' || error?.name === 'AbortError'
             ? 'Flipkart authentication request timed out.'
             : 'Could not reach Flipkart authentication service.',
           diagnosticCode: error?.name === 'TimeoutError' || error?.name === 'AbortError'

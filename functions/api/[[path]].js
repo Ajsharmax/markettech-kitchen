@@ -2666,6 +2666,7 @@ async function handleApi(request, env) {
 }
 
 export async function onRequest({ request, env }) {
+  const route = new URL(request.url).pathname;
   const origin = request.headers.get('Origin');
   if (origin && !['GET', 'HEAD', 'OPTIONS'].includes(request.method.toUpperCase())) {
     try {

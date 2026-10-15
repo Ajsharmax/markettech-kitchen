@@ -24,3 +24,179 @@
 .about-page .about-profile-card{animation:mt-about-reveal .9s .08s both;transition:transform .35s ease,box-shadow .35s ease}
 .about-page .about-profile-card:hover{transform:translateY(-4px);box-shadow:0 20px 55px rgba(0,0,0,.14)}
 .about-page .about-story{animation:mt-about-reveal .8s .12s both}
+
+/* ==========================================================================
+   VIBRANT KINETIC / BOLD GRADIENT THEME — ABOUT PAGE
+   ========================================================================== */
+.about-page {
+  position: relative;
+  isolation: isolate;
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at 12% 14%, rgba(59, 130, 246, 0.16), transparent 34%),
+    radial-gradient(circle at 86% 20%, rgba(236, 72, 153, 0.16), transparent 36%),
+    radial-gradient(circle at 74% 82%, rgba(245, 158, 11, 0.13), transparent 36%),
+    linear-gradient(145deg, #f4f7ff 0%, #eef2ff 50%, #fdf4ff 100%) !important;
+  color: #111834 !important;
+}
+.about-kinetic-orbs {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+.about-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(44px);
+  opacity: 0.55;
+  animation: mt-about-orb-drift 11s ease-in-out infinite;
+}
+.about-orb-1 {
+  width: 380px;
+  height: 380px;
+  top: -70px;
+  left: -60px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.44), transparent 70%);
+}
+.about-orb-2 {
+  width: 340px;
+  height: 340px;
+  top: 28%;
+  right: -60px;
+  background: radial-gradient(circle, rgba(236, 72, 153, 0.4), transparent 70%);
+  animation-delay: -4s;
+}
+.about-orb-3 {
+  width: 320px;
+  height: 320px;
+  bottom: -60px;
+  left: 35%;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.34), transparent 70%);
+  animation-delay: -7s;
+}
+@keyframes mt-about-orb-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(18px, -22px, 0) scale(1.1); }
+}
+
+.about-nav-button {
+  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 52%, #db2777 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 10px 24px rgba(124, 58, 237, 0.28);
+  transition: transform 0.26s cubic-bezier(0.22, 1.25, 0.36, 1), box-shadow 0.26s ease;
+}
+.about-nav-button:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 14px 32px rgba(124, 58, 237, 0.4);
+}
+
+.about-hero {
+  background:
+    radial-gradient(circle at 82% 20%, rgba(236, 72, 153, 0.35), transparent 44%),
+    radial-gradient(circle at 16% 80%, rgba(59, 130, 246, 0.36), transparent 45%),
+    linear-gradient(132deg, #0f173c 0%, #1f1b5c 50%, #3b135c 100%) !important;
+}
+.about-hero-orb {
+  background: radial-gradient(circle, rgba(236, 72, 153, 0.34), rgba(59, 130, 246, 0.14) 48%, transparent 70%) !important;
+}
+.about-page .about-hero h1 em {
+  background: linear-gradient(90deg, #60a5fa, #f472b6, #fbbf24, #60a5fa) !important;
+  background-size: 200% auto !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+}
+.about-profile-card {
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.06)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  box-shadow: 0 28px 65px rgba(9, 13, 38, 0.35) !important;
+}
+.profile-photo {
+  border: 4px solid rgba(255, 255, 255, 0.92) !important;
+  box-shadow: 0 18px 38px rgba(124, 58, 237, 0.38), 0 0 0 8px rgba(236, 72, 153, 0.2) !important;
+}
+.profile-dot {
+  background: #34d399 !important;
+  box-shadow: 0 0 0 8px rgba(52, 211, 153, 0.22) !important;
+}
+
+.about-section-kicker {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(219, 39, 119, 0.14));
+  border: 1px solid rgba(124, 58, 237, 0.22);
+  color: #4f46e5 !important;
+}
+.about-story h2 em {
+  background: linear-gradient(110deg, #2563eb, #7c3aed, #db2777);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+}
+.about-story-copy p {
+  color: #3e4c73 !important;
+}
+
+.about-values {
+  background:
+    radial-gradient(circle at 18% 20%, rgba(59, 130, 246, 0.12), transparent 40%),
+    radial-gradient(circle at 82% 80%, rgba(236, 72, 153, 0.12), transparent 40%),
+    linear-gradient(180deg, rgba(238, 242, 255, 0.8), rgba(253, 242, 248, 0.75)) !important;
+  border-block: 1px solid rgba(99, 102, 241, 0.18) !important;
+}
+.value-grid article {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.88) !important;
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(99, 102, 241, 0.18) !important;
+  box-shadow: 0 14px 36px rgba(27, 39, 94, 0.07) !important;
+  transition: transform 0.32s cubic-bezier(0.22, 1.25, 0.36, 1), box-shadow 0.32s ease, border-color 0.25s ease;
+}
+.value-grid article::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #2563eb, #7c3aed, #ec4899);
+}
+.value-grid article:nth-child(3n+2)::before {
+  background: linear-gradient(90deg, #ec4899, #f59e0b);
+}
+.value-grid article:nth-child(3n)::before {
+  background: linear-gradient(90deg, #10b981, #06b6d4, #3b82f6);
+}
+.value-grid article:hover {
+  transform: translateY(-7px) scale(1.01);
+  border-color: rgba(124, 58, 237, 0.42) !important;
+  box-shadow: 0 24px 48px rgba(79, 70, 229, 0.16) !important;
+}
+.value-grid span {
+  background: linear-gradient(135deg, #2563eb, #7c3aed, #db2777) !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 18px rgba(124, 58, 237, 0.26);
+}
+.value-grid p {
+  color: #4f5d82 !important;
+}
+
+.about-contact-card {
+  background:
+    radial-gradient(circle at 86% 20%, rgba(236, 72, 153, 0.35), transparent 44%),
+    radial-gradient(circle at 14% 80%, rgba(59, 130, 246, 0.35), transparent 45%),
+    linear-gradient(130deg, #131c47 0%, #241b63 54%, #3b155e 100%) !important;
+  box-shadow: 0 26px 60px rgba(27, 31, 86, 0.25) !important;
+}
+.about-contact-card .about-section-kicker {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.24);
+  color: #93c5fd !important;
+}
+.contact-email {
+  color: #f9a8d4 !important;
+}

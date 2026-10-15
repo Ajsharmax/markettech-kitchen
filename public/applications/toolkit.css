@@ -166,3 +166,178 @@
 .tk-page .tk-results:not(:empty){animation:mt-result-in .35s ease-out both}
 .tk-page .tk-panel{transition:border-color .2s ease,box-shadow .2s ease}
 .tk-page .tk-panel:focus-within{border-color:#c4d1f4;box-shadow:0 0 0 3px rgba(53,102,233,.05)}
+
+/* ==========================================================================
+   VIBRANT KINETIC / BOLD GRADIENT THEME — TOOL PAGES
+   ========================================================================== */
+.tk-page {
+  background:
+    radial-gradient(circle at 10% 15%, rgba(59, 130, 246, 0.16), transparent 36%),
+    radial-gradient(circle at 88% 20%, rgba(236, 72, 153, 0.15), transparent 38%),
+    radial-gradient(circle at 70% 85%, rgba(245, 158, 11, 0.12), transparent 35%),
+    linear-gradient(145deg, #f4f7ff 0%, #eef2ff 52%, #fdf4ff 100%) !important;
+  color: #111834 !important;
+}
+
+.tk-crumbs a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  color: #4338ca !important;
+  font-weight: 750;
+  box-shadow: 0 6px 18px rgba(37, 56, 128, 0.06);
+  transition: transform 0.25s cubic-bezier(0.22, 1.25, 0.36, 1), box-shadow 0.25s ease, background 0.22s ease;
+}
+.tk-crumbs a:hover {
+  text-decoration: none !important;
+  transform: translateX(-4px) translateY(-1px);
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(79, 70, 229, 0.15);
+}
+
+.tk-head {
+  position: relative;
+  overflow: hidden;
+  padding: 28px 32px;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 88% 22%, rgba(236, 72, 153, 0.32), transparent 42%),
+    radial-gradient(circle at 14% 85%, rgba(59, 130, 246, 0.32), transparent 44%),
+    linear-gradient(130deg, #131c47 0%, #241b63 54%, #3b155e 100%);
+  color: #ffffff;
+  box-shadow: 0 22px 52px rgba(27, 31, 86, 0.2);
+}
+.tk-head .applications-eyebrow {
+  display: inline-block !important;
+  color: #93c5fd !important;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 5px 12px;
+  border-radius: 999px;
+  margin-bottom: 10px;
+}
+.tk-head h1 {
+  background: linear-gradient(95deg, #ffffff 15%, #93c5fd 58%, #f9a8d4 95%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 850;
+}
+.tk-head p {
+  color: rgba(226, 232, 255, 0.88) !important;
+}
+.tk-privacy {
+  background: rgba(16, 185, 129, 0.18) !important;
+  border-color: rgba(52, 211, 153, 0.4) !important;
+  color: #d1fae5 !important;
+  backdrop-filter: blur(10px);
+}
+.tk-privacy::before {
+  background: #34d399 !important;
+  box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.25);
+}
+
+.tk-panel {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.88) !important;
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(99, 102, 241, 0.18) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 14px 36px rgba(27, 39, 94, 0.07);
+}
+.tk-panel::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #2563eb, #7c3aed, #ec4899, #f59e0b);
+}
+.tk-panel > h2 {
+  color: #4338ca !important;
+}
+
+.tk-drop {
+  border: 2px dashed rgba(99, 102, 241, 0.42) !important;
+  border-radius: 18px !important;
+  background: linear-gradient(145deg, rgba(238, 242, 255, 0.7), rgba(253, 242, 248, 0.65)) !important;
+  padding: 36px 20px !important;
+  transition: transform 0.28s cubic-bezier(0.22, 1.25, 0.36, 1), border-color 0.24s ease, box-shadow 0.28s ease, background 0.28s ease !important;
+}
+.tk-drop strong {
+  font-size: 17px;
+  background: linear-gradient(110deg, #1e2952, #4f46e5, #db2777);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.tk-drop:hover,
+.tk-drop.over,
+.tk-drop:focus-within {
+  transform: translateY(-3px) scale(1.005);
+  border-color: #7c3aed !important;
+  background: linear-gradient(145deg, rgba(224, 231, 255, 0.9), rgba(252, 231, 243, 0.85)) !important;
+  box-shadow: 0 16px 36px rgba(124, 58, 237, 0.14), 0 0 0 4px rgba(124, 58, 237, 0.1) !important;
+}
+
+.tk-badge {
+  background: linear-gradient(135deg, #2563eb, #7c3aed) !important;
+  color: #ffffff !important;
+}
+
+.tk-btn,
+.tk-mini {
+  border-radius: 11px !important;
+  border-color: rgba(99, 102, 241, 0.24) !important;
+  transition: transform 0.25s cubic-bezier(0.22, 1.25, 0.36, 1), box-shadow 0.25s ease, background 0.25s ease !important;
+}
+.tk-btn:hover:not(:disabled),
+.tk-mini:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: #6366f1 !important;
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.14);
+}
+.tk-btn.primary {
+  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 52%, #db2777 100%) !important;
+  border: 0 !important;
+  color: #ffffff !important;
+  box-shadow: 0 12px 28px rgba(124, 58, 237, 0.28);
+}
+.tk-btn.primary:hover:not(:disabled) {
+  transform: translateY(-3px) scale(1.015);
+  box-shadow: 0 16px 34px rgba(124, 58, 237, 0.4);
+}
+
+.tk-tab[aria-selected="true"] {
+  background: linear-gradient(135deg, #2563eb, #7c3aed) !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 18px rgba(79, 70, 229, 0.25);
+}
+
+.tk-results {
+  border-color: rgba(16, 185, 129, 0.35) !important;
+  background: linear-gradient(145deg, rgba(236, 253, 245, 0.92), rgba(255, 255, 255, 0.95)) !important;
+}
+
+#more-tools a {
+  border: 1px solid rgba(99, 102, 241, 0.22) !important;
+  background: rgba(255, 255, 255, 0.88) !important;
+  color: #243056 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 6px 16px rgba(37, 56, 128, 0.05);
+  transition: transform 0.25s cubic-bezier(0.22, 1.25, 0.36, 1), box-shadow 0.25s ease, border-color 0.22s ease, color 0.22s ease;
+}
+#more-tools a:hover {
+  transform: translateY(-3px);
+  border-color: #7c3aed !important;
+  color: #4f46e5 !important;
+  box-shadow: 0 10px 22px rgba(124, 58, 237, 0.16);
+}

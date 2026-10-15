@@ -3,24 +3,42 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#f6f3ed">
+<meta name="theme-color" content="#f3f5ff">
 <meta name="description" content="Technology applications and private browser-based tools from MarketTech.">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
 <title>Applications & Tools — MarketTech</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/styles.css?v=30">
-<link rel="stylesheet" href="/applications/applications.css?v=motion-1">
+<link rel="stylesheet" href="/styles.css?v=kinetic-1">
+<link rel="stylesheet" href="/applications/applications.css?v=kinetic-1">
 <script type="module" src="/applications/applications.js"></script>
 </head>
 <body class="applications-page">
+<div class="apps-kinetic-bg" aria-hidden="true">
+  <span class="apps-orb apps-orb-a"></span>
+  <span class="apps-orb apps-orb-b"></span>
+  <span class="apps-orb apps-orb-c"></span>
+</div>
 <header class="applications-header">
   <a class="applications-brand" href="/" aria-label="MarketTech home"><img src="/images/markettech-tech-logo.svg?v=1" alt="MarketTech — Smart Shopping & Smart Tools" width="228" height="76"></a>
-  <nav aria-label="Applications navigation"><a href="/">Store</a><a href="/applications" aria-current="page">Applications</a></nav>
+  <nav aria-label="Applications navigation"><a href="/">Home</a><a href="/applications" aria-current="page">Applications</a><a href="/about.html">About</a><a href="/contact.html">Support</a></nav>
 </header>
 <main class="applications-main">
+  <section class="apps-kinetic-banner" aria-label="MarketTech Toolkit overview">
+    <div class="apps-banner-copy">
+      <div class="apps-live-pill"><span class="apps-live-dot"></span> 100% BROWSER-POWERED · ZERO FILE UPLOADS</div>
+      <h1 class="apps-banner-title">Smart tools that move <span>at your speed.</span></h1>
+      <p class="apps-banner-sub">Convert, merge, sign, OCR, build resumes and calculate EMIs directly on your device — private by design, instant in your browser.</p>
+    </div>
+    <div class="apps-floating-cluster" aria-hidden="true">
+      <div class="apps-float-tile apps-tile-1"><span>▤</span><b>PDF Suite</b><small>Merge · Split · Sign</small></div>
+      <div class="apps-float-tile apps-tile-2"><span>✦</span><b>CV Studio</b><small>6 Live Templates</small></div>
+      <div class="apps-float-tile apps-tile-3"><span>₹</span><b>Smart EMI</b><small>Instant Schedule</small></div>
+      <div class="apps-float-tile apps-tile-4"><span>⬚</span><b>4×6 Labels</b><small>Seller Ready</small></div>
+    </div>
+  </section>
   <section class="applications-library" aria-labelledby="applications-title">
     <div class="applications-library-heading"><div><p class="applications-eyebrow">THE TOOLKIT</p><h2 id="applications-title">Applications</h2></div><p id="applications-count" aria-live="polite">Loading tools…</p></div>
-    <label class="applications-search"><span aria-hidden="true">⌕</span><span class="sr-only">Search applications</span><input id="applications-search" type="search" placeholder="Search tools, e.g. merge or crop…" autocomplete="off"></label>
+    <label class="applications-search"><span aria-hidden="true">⌕</span><span class="sr-only">Search applications</span><input id="applications-search" type="search" placeholder="Search tools, e.g. merge, resume, EMI or crop…" autocomplete="off"></label>
     <div id="applications-categories" class="applications-chips" role="group" aria-label="Filter by category"></div>
     <div id="applications-results" class="applications-results" aria-live="polite"></div>
     <p id="applications-empty" class="applications-empty" hidden>No tools match that search. Try another word or category.</p>
@@ -30,6 +48,6 @@
     <p>Every available tool runs inside your browser with libraries hosted on this site, so your files are never uploaded. Conversions that need a document engine on a server, such as Word to PDF, are marked Coming soon with the reason, rather than offering a poor imitation.</p>
   </section>
 </main>
-<footer class="applications-footer"><span>© <span id="applications-year"></span> MarketTech</span><a href="/">Back to MarketTech ↗</a></footer>
+<footer class="applications-footer"><span>© <span id="applications-year"></span> MarketTech · Smart Shopping &amp; Smart Tools</span><a href="/">Back to MarketTech ↗</a></footer>
 </body>
 </html>

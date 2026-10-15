@@ -1869,7 +1869,7 @@ async function handleApi(request, env) {
 
       const tokenUrl = new URL('https://api.flipkart.net/oauth-service/oauth/token');
       tokenUrl.searchParams.set('grant_type', 'client_credentials');
-      tokenUrl.searchParams.set('scope', 'Seller_Api,Default');
+      tokenUrl.searchParams.set('scope', 'Seller_Api');
 
       let response;
       try {

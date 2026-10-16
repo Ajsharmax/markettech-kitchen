@@ -1,4 +1,4 @@
-import { APPLICATIONS } from "/applications/registry.js";
+import { APPLICATIONS, applicationHref } from "/applications/registry.js";
 import { h, mountSpec, UserError } from "/applications/core.js";
 
 const slug = document.body.dataset.tool;
@@ -18,6 +18,6 @@ async function start() {
   }
   const more = APPLICATIONS.filter(t => t.status === "ready" && t.slug !== slug).slice(0, 8);
   const nav = document.getElementById("more-tools");
-  if (nav) for (const t of more) nav.append(h("a", { href: "/applications/" + t.slug }, t.name));
+  if (nav) for (const t of more) nav.append(h("a", { href: applicationHref(t) }, t.name));
 }
 start();

@@ -1,4 +1,4 @@
-import { APPLICATIONS, APPLICATION_CATEGORIES } from "/applications/registry.js?v=4";
+import { APPLICATIONS, APPLICATION_CATEGORIES, applicationHref } from "/applications/registry.js?v=5";
 const root = document.getElementById("applications-results");
 const search = document.getElementById("applications-search");
 const chips = document.getElementById("applications-categories");
@@ -18,7 +18,7 @@ function makeCard(tool) {
   const live = tool.status === "ready";
   const card = document.createElement(live ? "a" : "div");
   card.className = "application-card" + (tool.status === "ready" ? "" : " is-coming");
-  if (live) card.href = tool.url || ("/applications/" + tool.slug);
+  if (live) card.href = applicationHref(tool);
   else { card.setAttribute("aria-disabled", "true"); card.tabIndex = -1; }
   const top = document.createElement("div"); top.className = "application-card-top";
   const icon = document.createElement("span"); icon.className = "application-icon"; icon.textContent = tool.icon; icon.setAttribute("aria-hidden","true");
@@ -30,7 +30,11 @@ function makeCard(tool) {
   const description = document.createElement("p"); description.textContent = live ? tool.description : (tool.reason || tool.description);
   const offline = document.createElement("div"); offline.className = "application-offline";
   const dot = document.createElement("span"); dot.setAttribute("aria-hidden","true"); if (live) offline.append(dot,document.createTextNode("Works in your browser. No upload."));
-  card.append(top,title,description); if (live) card.append(offline);
+  card.append(top,title,description);
+  if (live) {
+    const action = document.createElement("span"); action.className = "application-open"; action.textContent = "Open tool →";
+    card.append(offline,action);
+  }
   return card;
 }
 function render() {

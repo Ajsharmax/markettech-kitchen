@@ -22,9 +22,9 @@ const page = t => `<!doctype html>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/styles.css?v=kinetic-2">
 <link rel="stylesheet" href="/applications/applications.css?v=kinetic-2">
-<link rel="stylesheet" href="/applications/toolkit.css?v=kinetic-2">${t.css ? `\n<link rel="stylesheet" href="${t.css}?v=kinetic-2">` : ""}
+<link rel="stylesheet" href="/applications/toolkit.css?v=kinetic-2">${t.css ? `\n<link rel="stylesheet" href="${esc(t.css)}">` : ""}
 <script src="/theme.js?v=1"></script>
-<script type="module" src="/applications/tool.js?v=1"></script>
+<script type="module" src="/applications/tool.js?v=2"></script>
 </head>
 <body class="applications-page tk-page" data-tool="${t.slug}">
 <div class="apps-kinetic-bg" aria-hidden="true"><span class="apps-orb apps-orb-a"></span><span class="apps-orb apps-orb-b"></span><span class="apps-orb apps-orb-c"></span></div>
@@ -41,9 +41,14 @@ const page = t => `<!doctype html>
 </html>
 `;
 
-const keep = new Set(["index.html"]);
+const handMaintained = new Set(["label-crop-4x6.html"]);
+const keep = new Set(["index.html", ...handMaintained]);
 const made = new Set();
-for (const t of APPLICATIONS.filter(t => t.status === "ready")) { writeFileSync(path.join(dir, t.slug + ".html"), page(t)); made.add(t.slug + ".html"); }
-// remove stale generated pages and the old placeholders
+for (const t of APPLICATIONS.filter(t => t.status === "ready")) {
+  const file = t.slug + ".html";
+  if (handMaintained.has(file)) { console.log("preserved", file); continue; }
+  writeFileSync(path.join(dir, file), page(t)); made.add(file);
+}
+// remove stale generated pages and the old placeholders, but never delete hand-maintained pages
 for (const f of readdirSync(dir)) if (f.endsWith(".html") && !keep.has(f) && !made.has(f)) { unlinkSync(path.join(dir, f)); console.log("removed", f); }
-console.log("wrote", made.size, "tool pages");
+console.log("wrote", made.size, "tool pages; preserved", handMaintained.size, "hand-maintained page(s)");

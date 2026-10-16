@@ -7,10 +7,10 @@
   <meta name="description" content="MarketTech website administration">
   <title>MarketTech Admin</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/admin.css?v=crm-nav-2">
+  <link rel="stylesheet" href="/admin.css?v=crm-flat-1">
   <link rel="stylesheet" href="/admin-crm.css?v=kinetic-2">
   <script src="/theme.js?v=1"></script>
-  <script src="/admin.js?v=crm-nav-2" defer></script>
+  <script src="/admin.js?v=crm-flat-1" defer></script>
   <script src="/admin-crm.js" defer></script>
 </head>
 <body class="admin-body">
@@ -26,18 +26,12 @@
       <div class="sidebar-label">WORKSPACE</div>
       <nav class="admin-nav" aria-label="Admin navigation">
         <button class="admin-nav-item active" data-page="overview"><span class="nav-icon">▦</span> Overview</button>
-        <div class="admin-nav-group" id="crm-nav-group">
-          <button class="admin-nav-item admin-nav-group-toggle" id="crm-nav-toggle" type="button" aria-expanded="false" aria-controls="crm-nav-submenu">
-            <span class="nav-icon">◎</span><span class="nav-group-title">CRM</span><span class="nav-chevron" aria-hidden="true">⌄</span>
-          </button>
-          <div class="admin-nav-submenu" id="crm-nav-submenu" hidden>
-            <button class="admin-nav-item admin-nav-subitem" data-page="crm"><span class="nav-icon">◉</span> CRM Dashboard</button>
-            <button class="admin-nav-item admin-nav-subitem" data-page="orders"><span class="nav-icon">▤</span> Orders <span class="nav-count" id="nav-pending-count">0</span></button>
-            <button class="admin-nav-item admin-nav-subitem" data-page="customers"><span class="nav-icon">♙</span> Customers</button>
-            <button class="admin-nav-item admin-nav-subitem" data-page="products"><span class="nav-icon">◫</span> Products</button>
-            <button class="admin-nav-item admin-nav-subitem" data-page="inventory"><span class="nav-icon">▥</span> Inventory</button>
-          </div>
-        </div>
+        <div class="sidebar-label sidebar-label-crm">CRM &amp; STORE MANAGEMENT</div>
+        <button class="admin-nav-item" data-page="crm"><span class="nav-icon">◎</span> CRM Dashboard</button>
+        <button class="admin-nav-item" data-page="orders"><span class="nav-icon">▤</span> Orders <span class="nav-count" id="nav-pending-count">0</span></button>
+        <button class="admin-nav-item" data-page="customers"><span class="nav-icon">♙</span> Customers</button>
+        <button class="admin-nav-item" data-page="products"><span class="nav-icon">◫</span> Products</button>
+        <button class="admin-nav-item" data-page="inventory"><span class="nav-icon">▥</span> Inventory</button>
         <button class="admin-nav-item" data-page="website"><span class="nav-icon">✎</span> Website &amp; policies</button>
         <button class="admin-nav-item" data-page="integrations"><span class="nav-icon">⌘</span> Integrations &amp; ads</button>
         <button class="admin-nav-item" data-page="marketing"><span class="nav-icon">✦</span> Coupons &amp; offers</button>

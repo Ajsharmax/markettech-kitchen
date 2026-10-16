@@ -1598,6 +1598,275 @@ p{font-weight:500}
   }
 }
 
+/* ==========================================================================
+   5 SINGLE-CLICK WEBSITE THEMES (Emerald, Sunset, Midnight, Royal)
+   Default theme ("kinetic") is defined above.
+   ========================================================================== */
+
+/* 2. EMERALD BOTANICAL THEME */
+html[data-theme="emerald"] {
+  --mt-grad-kinetic: linear-gradient(125deg, #059669 0%, #0d9488 35%, #10b981 68%, #d97706 100%);
+  --mt-grad-btn: linear-gradient(135deg, #047857 0%, #0d9488 52%, #d97706 100%);
+  --mt-theme-bg:
+    radial-gradient(circle at 12% 14%, rgba(16, 185, 129, 0.18), transparent 34%),
+    radial-gradient(circle at 88% 22%, rgba(13, 148, 136, 0.16), transparent 36%),
+    radial-gradient(circle at 75% 82%, rgba(217, 119, 6, 0.14), transparent 35%),
+    linear-gradient(145deg, #f0fdf7 0%, #ecfdf5 52%, #fefce8 100%);
+  --mt-theme-hero:
+    radial-gradient(circle at 84% 20%, rgba(16, 185, 129, 0.34), transparent 44%),
+    radial-gradient(circle at 16% 80%, rgba(217, 119, 6, 0.28), transparent 45%),
+    linear-gradient(132deg, #052e22 0%, #0b4636 52%, #134e4a 100%);
+}
+
+/* 3. SUNSET TERRACOTTA THEME */
+html[data-theme="sunset"] {
+  --mt-grad-kinetic: linear-gradient(125deg, #ea580c 0%, #e11d48 38%, #f59e0b 72%, #fb7185 100%);
+  --mt-grad-btn: linear-gradient(135deg, #ea580c 0%, #e11d48 54%, #d97706 100%);
+  --mt-theme-bg:
+    radial-gradient(circle at 12% 14%, rgba(234, 88, 12, 0.17), transparent 34%),
+    radial-gradient(circle at 88% 22%, rgba(225, 29, 72, 0.15), transparent 36%),
+    radial-gradient(circle at 75% 82%, rgba(245, 158, 11, 0.16), transparent 35%),
+    linear-gradient(145deg, #fff8f3 0%, #fff1f2 52%, #fffbeb 100%);
+  --mt-theme-hero:
+    radial-gradient(circle at 84% 20%, rgba(245, 158, 11, 0.32), transparent 44%),
+    radial-gradient(circle at 16% 80%, rgba(225, 29, 72, 0.34), transparent 45%),
+    linear-gradient(132deg, #3b0a18 0%, #5c1614 52%, #7c2d12 100%);
+}
+
+/* 4. MIDNIGHT CYBER NEON THEME (DARK MODE) */
+html[data-theme="midnight"] {
+  --mt-grad-kinetic: linear-gradient(125deg, #06b6d4 0%, #6366f1 38%, #a855f7 72%, #ec4899 100%);
+  --mt-grad-btn: linear-gradient(135deg, #0891b2 0%, #4f46e5 52%, #9333ea 100%);
+  --mt-theme-bg:
+    radial-gradient(circle at 12% 14%, rgba(6, 182, 212, 0.22), transparent 34%),
+    radial-gradient(circle at 88% 22%, rgba(168, 85, 247, 0.22), transparent 36%),
+    radial-gradient(circle at 75% 82%, rgba(59, 130, 246, 0.18), transparent 35%),
+    linear-gradient(145deg, #060916 0%, #0b1124 52%, #130f2e 100%);
+  --mt-theme-hero:
+    radial-gradient(circle at 84% 20%, rgba(6, 182, 212, 0.32), transparent 44%),
+    radial-gradient(circle at 16% 80%, rgba(168, 85, 247, 0.34), transparent 45%),
+    linear-gradient(132deg, #040711 0%, #0c1631 52%, #1e1342 100%);
+}
+
+/* 5. ROYAL LUXE GOLD THEME */
+html[data-theme="royal"] {
+  --mt-grad-kinetic: linear-gradient(125deg, #4338ca 0%, #7c3aed 36%, #d97706 72%, #f59e0b 100%);
+  --mt-grad-btn: linear-gradient(135deg, #311b63 0%, #6d28d9 50%, #d97706 100%);
+  --mt-theme-bg:
+    radial-gradient(circle at 12% 14%, rgba(124, 58, 237, 0.15), transparent 34%),
+    radial-gradient(circle at 88% 22%, rgba(217, 119, 6, 0.16), transparent 36%),
+    radial-gradient(circle at 75% 82%, rgba(67, 56, 202, 0.13), transparent 35%),
+    linear-gradient(145deg, #faf7ff 0%, #fdf8ee 52%, #f5f0ff 100%);
+  --mt-theme-hero:
+    radial-gradient(circle at 84% 20%, rgba(245, 158, 11, 0.34), transparent 44%),
+    radial-gradient(circle at 16% 80%, rgba(124, 58, 237, 0.34), transparent 45%),
+    linear-gradient(132deg, #160d33 0%, #2a1454 52%, #3d1d6b 100%);
+}
+
+/* Shared Theme Variable Bindings for Non-Default Themes */
+html[data-theme="emerald"] body,
+html[data-theme="sunset"] body,
+html[data-theme="midnight"] body,
+html[data-theme="royal"] body,
+html[data-theme="emerald"] .mt-launch,
+html[data-theme="sunset"] .mt-launch,
+html[data-theme="midnight"] .mt-launch,
+html[data-theme="royal"] .mt-launch,
+html[data-theme="emerald"] .applications-page,
+html[data-theme="sunset"] .applications-page,
+html[data-theme="midnight"] .applications-page,
+html[data-theme="royal"] .applications-page,
+html[data-theme="emerald"] .tk-page,
+html[data-theme="sunset"] .tk-page,
+html[data-theme="midnight"] .tk-page,
+html[data-theme="royal"] .tk-page,
+html[data-theme="emerald"] .about-page,
+html[data-theme="sunset"] .about-page,
+html[data-theme="midnight"] .about-page,
+html[data-theme="royal"] .about-page,
+html[data-theme="emerald"] body.contact-page,
+html[data-theme="sunset"] body.contact-page,
+html[data-theme="midnight"] body.contact-page,
+html[data-theme="royal"] body.contact-page {
+  background: var(--mt-theme-bg) !important;
+}
+
+html[data-theme="emerald"] .apps-kinetic-banner,
+html[data-theme="sunset"] .apps-kinetic-banner,
+html[data-theme="midnight"] .apps-kinetic-banner,
+html[data-theme="royal"] .apps-kinetic-banner,
+html[data-theme="emerald"] .tk-head,
+html[data-theme="sunset"] .tk-head,
+html[data-theme="midnight"] .tk-head,
+html[data-theme="royal"] .tk-head,
+html[data-theme="emerald"] .about-hero,
+html[data-theme="sunset"] .about-hero,
+html[data-theme="midnight"] .about-hero,
+html[data-theme="royal"] .about-hero,
+html[data-theme="emerald"] .about-contact-card,
+html[data-theme="sunset"] .about-contact-card,
+html[data-theme="midnight"] .about-contact-card,
+html[data-theme="royal"] .about-contact-card,
+html[data-theme="emerald"] .site-footer,
+html[data-theme="sunset"] .site-footer,
+html[data-theme="midnight"] .site-footer,
+html[data-theme="royal"] .site-footer {
+  background: var(--mt-theme-hero) !important;
+}
+
+html[data-theme="emerald"] .site-header::after,
+html[data-theme="sunset"] .site-header::after,
+html[data-theme="midnight"] .site-header::after,
+html[data-theme="royal"] .site-header::after,
+html[data-theme="emerald"] .applications-header::after,
+html[data-theme="sunset"] .applications-header::after,
+html[data-theme="midnight"] .applications-header::after,
+html[data-theme="royal"] .applications-header::after,
+html[data-theme="emerald"] .application-card::before,
+html[data-theme="sunset"] .application-card::before,
+html[data-theme="midnight"] .application-card::before,
+html[data-theme="royal"] .application-card::before,
+html[data-theme="emerald"] .tk-panel::before,
+html[data-theme="sunset"] .tk-panel::before,
+html[data-theme="midnight"] .tk-panel::before,
+html[data-theme="royal"] .tk-panel::before {
+  background: var(--mt-grad-kinetic) !important;
+  background-size: 200% 100% !important;
+}
+
+html[data-theme="emerald"] .button-dark,
+html[data-theme="sunset"] .button-dark,
+html[data-theme="midnight"] .button-dark,
+html[data-theme="royal"] .button-dark,
+html[data-theme="emerald"] .mt-primary-cta,
+html[data-theme="sunset"] .mt-primary-cta,
+html[data-theme="midnight"] .mt-primary-cta,
+html[data-theme="royal"] .mt-primary-cta,
+html[data-theme="emerald"] .tk-btn.primary,
+html[data-theme="sunset"] .tk-btn.primary,
+html[data-theme="midnight"] .tk-btn.primary,
+html[data-theme="royal"] .tk-btn.primary,
+html[data-theme="emerald"] .applications-chip[aria-pressed="true"],
+html[data-theme="sunset"] .applications-chip[aria-pressed="true"],
+html[data-theme="midnight"] .applications-chip[aria-pressed="true"],
+html[data-theme="royal"] .applications-chip[aria-pressed="true"],
+html[data-theme="emerald"] .applications-header nav a[aria-current="page"],
+html[data-theme="sunset"] .applications-header nav a[aria-current="page"],
+html[data-theme="midnight"] .applications-header nav a[aria-current="page"],
+html[data-theme="royal"] .applications-header nav a[aria-current="page"],
+html[data-theme="emerald"] .about-nav-button,
+html[data-theme="sunset"] .about-nav-button,
+html[data-theme="midnight"] .about-nav-button,
+html[data-theme="royal"] .about-nav-button,
+html[data-theme="emerald"] .contact-nav-button,
+html[data-theme="sunset"] .contact-nav-button,
+html[data-theme="midnight"] .contact-nav-button,
+html[data-theme="royal"] .contact-nav-button,
+html[data-theme="emerald"] .plan-button,
+html[data-theme="sunset"] .plan-button,
+html[data-theme="midnight"] .plan-button,
+html[data-theme="royal"] .plan-button,
+html[data-theme="emerald"] .billing-option.active,
+html[data-theme="sunset"] .billing-option.active,
+html[data-theme="midnight"] .billing-option.active,
+html[data-theme="royal"] .billing-option.active {
+  background: var(--mt-grad-btn) !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="emerald"] .mt-title span,
+html[data-theme="sunset"] .mt-title span,
+html[data-theme="midnight"] .mt-title span,
+html[data-theme="royal"] .mt-title span,
+html[data-theme="emerald"] .about-story h2 em,
+html[data-theme="sunset"] .about-story h2 em,
+html[data-theme="midnight"] .about-story h2 em,
+html[data-theme="royal"] .about-story h2 em,
+html[data-theme="emerald"] .contact-hero h1 em,
+html[data-theme="sunset"] .contact-hero h1 em,
+html[data-theme="midnight"] .contact-hero h1 em,
+html[data-theme="royal"] .contact-hero h1 em,
+html[data-theme="emerald"] .hero h1 em,
+html[data-theme="sunset"] .hero h1 em,
+html[data-theme="midnight"] .hero h1 em,
+html[data-theme="royal"] .hero h1 em,
+html[data-theme="emerald"] .price,
+html[data-theme="sunset"] .price,
+html[data-theme="midnight"] .price,
+html[data-theme="royal"] .price {
+  background: var(--mt-grad-kinetic) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+}
+
+/* Midnight Cyber Neon Dark Mode Surface Adjustments */
+html[data-theme="midnight"] body,
+html[data-theme="midnight"] .applications-page,
+html[data-theme="midnight"] .tk-page,
+html[data-theme="midnight"] .about-page,
+html[data-theme="midnight"] body.contact-page {
+  color: #e2e8f0 !important;
+}
+html[data-theme="midnight"] .site-header,
+html[data-theme="midnight"] .applications-header,
+html[data-theme="midnight"] .contact-header {
+  background: rgba(10, 15, 34, 0.84) !important;
+  border-bottom-color: rgba(56, 189, 248, 0.2) !important;
+}
+html[data-theme="midnight"] .primary-nav a,
+html[data-theme="midnight"] .applications-nav-trigger,
+html[data-theme="midnight"] .applications-header nav a,
+html[data-theme="midnight"] .mt-title,
+html[data-theme="midnight"] .about-story h2,
+html[data-theme="midnight"] .contact-hero h1,
+html[data-theme="midnight"] .hero h1,
+html[data-theme="midnight"] .faq h2,
+html[data-theme="midnight"] summary,
+html[data-theme="midnight"] .plan-card h2,
+html[data-theme="midnight"] .application-card h4,
+html[data-theme="midnight"] .value-grid h3,
+html[data-theme="midnight"] .contact-card h2 {
+  color: #f8fafc !important;
+}
+html[data-theme="midnight"] .mt-sub,
+html[data-theme="midnight"] .about-story-copy p,
+html[data-theme="midnight"] .contact-lead,
+html[data-theme="midnight"] .hero-copy,
+html[data-theme="midnight"] .plan-description,
+html[data-theme="midnight"] .features li,
+html[data-theme="midnight"] .application-card p,
+html[data-theme="midnight"] .value-grid p,
+html[data-theme="midnight"] .contact-card p {
+  color: #94a3b8 !important;
+}
+html[data-theme="midnight"] .application-card,
+html[data-theme="midnight"] .tk-panel,
+html[data-theme="midnight"] .value-grid article,
+html[data-theme="midnight"] .contact-card,
+html[data-theme="midnight"] .plan-card,
+html[data-theme="midnight"] .mt-hub-card,
+html[data-theme="midnight"] .mt-bento-card,
+html[data-theme="midnight"] .mt-stat-card,
+html[data-theme="midnight"] .applications-search,
+html[data-theme="midnight"] .applications-limits,
+html[data-theme="midnight"] .trust-row {
+  background: rgba(15, 23, 42, 0.84) !important;
+  border-color: rgba(56, 189, 248, 0.22) !important;
+  color: #f1f5f9 !important;
+  box-shadow: 0 18px 44px rgba(2, 6, 23, 0.55) !important;
+}
+html[data-theme="midnight"] .tk-drop {
+  background: rgba(15, 23, 42, 0.72) !important;
+  border-color: rgba(56, 189, 248, 0.42) !important;
+  color: #e2e8f0 !important;
+}
+html[data-theme="midnight"] .applications-chip {
+  background: rgba(15, 23, 42, 0.85) !important;
+  border-color: rgba(56, 189, 248, 0.25) !important;
+  color: #cbd5e1 !important;
+}
+
 /* Consistent typography for every top-level mobile navigation item. */
 @media (max-width: 720px) {
   .site-header .mobile-nav > a,
@@ -1615,4 +1884,282 @@ p{font-weight:500}
   .site-header .mobile-nav > .mobile-applications-dropdown > summary {
     padding: 16px 4px;
   }
+}
+
+/* ==========================================================================
+   5 NEW ULTRA-READABLE LIGHT THEMES (Daylight, Ivory, Mint, Blossom, Sky)
+   Designed for 100% crystal-clear dark text visibility on light surfaces.
+   ========================================================================== */
+
+html[data-theme="daylight"] {
+  --mt-light-bg: linear-gradient(150deg, #ffffff 0%, #f8fafc 55%, #eff6ff 100%);
+  --mt-light-hero-bg: linear-gradient(135deg, #eff6ff 0%, #dbeafe 55%, #e0f2fe 100%);
+  --mt-light-card: #ffffff;
+  --mt-light-ink: #0f172a;
+  --mt-light-muted: #334155;
+  --mt-light-accent: #1d4ed8;
+  --mt-light-accent-soft: #dbeafe;
+  --mt-light-border: #cbd5e1;
+  --mt-light-btn: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+}
+
+html[data-theme="ivory"] {
+  --mt-light-bg: linear-gradient(150deg, #fffdf9 0%, #faf6ee 55%, #f5efe4 100%);
+  --mt-light-hero-bg: linear-gradient(135deg, #f5efe4 0%, #ede3d2 55%, #faeedc 100%);
+  --mt-light-card: #ffffff;
+  --mt-light-ink: #1c1917;
+  --mt-light-muted: #44403c;
+  --mt-light-accent: #9a3412;
+  --mt-light-accent-soft: #ffedd5;
+  --mt-light-border: #d6d3d1;
+  --mt-light-btn: linear-gradient(135deg, #78350f 0%, #9a3412 100%);
+}
+
+html[data-theme="mint"] {
+  --mt-light-bg: linear-gradient(150deg, #ffffff 0%, #f4fdf8 55%, #ecfdf5 100%);
+  --mt-light-hero-bg: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 55%, #e6f9f0 100%);
+  --mt-light-card: #ffffff;
+  --mt-light-ink: #062e22;
+  --mt-light-muted: #1e4638;
+  --mt-light-accent: #047857;
+  --mt-light-accent-soft: #d1fae5;
+  --mt-light-border: #a7f3d0;
+  --mt-light-btn: linear-gradient(135deg, #047857 0%, #059669 100%);
+}
+
+html[data-theme="blossom"] {
+  --mt-light-bg: linear-gradient(150deg, #ffffff 0%, #fff8fa 55%, #fff1f5 100%);
+  --mt-light-hero-bg: linear-gradient(135deg, #fff0f5 0%, #ffe4ec 55%, #fce7f3 100%);
+  --mt-light-card: #ffffff;
+  --mt-light-ink: #3b0a21;
+  --mt-light-muted: #591c36;
+  --mt-light-accent: #be123c;
+  --mt-light-accent-soft: #ffe4ec;
+  --mt-light-border: #fecdd3;
+  --mt-light-btn: linear-gradient(135deg, #be123c 0%, #e11d48 100%);
+}
+
+html[data-theme="sky"] {
+  --mt-light-bg: linear-gradient(150deg, #ffffff 0%, #f6f8ff 55%, #eef2ff 100%);
+  --mt-light-hero-bg: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 55%, #dbeafe 100%);
+  --mt-light-card: #ffffff;
+  --mt-light-ink: #17153b;
+  --mt-light-muted: #312e5c;
+  --mt-light-accent: #4338ca;
+  --mt-light-accent-soft: #e0e7ff;
+  --mt-light-border: #c7d2fe;
+  --mt-light-btn: linear-gradient(135deg, #3730a3 0%, #4f46e5 100%);
+}
+
+/* Apply Light Theme Variables across ALL pages when data-theme-mode="light" */
+html[data-theme-mode="light"] body,
+html[data-theme-mode="light"] .mt-launch,
+html[data-theme-mode="light"] .applications-page,
+html[data-theme-mode="light"] .tk-page,
+html[data-theme-mode="light"] .about-page,
+html[data-theme-mode="light"] body.contact-page {
+  background: var(--mt-light-bg) !important;
+  color: var(--mt-light-ink) !important;
+}
+
+/* Header & Navigation in Light Mode */
+html[data-theme-mode="light"] .site-header,
+html[data-theme-mode="light"] .applications-header,
+html[data-theme-mode="light"] .contact-header {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-bottom: 1.5px solid var(--mt-light-border) !important;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.05) !important;
+}
+html[data-theme-mode="light"] .site-header::after,
+html[data-theme-mode="light"] .applications-header::after {
+  background: var(--mt-light-btn) !important;
+  animation: none !important;
+}
+html[data-theme-mode="light"] .primary-nav a,
+html[data-theme-mode="light"] .applications-nav-trigger,
+html[data-theme-mode="light"] .applications-header nav a,
+html[data-theme-mode="light"] .admin-link,
+html[data-theme-mode="light"] .account-button {
+  color: var(--mt-light-ink) !important;
+  font-weight: 700 !important;
+}
+
+/* Eliminate washed-out transparent gradient text in Light Themes so every word is 100% solid & readable */
+html[data-theme-mode="light"] .mt-title,
+html[data-theme-mode="light"] .apps-banner-title,
+html[data-theme-mode="light"] .applications-library-heading h2,
+html[data-theme-mode="light"] .tk-head h1,
+html[data-theme-mode="light"] .tk-drop strong,
+html[data-theme-mode="light"] .about-hero h1,
+html[data-theme-mode="light"] .about-story h2,
+html[data-theme-mode="light"] .about-contact h2,
+html[data-theme-mode="light"] .contact-hero h1,
+html[data-theme-mode="light"] .hero h1,
+html[data-theme-mode="light"] .faq h2,
+html[data-theme-mode="light"] .plan-card h2,
+html[data-theme-mode="light"] .application-card h4,
+html[data-theme-mode="light"] .value-grid h3,
+html[data-theme-mode="light"] .contact-card h2 {
+  background: none !important;
+  -webkit-text-fill-color: var(--mt-light-ink) !important;
+  color: var(--mt-light-ink) !important;
+}
+
+html[data-theme-mode="light"] .mt-title span,
+html[data-theme-mode="light"] .apps-banner-title span,
+html[data-theme-mode="light"] .about-hero h1 em,
+html[data-theme-mode="light"] .about-story h2 em,
+html[data-theme-mode="light"] .contact-hero h1 em,
+html[data-theme-mode="light"] .hero h1 em,
+html[data-theme-mode="light"] .faq h2 em,
+html[data-theme-mode="light"] .price,
+html[data-theme-mode="light"] .modal h2 em,
+html[data-theme-mode="light"] .drawer-head h2 span {
+  background: none !important;
+  -webkit-text-fill-color: var(--mt-light-accent) !important;
+  color: var(--mt-light-accent) !important;
+}
+
+/* Convert Dark Hero Banners into Crisp Light-Mode Banners with Dark Ink Text */
+html[data-theme-mode="light"] .apps-kinetic-banner,
+html[data-theme-mode="light"] .tk-head,
+html[data-theme-mode="light"] .about-hero,
+html[data-theme-mode="light"] .about-contact-card,
+html[data-theme-mode="light"] .page-hero {
+  background: var(--mt-light-hero-bg) !important;
+  color: var(--mt-light-ink) !important;
+  border: 1.5px solid var(--mt-light-border) !important;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06) !important;
+}
+html[data-theme-mode="light"] .apps-banner-sub,
+html[data-theme-mode="light"] .tk-head p,
+html[data-theme-mode="light"] .about-hero-copy > p,
+html[data-theme-mode="light"] .about-contact p,
+html[data-theme-mode="light"] .page-hero p,
+html[data-theme-mode="light"] .mt-sub,
+html[data-theme-mode="light"] .about-story-copy p,
+html[data-theme-mode="light"] .contact-lead,
+html[data-theme-mode="light"] .hero-copy,
+html[data-theme-mode="light"] .plan-description,
+html[data-theme-mode="light"] .features li,
+html[data-theme-mode="light"] .application-card p,
+html[data-theme-mode="light"] .value-grid p,
+html[data-theme-mode="light"] .contact-card p {
+  color: var(--mt-light-muted) !important;
+}
+html[data-theme-mode="light"] .apps-live-pill,
+html[data-theme-mode="light"] .tk-head .applications-eyebrow,
+html[data-theme-mode="light"] .about-hero .eyebrow-light,
+html[data-theme-mode="light"] .about-contact-card .about-section-kicker {
+  background: #ffffff !important;
+  border: 1px solid var(--mt-light-border) !important;
+  color: var(--mt-light-accent) !important;
+  font-weight: 800 !important;
+}
+html[data-theme-mode="light"] .tk-privacy {
+  background: #ffffff !important;
+  border: 1px solid var(--mt-light-border) !important;
+  color: #047857 !important;
+  font-weight: 700 !important;
+}
+html[data-theme-mode="light"] .apps-float-tile {
+  background: #ffffff !important;
+  border: 1px solid var(--mt-light-border) !important;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06) !important;
+}
+html[data-theme-mode="light"] .apps-float-tile b {
+  color: var(--mt-light-ink) !important;
+}
+html[data-theme-mode="light"] .apps-float-tile small {
+  color: var(--mt-light-muted) !important;
+}
+html[data-theme-mode="light"] .about-profile-card {
+  background: #ffffff !important;
+  border: 1.5px solid var(--mt-light-border) !important;
+  color: var(--mt-light-ink) !important;
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.08) !important;
+}
+html[data-theme-mode="light"] .about-profile-card strong {
+  color: var(--mt-light-ink) !important;
+}
+html[data-theme-mode="light"] .about-profile-card span,
+html[data-theme-mode="light"] .about-profile-card small,
+html[data-theme-mode="light"] .about-instagram-link,
+html[data-theme-mode="light"] .contact-instagram,
+html[data-theme-mode="light"] .contact-location {
+  color: var(--mt-light-muted) !important;
+  border-color: var(--mt-light-border) !important;
+}
+html[data-theme-mode="light"] .contact-email {
+  color: var(--mt-light-accent) !important;
+}
+
+/* Cards, Dropzones & Buttons in Light Mode */
+html[data-theme-mode="light"] .application-card,
+html[data-theme-mode="light"] .tk-panel,
+html[data-theme-mode="light"] .value-grid article,
+html[data-theme-mode="light"] .contact-card,
+html[data-theme-mode="light"] .plan-card,
+html[data-theme-mode="light"] .mt-hub-card,
+html[data-theme-mode="light"] .mt-bento-card,
+html[data-theme-mode="light"] .mt-stat-card,
+html[data-theme-mode="light"] .applications-search,
+html[data-theme-mode="light"] .applications-limits,
+html[data-theme-mode="light"] .trust-row {
+  background: #ffffff !important;
+  border: 1.5px solid var(--mt-light-border) !important;
+  color: var(--mt-light-ink) !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05) !important;
+}
+html[data-theme-mode="light"] .application-card::before,
+html[data-theme-mode="light"] .tk-panel::before,
+html[data-theme-mode="light"] .value-grid article::before,
+html[data-theme-mode="light"] .contact-card::before,
+html[data-theme-mode="light"] .plan-card::before {
+  background: var(--mt-light-btn) !important;
+}
+html[data-theme-mode="light"] .button-dark,
+html[data-theme-mode="light"] .mt-primary-cta,
+html[data-theme-mode="light"] .tk-btn.primary,
+html[data-theme-mode="light"] .applications-chip[aria-pressed="true"],
+html[data-theme-mode="light"] .applications-header nav a[aria-current="page"],
+html[data-theme-mode="light"] .about-nav-button,
+html[data-theme-mode="light"] .contact-nav-button,
+html[data-theme-mode="light"] .plan-button,
+html[data-theme-mode="light"] .billing-option.active {
+  background: var(--mt-light-btn) !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14) !important;
+}
+
+/* Light-Mode Site Footer with Crisp Dark Ink */
+html[data-theme-mode="light"] .site-footer {
+  background: var(--mt-light-hero-bg) !important;
+  color: var(--mt-light-ink) !important;
+  border-top: 1.5px solid var(--mt-light-border) !important;
+}
+html[data-theme-mode="light"] .site-footer .footer-brand-col p,
+html[data-theme-mode="light"] .site-footer .footer-note p,
+html[data-theme-mode="light"] .site-footer .footer-note span:not(.footer-sun),
+html[data-theme-mode="light"] .site-footer .footer-bottom,
+html[data-theme-mode="light"] .site-footer .footer-bottom a {
+  color: var(--mt-light-muted) !important;
+}
+html[data-theme-mode="light"] .site-footer .footer-links h3 {
+  color: var(--mt-light-accent) !important;
+}
+html[data-theme-mode="light"] .site-footer .footer-links a {
+  color: var(--mt-light-ink) !important;
+  font-weight: 600;
+}
+html[data-theme-mode="light"] .site-footer .footer-links a:hover {
+  color: var(--mt-light-accent) !important;
+}
+html[data-theme-mode="light"] .site-footer .social-links a {
+  background: #ffffff !important;
+  border: 1px solid var(--mt-light-border) !important;
+  color: var(--mt-light-ink) !important;
+}
+html[data-theme-mode="light"] .site-footer .brand-logo {
+  filter: none !important;
 }

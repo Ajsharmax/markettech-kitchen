@@ -44,6 +44,7 @@ const DEFAULT_SETTINGS = {
     shippingFee: DEFAULT_SHIPPING_FEE,
     freeShippingAt: DEFAULT_FREE_SHIPPING_AT,
     lowStockThreshold: 8,
+    theme: 'daylight',
     seoTitle: 'MarketTech Kitchen — Good things happen in the kitchen',
     seoDescription: 'Thoughtful kitchen tools for the rituals you return to. Shop considered cookware, prep tools, tableware and everyday essentials.'
   },
@@ -270,6 +271,7 @@ function parseProduct(row) {
 
 const ALLOWED_ORDER_STATUSES = ['New', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
 const ALLOWED_PAYMENT_STATUSES = ['Pending', 'Paid', 'Due on delivery', 'Failed'];
+const ALLOWED_THEMES = ['daylight', 'ivory', 'mint', 'blossom', 'sky', 'kinetic', 'emerald', 'sunset', 'midnight', 'royal'];
 
 function orderItemQuantities(order) {
   const quantities = new Map();
@@ -498,6 +500,12 @@ function updateSettings(current, input) {
   for (const [key, max] of Object.entries(siteTextLimits)) {
     if (Object.hasOwn(body.site || {}, key)) settings.site[key] = clean(body.site[key], max);
   }
+  if (Object.hasOwn(body.site || {}, 'theme')) {
+    const requestedTheme = String(body.site.theme || '').trim().toLowerCase();
+    if (!ALLOWED_THEMES.includes(requestedTheme)) throw new HttpError(400, 'Choose one of the 10 supported website themes.');
+    settings.site.theme = requestedTheme;
+  }
+  if (!ALLOWED_THEMES.includes(settings.site.theme)) settings.site.theme = 'daylight';
   if (settings.site.contactEmail && !cleanEmail(settings.site.contactEmail)) throw new HttpError(400, 'Enter a valid store contact email.');
   if (settings.site.upiVpa && !/^[\w.-]{2,100}@[\w.-]{2,30}$/.test(settings.site.upiVpa)) throw new HttpError(400, 'Enter a valid UPI ID, such as name@bank.');
   if (settings.site.upiQrImage && (!(settings.site.upiQrImage.startsWith('/uploads/') || settings.site.upiQrImage.startsWith('/images/')) || settings.site.upiQrImage.includes('..'))) throw new HttpError(400, 'Upload a valid UPI QR image.');
@@ -1497,6 +1505,7 @@ async function handleApi(request, env) {
     const settings = await getSettings(env);
     return json(200, {
       storeName: settings.site.storeName,
+      theme: ALLOWED_THEMES.includes(settings.site.theme) ? settings.site.theme : 'daylight',
       currency: 'INR',
       shippingFee: Number.isFinite(Number(settings.site.shippingFee)) ? Number(settings.site.shippingFee) : DEFAULT_SHIPPING_FEE,
       freeShippingAt: Number.isFinite(Number(settings.site.freeShippingAt)) ? Number(settings.site.freeShippingAt) : DEFAULT_FREE_SHIPPING_AT,

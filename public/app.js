@@ -381,6 +381,10 @@
     const marketing = storefrontSettings.marketing || {};
     const developer = storefrontSettings.developer || {};
     const overrides = developer.textOverrides || {};
+    const activeTheme = site.theme || config.theme || '';
+    if (activeTheme && typeof window.applyMarketTechTheme === 'function') {
+      window.applyMarketTechTheme(activeTheme);
+    }
     for (const element of $$('[data-site]')) {
       const key = element.dataset.site;
       const value = Object.hasOwn(overrides, key) && overrides[key] ? overrides[key] : site[key];

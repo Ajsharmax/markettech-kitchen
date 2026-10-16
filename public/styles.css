@@ -1597,3 +1597,24 @@ p{font-weight:500}
     transition: none !important;
   }
 }
+
+/* Consistent typography for every top-level mobile navigation item. */
+@media (max-width: 720px) {
+  .mobile-nav > a,
+  .mobile-nav > button,
+  .mobile-nav > .mobile-applications-dropdown > summary {
+    font-family: var(--sans);
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 1.4;
+    letter-spacing: normal;
+    text-transform: none;
+  }
+  .mobile-nav > a,
+  .mobile-nav > button {
+    padding: 16px 4px;
+  }
+  .mobile-nav > .mobile-applications-dropdown > summary {
+    padding: 16px 4px;
+  }
+}

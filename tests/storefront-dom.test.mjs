@@ -63,9 +63,19 @@ const indexHtml = read('public/index.html');
 const appJs = read('public/app.js');
 const indexIds = idsInHtml(indexHtml);
 
-// The newsletter block is optional: a published storefront may leave it out.
-// app.js must guard these lookups so the catalogue still loads without it.
-const OPTIONAL_STOREFRONT_IDS = new Set(['newsletter-form', 'newsletter-email', 'newsletter-message']);
+// The newsletter block and hero quick-search controls are optional: a published
+// storefront may leave them out. app.js guards these lookups so the catalogue
+// still loads without them.
+const OPTIONAL_STOREFRONT_IDS = new Set([
+  'newsletter-form',
+  'newsletter-email',
+  'newsletter-message',
+  'view-all-link',
+  'quick-search-input',
+  'quick-find-input',
+  'quick-search-button',
+  'quick-find-search-button'
+]);
 
 danglingLookups('public/app.js', 'public/index.html', 'Storefront (public/app.js → public/index.html)', OPTIONAL_STOREFRONT_IDS);
 
@@ -124,11 +134,11 @@ check(/\/api\/admin\/orders\/bulk-status/.test(adminJs), 'Admin: admin.js must c
 check(/\/api\/admin\/orders\/bulk-delete/.test(adminJs), 'Admin: admin.js must call /api/admin/orders/bulk-delete');
 check(/data-action="delete-order"/.test(adminJs), 'Admin: order rows must render a delete action button');
 
-// Admin 1-click 5-theme switcher controls must exist.
+// Admin 1-click 10-theme switcher controls (5 Light + 5 Bold) must exist.
 for (const themeControlId of ['overview-theme-strip', 'overview-theme-grid', 'overview-active-theme-badge', 'website-theme-card', 'website-theme-grid', 'website-theme-status']) {
   check(adminIds.has(themeControlId), `Admin: #${themeControlId} must exist in admin.html`);
 }
-for (const themeSlug of ['kinetic', 'emerald', 'sunset', 'midnight', 'royal']) {
+for (const themeSlug of ['daylight', 'ivory', 'mint', 'blossom', 'sky', 'kinetic', 'emerald', 'sunset', 'midnight', 'royal']) {
   check(new RegExp(`data-theme-select="${themeSlug}"`).test(adminHtml), `Admin: theme option "${themeSlug}" must exist in admin.html`);
 }
 check(/selectWebsiteTheme/.test(adminJs), 'Admin: admin.js must wire 1-click selectWebsiteTheme handler');

@@ -962,3 +962,199 @@ html[data-theme="royal"] .crm-kpi strong {
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   5 NEW ULTRA-READABLE LIGHT THEMES IN ADMIN PANEL
+   (daylight, ivory, mint, blossom, sky) + High-Contrast Text Fixes
+   ========================================================================== */
+.admin-theme-group-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #334155;
+  margin: 4px 0 10px;
+}
+.theme-card-banner.is-light-banner {
+  border: 1px solid rgba(15, 23, 42, 0.14);
+}
+.theme-card-badge.is-light-badge {
+  background: rgba(255, 255, 255, 0.92);
+  color: #0f172a;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+}
+
+html[data-theme="daylight"] {
+  --adm-light-bg: linear-gradient(150deg, #ffffff 0%, #f8fafc 55%, #eff6ff 100%);
+  --adm-light-sidebar: linear-gradient(180deg, #f8fafc 0%, #eff6ff 100%);
+  --adm-light-ink: #0f172a;
+  --adm-light-muted: #334155;
+  --adm-light-accent: #1d4ed8;
+  --adm-light-border: #cbd5e1;
+  --adm-light-btn: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+  --adm-light-thead: #eff6ff;
+}
+html[data-theme="ivory"] {
+  --adm-light-bg: linear-gradient(150deg, #fffdf9 0%, #faf6ee 55%, #f5efe4 100%);
+  --adm-light-sidebar: linear-gradient(180deg, #faf6ee 0%, #f5efe4 100%);
+  --adm-light-ink: #1c1917;
+  --adm-light-muted: #44403c;
+  --adm-light-accent: #9a3412;
+  --adm-light-border: #d6d3d1;
+  --adm-light-btn: linear-gradient(135deg, #78350f 0%, #9a3412 100%);
+  --adm-light-thead: #f5efe4;
+}
+html[data-theme="mint"] {
+  --adm-light-bg: linear-gradient(150deg, #ffffff 0%, #f4fdf8 55%, #ecfdf5 100%);
+  --adm-light-sidebar: linear-gradient(180deg, #f2fcf7 0%, #d1fae5 100%);
+  --adm-light-ink: #062e22;
+  --adm-light-muted: #1e4638;
+  --adm-light-accent: #047857;
+  --adm-light-border: #a7f3d0;
+  --adm-light-btn: linear-gradient(135deg, #047857 0%, #059669 100%);
+  --adm-light-thead: #ecfdf5;
+}
+html[data-theme="blossom"] {
+  --adm-light-bg: linear-gradient(150deg, #ffffff 0%, #fff8fa 55%, #fff1f5 100%);
+  --adm-light-sidebar: linear-gradient(180deg, #fff5f8 0%, #ffe4ec 100%);
+  --adm-light-ink: #3b0a21;
+  --adm-light-muted: #591c36;
+  --adm-light-accent: #be123c;
+  --adm-light-border: #fecdd3;
+  --adm-light-btn: linear-gradient(135deg, #be123c 0%, #e11d48 100%);
+  --adm-light-thead: #fff0f5;
+}
+html[data-theme="sky"] {
+  --adm-light-bg: linear-gradient(150deg, #ffffff 0%, #f6f8ff 55%, #eef2ff 100%);
+  --adm-light-sidebar: linear-gradient(180deg, #f5f7ff 0%, #e0e7ff 100%);
+  --adm-light-ink: #17153b;
+  --adm-light-muted: #312e5c;
+  --adm-light-accent: #4338ca;
+  --adm-light-border: #c7d2fe;
+  --adm-light-btn: linear-gradient(135deg, #3730a3 0%, #4f46e5 100%);
+  --adm-light-thead: #eef2ff;
+}
+
+/* Light-Mode Admin Workspace with High-Contrast Dark Ink Everywhere */
+html[data-theme-mode="light"] body.admin-body {
+  background: var(--adm-light-bg) !important;
+  color: var(--adm-light-ink) !important;
+}
+html[data-theme-mode="light"] .admin-sidebar {
+  background: var(--adm-light-sidebar) !important;
+  color: var(--adm-light-ink) !important;
+  border-right: 1.5px solid var(--adm-light-border) !important;
+  box-shadow: 6px 0 24px rgba(15, 23, 42, 0.05) !important;
+}
+html[data-theme-mode="light"] .sidebar-store,
+html[data-theme-mode="light"] .help-card {
+  background: #ffffff !important;
+  border: 1px solid var(--adm-light-border) !important;
+  color: var(--adm-light-ink) !important;
+}
+html[data-theme-mode="light"] .sidebar-store strong,
+html[data-theme-mode="light"] .help-card strong,
+html[data-theme-mode="light"] .admin-profile strong {
+  color: var(--adm-light-ink) !important;
+  font-weight: 700 !important;
+}
+html[data-theme-mode="light"] .sidebar-store small,
+html[data-theme-mode="light"] .help-card small,
+html[data-theme-mode="light"] .admin-profile small,
+html[data-theme-mode="light"] .sidebar-label {
+  color: var(--adm-light-muted) !important;
+  font-weight: 700 !important;
+}
+html[data-theme-mode="light"] .admin-nav-item {
+  color: var(--adm-light-ink) !important;
+  font-weight: 700 !important;
+}
+html[data-theme-mode="light"] .admin-nav-item:hover {
+  background: rgba(15, 23, 42, 0.06) !important;
+  color: var(--adm-light-accent) !important;
+}
+html[data-theme-mode="light"] .admin-nav-item .nav-icon {
+  color: var(--adm-light-accent) !important;
+}
+html[data-theme-mode="light"] .admin-nav-item.active {
+  background: var(--adm-light-btn) !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14) !important;
+}
+html[data-theme-mode="light"] .admin-nav-item.active .nav-icon {
+  color: #ffffff !important;
+}
+html[data-theme-mode="light"] .admin-topbar {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-bottom: 1.5px solid var(--adm-light-border) !important;
+}
+html[data-theme-mode="light"] .admin-topbar::after {
+  background: var(--adm-light-btn) !important;
+  animation: none !important;
+}
+html[data-theme-mode="light"] .topbar-breadcrumb,
+html[data-theme-mode="light"] .today-label,
+html[data-theme-mode="light"] .page-title-row p,
+html[data-theme-mode="light"] .card-heading p,
+html[data-theme-mode="light"] .settings-card-heading p,
+html[data-theme-mode="light"] .admin-theme-strip-head p,
+html[data-theme-mode="light"] .stat-top,
+html[data-theme-mode="light"] .stat-card > small,
+html[data-theme-mode="light"] .table-toolbar > div:first-child small,
+html[data-theme-mode="light"] .admin-field {
+  color: var(--adm-light-muted) !important;
+  font-weight: 600 !important;
+}
+html[data-theme-mode="light"] .page-title-row h1,
+html[data-theme-mode="light"] .card-heading h2,
+html[data-theme-mode="light"] .settings-card-heading h2,
+html[data-theme-mode="light"] .admin-theme-strip-head h2,
+html[data-theme-mode="light"] .table-toolbar > div:first-child strong,
+html[data-theme-mode="light"] .customer-cell strong,
+html[data-theme-mode="light"] .product-table-item strong,
+html[data-theme-mode="light"] .order-total,
+html[data-theme-mode="light"] .price-label {
+  color: var(--adm-light-ink) !important;
+}
+html[data-theme-mode="light"] .login-box h2 em,
+html[data-theme-mode="light"] .page-title-row h1 em,
+html[data-theme-mode="light"] .admin-modal h2 em,
+html[data-theme-mode="light"] .admin-theme-strip-head h2 em,
+html[data-theme-mode="light"] .stat-card > strong,
+html[data-theme-mode="light"] .crm-kpi strong {
+  background: none !important;
+  -webkit-text-fill-color: var(--adm-light-accent) !important;
+  color: var(--adm-light-accent) !important;
+}
+html[data-theme-mode="light"] .stat-card,
+html[data-theme-mode="light"] .admin-card,
+html[data-theme-mode="light"] .crm-kpi,
+html[data-theme-mode="light"] .admin-theme-option {
+  background: #ffffff !important;
+  border: 1.5px solid var(--adm-light-border) !important;
+  color: var(--adm-light-ink) !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05) !important;
+}
+html[data-theme-mode="light"] .stat-card::before,
+html[data-theme-mode="light"] .crm-kpi::before {
+  background: var(--adm-light-btn) !important;
+}
+html[data-theme-mode="light"] .admin-button-dark,
+html[data-theme-mode="light"] .admin-theme-option.is-active .theme-option-state {
+  background: var(--adm-light-btn) !important;
+  color: #ffffff !important;
+}
+html[data-theme-mode="light"] .admin-theme-option.is-active {
+  border: 2px solid var(--adm-light-accent) !important;
+  background: var(--adm-light-thead) !important;
+}
+html[data-theme-mode="light"] thead th {
+  background: var(--adm-light-thead) !important;
+  color: var(--adm-light-ink) !important;
+  font-weight: 800 !important;
+}
+html[data-theme-mode="light"] tbody td {
+  color: var(--adm-light-ink) !important;
+  font-weight: 500;
+}
+

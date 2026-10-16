@@ -1158,19 +1158,13 @@ html[data-theme-mode="light"] tbody td {
   font-weight: 500;
 }
 
-/* CRM workspace navigation grouping */
-.admin-nav-group{display:flex;flex-direction:column;gap:4px;min-width:0}
-.admin-nav-group-toggle{width:100%}
-.admin-nav-group-toggle .nav-group-title{flex:1;text-align:left}
-.admin-nav-group-toggle .nav-chevron{margin-left:auto;font-size:16px;line-height:1;transition:transform .18s ease;color:#aebca8}
-.admin-nav-group.is-open>.admin-nav-group-toggle .nav-chevron{transform:rotate(180deg)}
-.admin-nav-group.has-active-page>.admin-nav-group-toggle{background:rgba(245,247,236,.07);color:#fff}
-.admin-nav-submenu{display:flex;flex-direction:column;gap:3px;margin:0 0 7px 20px;padding:3px 0 3px 9px;border-left:1px solid rgba(234,241,227,.22);min-width:0}
-.admin-nav-submenu[hidden]{display:none!important}
-.admin-nav-subitem{height:35px;min-height:35px;padding:0 8px;gap:8px;font-size:9px}
-.admin-nav-subitem .nav-icon{width:16px;font-size:13px;flex:0 0 16px}
-.admin-nav-subitem .nav-count{margin-left:auto}
+/* Direct CRM/store-management navigation */
+.sidebar-label-crm{margin-top:22px}
+.admin-nav-item[data-page="crm"]{margin-top:0}
+.admin-nav-item[data-page="orders"],
+.admin-nav-item[data-page="customers"],
+.admin-nav-item[data-page="products"],
+.admin-nav-item[data-page="inventory"]{padding-left:11px}
 @media(max-width:760px){
-  .admin-nav-submenu{margin-left:17px}
-  .admin-nav-subitem{height:38px;min-height:38px;font-size:10px}
+  .sidebar-label-crm{margin-top:18px}
 }

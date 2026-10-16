@@ -1915,23 +1915,25 @@ async function handleApi(request, env) {
         return json(400, { ok: false, error: 'Batch must be a whole number between 0 and 500.' });
       }
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000);
-      try {
-        const credentialBytes = new TextEncoder().encode(clientId + ':' + clientSecret);
-        let credentialBinary = '';
-        for (const byte of credentialBytes) credentialBinary += String.fromCharCode(byte);
-        const authorization = 'Basic ' + btoa(credentialBinary);
+      const credentialBytes = new TextEncoder().encode(clientId + ':' + clientSecret);
+      let credentialBinary = '';
+      for (const byte of credentialBytes) credentialBinary += String.fromCharCode(byte);
+      const authorization = 'Basic ' + btoa(credentialBinary);
 
+      let tokenData = {};
+      const tokenController = new AbortController();
+      const tokenTimeoutId = setTimeout(() => tokenController.abort(), 12000);
+      try {
         const tokenUrl = new URL('https://api.flipkart.net/oauth-service/oauth/token');
         tokenUrl.searchParams.set('grant_type', 'client_credentials');
         tokenUrl.searchParams.set('scope', 'Seller_Api');
         const tokenResponse = await fetch(tokenUrl.toString(), {
           method: 'GET',
           headers: { Authorization: authorization, Accept: 'application/json' },
-          signal: controller.signal
+          signal: tokenController.signal
         });
-        const tokenData = await tokenResponse.json().catch(() => ({}));
+        const tokenText = await tokenResponse.text();
+        try { tokenData = tokenText ? JSON.parse(tokenText) : {}; } catch { tokenData = {}; }
         if (!tokenResponse.ok || !tokenData.access_token) {
           return json(502, {
             ok: false,
@@ -1940,7 +1942,21 @@ async function handleApi(request, env) {
             providerStatus: tokenResponse.status
           });
         }
+      } catch (error) {
+        const timedOut = error?.name === 'AbortError' || error?.name === 'TimeoutError';
+        console.error('Flipkart token request failed:', timedOut ? 'timeout' : (error?.name || 'FetchError'));
+        return json(502, {
+          ok: false,
+          error: timedOut ? 'Flipkart authentication request timed out.' : 'Could not connect to Flipkart authentication service.',
+          diagnosticCode: timedOut ? 'FLIPKART_TOKEN_TIMEOUT' : 'FLIPKART_TOKEN_CONNECTION_FAILED'
+        });
+      } finally {
+        clearTimeout(tokenTimeoutId);
+      }
 
+      const listingController = new AbortController();
+      const listingTimeoutId = setTimeout(() => listingController.abort(), 12000);
+      try {
         const listingsResponse = await fetch('https://api.flipkart.net/sellers/listings/v3/product/search', {
           method: 'POST',
           headers: {
@@ -1953,7 +1969,7 @@ async function handleApi(request, env) {
             internalState,
             ...(searchText ? { searchText } : {})
           }),
-          signal: controller.signal
+          signal: listingController.signal
         });
         const listingResponseText = await listingsResponse.text();
         let listingData = {};
@@ -1971,7 +1987,6 @@ async function handleApi(request, env) {
             providerError: String(listingData.error || listingData.message || 'Provider request failed').slice(0, 200)
           });
         }
-
         return json(200, {
           ok: true,
           status: internalState,
@@ -1981,14 +1996,15 @@ async function handleApi(request, env) {
           hasMore: (batchNo + 1) * 20 < Number(listingData.totalListingsCount || 0)
         });
       } catch (error) {
-        console.error('Flipkart listings request failed:', error?.name || 'FetchError');
+        const timedOut = error?.name === 'AbortError' || error?.name === 'TimeoutError';
+        console.error('Flipkart listings request failed:', timedOut ? 'timeout' : (error?.name || 'FetchError'));
         return json(502, {
           ok: false,
-          error: error?.name === 'AbortError' ? 'Flipkart listing request timed out.' : 'Could not load listings from Flipkart.',
-          diagnosticCode: error?.name === 'AbortError' ? 'FLIPKART_LISTINGS_TIMEOUT' : 'FLIPKART_LISTINGS_FETCH_FAILED'
+          error: timedOut ? 'Flipkart listing request timed out.' : 'Could not connect to Flipkart listings service.',
+          diagnosticCode: timedOut ? 'FLIPKART_LISTINGS_TIMEOUT' : 'FLIPKART_LISTINGS_CONNECTION_FAILED'
         });
       } finally {
-        clearTimeout(timeoutId);
+        clearTimeout(listingTimeoutId);
       }
     }
 

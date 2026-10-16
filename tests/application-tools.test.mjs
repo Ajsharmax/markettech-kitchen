@@ -1,6 +1,6 @@
 // Functional smoke tests for the shared Applications tools (no browser or network required).
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
@@ -214,12 +214,21 @@ assert.match(cvSource, /fetch\("\/applications\/cv-resume\.css"/);
 assert.match(cvSource, /<style>html,body\{margin:0;background:#fff;\}/);
 assert.match(cvSource, /const title = escapeHTML\(state\.fullName/);
 
-// The external-library standalone tools also need valid executable inline scripts.
-for (const file of ["public/pdf-to-excel.html", "public/ocr-pdf.html"]) {
-  const html = readFileSync(path.join(root, file), "utf8");
-  const inline = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(match => match[1]).filter(code => code.trim());
-  assert.ok(inline.length, file + " should contain its tool logic");
-  inline.forEach(code => assert.doesNotThrow(() => new Function(code), file + " inline script should parse"));
+// The standalone OCR/Excel tools must keep their logic in CSP-safe, local scripts and libraries.
+for (const name of ["pdf-to-excel", "ocr-pdf"]) {
+  const html = readFileSync(path.join(root, "public", name + ".html"), "utf8");
+  const scriptPath = path.join(root, "public/applications/standalone", name + ".js");
+  const source = readFileSync(scriptPath, "utf8");
+  assert.ok(html.includes(`<script defer src="/applications/standalone/${name}.js?v=1"></script>`), name + " should load its standalone app script");
+  const scriptTags = [...html.matchAll(/<script\b[^>]*>/gi)].map(match => match[0]);
+  assert.ok(scriptTags.every(tag => /\bsrc\s*=/.test(tag)), name + " must not contain CSP-blocked inline code");
+  assert.doesNotMatch(html, /https:\/\/(?:cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net|tessdata\.projectnaptha\.com)/, name + " should not need third-party CDNs");
+  assert.doesNotThrow(() => new Function(source), name + " local script should parse");
+  assert.match(source, /\/applications\/vendor\/pdfjs-3\.11\.174\.worker\.min\.js/);
 }
+assert.ok(existsSync(path.join(root, "public/applications/vendor/xlsx-0.18.5.full.min.js")), "PDF-to-Excel needs the local SheetJS bundle");
+assert.ok(existsSync(path.join(root, "public/applications/vendor/tesseract-5.1.0/tesseract.min.js")), "OCR needs local Tesseract.js");
+assert.ok(existsSync(path.join(root, "public/applications/vendor/tesseract-core-5.1.1/tesseract-core-simd-lstm.wasm")), "OCR needs the local SIMD WASM core");
+for (const lang of ["eng", "hin"]) assert.ok(existsSync(path.join(root, "public/applications/vendor/tessdata/4.0.0_best_int", lang + ".traineddata.gz")), "OCR needs locally hosted " + lang + " data");
 
 console.log("Applications functional smoke tests passed (PDF page edits, text conversions, CV import/export safeguards, EMI, and standalone page scripts).");

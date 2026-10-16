@@ -2,6 +2,11 @@
 export const APPLICATION_CATEGORIES = ["Print Helpers", "Organize PDF", "Edit PDF", "Convert from PDF", "Convert to PDF", "Optimize PDF", "Security", "Career Tools", "Financial Tools"];
 const ready = (slug, module, name, category, icon, description, extra = {}) => ({ id: slug, slug, name, category, icon, description, status: "ready", module, ...extra });
 const soon = (slug, name, category, icon, description, reason) => ({ id: slug, slug, name, category, icon, description, status: "coming-soon", module: null, reason });
+
+/* Use real static file URLs. Do not rely on host-specific clean-URL rewrites for tool pages. */
+export function applicationHref(tool) {
+  return tool.url || "/applications/" + encodeURIComponent(tool.slug) + ".html";
+}
 export const APPLICATIONS = [
 ready("label-crop-4x6","label-crop","Flipkart Shipping Label Printer","Print Helpers","▣","Convert Flipkart shipping label PDFs from A4 to print-ready 4×6 inch thermal printer labels. Free browser-based processing; files are never uploaded.",{featured:true,wide:true}),
 ready("merge-pdf","pages","Merge PDF","Organize PDF","⊕","Combine several PDFs into one and set their order.",{featured:true}),ready("split-pdf","pages","Split PDF","Organize PDF","⇱","Split by page ranges, every N pages, or one file per page."),ready("organize-pages","visual","Organize pages","Organize PDF","▦","See every page, then reorder, rotate, delete, duplicate or add blank pages."),ready("remove-pages","pages","Remove pages","Organize PDF","⊖","Delete the pages you do not need."),ready("extract-pages","pages","Extract pages","Organize PDF","⇥","Keep only the pages you choose in a new PDF."),ready("rotate-pdf","pages","Rotate PDF","Organize PDF","↻","Turn all pages, or only some, by 90°, 180° or 270°."),

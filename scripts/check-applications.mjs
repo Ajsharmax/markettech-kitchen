@@ -3,7 +3,7 @@ import { readdirSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 const dir = "public/applications";
-const files = ["core.js", "stage.js", "tool.js", "applications.js", "registry.js", ...readdirSync(path.join(dir, "tools")).map(f => "tools/" + f)];
+const files = ["core.js", "stage.js", "tool.js", "applications.js", "registry.js", ...readdirSync(path.join(dir, "tools")).filter(f => f.endsWith(".js")).map(f => "tools/" + f), ...readdirSync(path.join(dir, "standalone")).filter(f => f.endsWith(".js")).map(f => "standalone/" + f)];
 let bad = 0;
 for (const f of files) { const r = spawnSync(process.execPath, ["--input-type=module", "--check"], { input: (await import("node:fs")).readFileSync(path.join(dir, f)), encoding: "utf8" }); if (r.status) { bad++; console.error(f + ":\n" + r.stderr); } }
 if (bad) process.exit(1);

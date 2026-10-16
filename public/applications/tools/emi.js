@@ -69,5 +69,5 @@ function render(root) {
 }
 
 export default {
-  emi: { custom: true, mount: render }
+  "emi-calculator": { custom: true, mount: render }
 };

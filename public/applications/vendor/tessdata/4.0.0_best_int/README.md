@@ -1,0 +1,1 @@
+English and Hindi Tesseract traineddata, version 4.0.0 best-int, from the npm packages `@tesseract.js-data/eng@1.0.0` and `@tesseract.js-data/hin@1.0.0`. Both packages identify their license as MIT and their upstream repository as `https://github.com/naptha/tessdata`. The corresponding package metadata is included as `eng-package.json` and `hin-package.json`.

@@ -16,7 +16,7 @@ Private, in-browser PDF tools. Files are processed on the visitor's device and a
 ## Privacy
 - The core Applications tools use self-hosted pdf.js 3.11.174, pdf-lib 1.10.0 and JSZip 3.10.1 in `vendor/`.
 - PDF to PowerPoint uses the self-hosted PptxGenJS 3.12.0 browser build (MIT-licensed, with its license in `vendor/`) and the local JSZip library. Selectable PDF text is rebuilt as editable PowerPoint text boxes. Options let users omit artwork for a text-only deck, group nearby text runs, choose Office-safe font mapping, and use black text instead of PDF colors. When included, page rules, logos, barcodes, QR codes and other artwork remain a separate local graphics layer. No PDF or generated slide data is uploaded.
-- PDF to Excel uses pdf.js and SheetJS from cdnjs. OCR PDF uses pdf.js and Tesseract.js from cdnjs; Tesseract downloads its language data from jsDelivr on first use. These two pages have a scoped Content-Security-Policy allowing only those required CDN sources.
+- PDF to Excel uses the self-hosted pdf.js and SheetJS 0.18.5 bundles. OCR PDF uses self-hosted pdf.js, Tesseract.js 5.1.0, its SIMD LSTM WebAssembly core, and locally hosted English and Hindi language data. Both tools work without third-party CDNs; their PDFs and extracted content stay in the browser.
 
 ## Known limits
 - pdf-lib cannot read password-protected PDFs. The tools say so; Unlock PDF is marked Coming soon. The PDF to PowerPoint and PDF to Word tools can prompt for a PDF password.

@@ -15,12 +15,14 @@
       var mobileMenu = document.getElementById('mobile-nav');
       if (!menuButton || !mobileMenu || menuButton.dataset.menuFallbackBound === 'true') return;
       menuButton.dataset.menuFallbackBound = 'true';
-      menuButton.addEventListener('click', function () {
+      menuButton.addEventListener('click', function (event) {
+        // Own this click so the legacy listener cannot toggle the menu a second time.
+        event.stopImmediatePropagation();
         var opening = mobileMenu.hidden;
         mobileMenu.hidden = !opening;
         menuButton.setAttribute('aria-expanded', String(opening));
         menuButton.setAttribute('aria-label', opening ? 'Close menu' : 'Open menu');
-      });
+      }, true);
       mobileMenu.addEventListener('click', function (event) {
         if (!event.target.closest('a')) return;
         mobileMenu.hidden = true;

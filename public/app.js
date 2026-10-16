@@ -11,12 +11,10 @@
   let toastTimer;
   let cart = loadCart();
   let wishlist = loadWishlist();
-  let config = { shippingFee: 99, freeShippingAt: 1999, paymentOptions: { cashOnDelivery: true, upi: false, razorpay: false } };
+  let config = { shippingFee: 0, freeShippingAt: 0, paymentOptions: { cashOnDelivery: true, upi: false, razorpay: false } };
   let storefrontSettings = { site: {}, policies: {}, marketing: {}, developer: {}, offers: [] };
   let publicCoupons = [];
   let appliedCoupon = '';
-  let checkoutShippingFee = null;
-  let shippingQuoteKey = '';
   let currentCustomer = null;
   let checkoutAfterAuth = false;
   let modalGalleryImages = [];
@@ -96,27 +94,6 @@
       return '<div class="coupon-option' + (disabled && !eligible ? ' is-locked' : '') + '"><div><strong>' + escapeHtml(coupon.code) + '</strong><span>' + escapeHtml(label + cap) + '</span><small>Minimum ' + formatMoney(minOrder) + (coupon.customerEmail ? ' · Personal offer' : '') + '</small></div><button type="button" data-apply-coupon-code="' + escapeHtml(coupon.code) + '"' + (disabled ? ' disabled' : '') + '>' + escapeHtml(state) + '</button></div>';
     }).join('');
   }
-  async function refreshShippingQuote() {
-    const pincode = $('#checkout-form')?.elements.namedItem('pincode')?.value?.trim() || '';
-    const state = $('#checkout-form')?.elements.namedItem('state')?.value?.trim() || '';
-    const key = state.toLowerCase() + '|' + pincode;
-    if (!/^\d{6}$/.test(pincode)) {
-      checkoutShippingFee = 49;
-      shippingQuoteKey = '';
-      renderCheckoutSummary();
-      return;
-    }
-    if (key === shippingQuoteKey) return;
-    shippingQuoteKey = key;
-    try {
-      const result = await api('/api/shipping-rate?pincode=' + encodeURIComponent(pincode) + '&state=' + encodeURIComponent(state));
-      checkoutShippingFee = Number(result.fee) || 149;
-    } catch {
-      checkoutShippingFee = 49;
-    }
-    renderCheckoutSummary();
-  }
-
   function renderLivePromoMessage(subtotal = cartSubtotal()) {
     const box = $('#live-promo-message');
     if (!box) return;
@@ -606,6 +583,18 @@
   function cartSubtotal() {
     return currentCartItems().reduce((sum, item) => sum + (Number(item.price) * item.quantity), 0);
   }
+  function deliveryCharge(subtotal) {
+    const fee = Math.max(0, Number(config.shippingFee) || 0);
+    const threshold = Math.max(0, Number(config.freeShippingAt) || 0);
+    return fee > 0 && threshold > 0 && subtotal < threshold ? fee : 0;
+  }
+  function deliveryCopy(subtotal) {
+    const fee = Math.max(0, Number(config.shippingFee) || 0);
+    const threshold = Math.max(0, Number(config.freeShippingAt) || 0);
+    if (fee <= 0 || threshold <= 0) return 'Free delivery on every order.';
+    if (subtotal >= threshold) return 'Free delivery unlocked on this order.';
+    return `Delivery ${formatMoney(fee)} · add ${formatMoney(threshold - subtotal)} for free delivery.`;
+  }
   function itemCount() {
     return currentCartItems().reduce((sum, item) => sum + item.quantity, 0);
   }
@@ -676,11 +665,12 @@
     $('#cart-empty').classList.toggle('is-visible', items.length === 0);
     $('#cart-items').style.display = items.length ? 'block' : 'none';
     $('#drawer-foot').classList.toggle('is-hidden', items.length === 0);
-    $('#shipping-progress').classList.toggle('is-hidden', items.length === 0);
-    const threshold = Number.isFinite(Number(config.freeShippingAt)) ? Number(config.freeShippingAt) : 1999;
-    const remaining = Math.max(0, threshold - subtotal);
-    $('#shipping-message').textContent = 'Delivery from ₹49 · final fee depends on your PIN code';
-    $('#shipping-progress-fill').style.width = '0%';
+    const deliveryFee = Math.max(0, Number(config.shippingFee) || 0);
+    const freeDeliveryThreshold = Math.max(0, Number(config.freeShippingAt) || 0);
+    const showDeliveryProgress = deliveryFee > 0 && freeDeliveryThreshold > 0;
+    $('#shipping-progress').classList.toggle('is-hidden', items.length === 0 || !showDeliveryProgress);
+    $('#shipping-message').textContent = deliveryCopy(subtotal);
+    $('#shipping-progress-fill').style.width = (showDeliveryProgress ? Math.min(100, subtotal / freeDeliveryThreshold * 100) : 0) + '%';
     $('#bag-count').setAttribute('aria-label', `${count} items in bag`);
   }
 
@@ -759,7 +749,7 @@
   function renderCheckoutSummary() {
     const items = currentCartItems();
     const subtotal = cartSubtotal();
-    const shipping = checkoutShippingFee === null ? 49 : checkoutShippingFee;
+    const shipping = deliveryCharge(subtotal);
     const coupon = publicCoupons.find(item => String(item.code).toUpperCase() === String(appliedCoupon).toUpperCase());
     const couponDiscount = coupon ? couponDiscountPreview(coupon, subtotal) : 0;
     const quantityDiscount = cartQuantityDiscount();
@@ -795,7 +785,7 @@
     $('#checkout-total').textContent = formatMoney(finalPayable);
     $('.summary-note').textContent = couponDiscount
       ? `Coupon ${coupon.code} applied · you pay ${formatMoney(finalPayable)} including delivery.`
-      : 'Delivery: ₹49 Delhi NCR · ₹99 within 500 km of Delhi · ₹149 elsewhere in India.';
+      : deliveryCopy(subtotal);
     renderLivePromoMessage(subtotal);
   }
   function loadExternalScript(src) {
@@ -883,8 +873,6 @@
       }
     }
     appliedCoupon = '';
-    checkoutShippingFee = null;
-    shippingQuoteKey = '';
     $('#coupon-input').value = '';
     $('#coupon-message').textContent = '';
     $('#cart-drawer').hidden = true;
@@ -1149,18 +1137,6 @@
   });
 
   $('#coupon-input').addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); $('#apply-coupon').click(); } });
-
-  ['pincode', 'state'].forEach(name => {
-    const input = $('#checkout-form')?.elements.namedItem(name);
-    if (input) {
-      input.addEventListener('input', () => {
-        checkoutShippingFee = null;
-        shippingQuoteKey = '';
-        renderCheckoutSummary();
-      });
-      input.addEventListener('blur', refreshShippingQuote);
-    }
-  });
 
   $('#checkout-form').addEventListener('submit', async event => {
     event.preventDefault();

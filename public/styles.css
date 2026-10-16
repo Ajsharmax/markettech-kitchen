@@ -1867,3 +1867,21 @@ html[data-theme="midnight"] .applications-chip {
   color: #cbd5e1 !important;
 }
 
+/* Consistent typography for every top-level mobile navigation item. */
+@media (max-width: 720px) {
+  .site-header .mobile-nav > a,
+  .site-header .mobile-nav > button,
+  .site-header .mobile-nav > .mobile-applications-dropdown > summary {
+    font-family: var(--sans);
+    font-size: 21px;
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: normal;
+    text-transform: none;
+  }
+  .site-header .mobile-nav > a,
+  .site-header .mobile-nav > button,
+  .site-header .mobile-nav > .mobile-applications-dropdown > summary {
+    padding: 16px 4px;
+  }
+}

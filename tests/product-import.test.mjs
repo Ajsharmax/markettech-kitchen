@@ -393,7 +393,10 @@ equal(manual.status, 201, 'Creating a product by hand should still work');
 const duplicateSku = await call('/api/admin/products', { body: { name: 'Another Product', category: 'Prep', price: 500, stock: 5, sku: 'MTK-MANUAL-1', image: '/images/product-pan.jpg' } });
 equal(duplicateSku.status, 409, 'Duplicate manual SKUs should be refused with a friendly message');
 
-// Checkout regression: an undefined delivery amount used to make every order fail.
+// Checkout regression: configured free delivery must match the shown total and saved order.
+const config = await call('/api/config', { method: 'GET' });
+equal(config.data.shippingFee, 0, 'Storefront config should expose free delivery');
+equal(config.data.freeShippingAt, 0, 'Storefront config should expose free delivery on every order');
 const orderProduct = database.prepare('SELECT id, stock, data FROM products WHERE stock > 0 LIMIT 1').get();
 const orderPrice = JSON.parse(orderProduct.data).price;
 const checkout = await call('/api/orders', { body: {
@@ -402,6 +405,8 @@ const checkout = await call('/api/orders', { body: {
 } });
 equal(checkout.status, 201, 'COD checkout should create an order');
 equal(checkout.data.order?.total, orderPrice, 'Checkout should use the configured free delivery amount');
+const savedOrder = JSON.parse(database.prepare('SELECT data FROM orders WHERE id = ?').get(checkout.data.order.id).data);
+equal(savedOrder.shipping, 0, 'Saved order should record zero shipping when delivery is free');
 equal(database.prepare('SELECT stock FROM products WHERE id = ?').get(orderProduct.id).stock, orderProduct.stock - 1, 'Checkout should reserve stock');
 
 /* -------------------------------- Report -------------------------------- */

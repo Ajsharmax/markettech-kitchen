@@ -9,6 +9,25 @@
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/styles.css?v=kinetic-1">
   <script>
+    // Keep the mobile navigation working even if an unrelated storefront script fails.
+    document.addEventListener('DOMContentLoaded', function () {
+      var menuButton = document.getElementById('mobile-menu-toggle');
+      var mobileMenu = document.getElementById('mobile-nav');
+      if (!menuButton || !mobileMenu || menuButton.dataset.menuFallbackBound === 'true') return;
+      menuButton.dataset.menuFallbackBound = 'true';
+      menuButton.addEventListener('click', function () {
+        var opening = mobileMenu.hidden;
+        mobileMenu.hidden = !opening;
+        menuButton.setAttribute('aria-expanded', String(opening));
+        menuButton.setAttribute('aria-label', opening ? 'Close menu' : 'Open menu');
+      });
+      mobileMenu.addEventListener('click', function (event) {
+        if (!event.target.closest('a')) return;
+        mobileMenu.hidden = true;
+        menuButton.setAttribute('aria-expanded', 'false');
+        menuButton.setAttribute('aria-label', 'Open menu');
+      });
+    });
     window.marketTechOpenAccount = function () {
       var modal = document.getElementById('account-modal');
       var overlay = document.getElementById('overlay');

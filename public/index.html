@@ -113,6 +113,18 @@
   </div>
   <div class="mt-bottom-line"><span>SMART SHOPPING</span><i></i><span>SMART TOOLS</span><i></i><span>SMART YOU</span></div>
 </section>
+<section class="shop-section" id="shop" aria-labelledby="shop-title" hidden>
+  <div class="page-width">
+    <div class="shop-toolbar">
+      <div class="filter-list" id="filter-list" aria-label="Filter by category"></div>
+      <label class="sort-control"><span>Sort by</span><select id="sort-select" aria-label="Sort products"><option value="featured">Featured</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option><option value="rating">Top rated</option></select><span class="sort-chevron">⌄</span></label>
+    </div>
+    <div class="search-result-note" id="search-result-note" aria-live="polite"></div>
+    <div class="product-grid" id="product-grid" aria-live="polite"></div>
+    <div class="empty-state" id="empty-products" hidden><span>✳</span><h3>Nothing on this shelf yet.</h3><p>Try another category or search for something else.</p><button class="button button-dark" id="reset-filters">See all goods</button></div>
+  </div>
+</section>
+  </main>
 
   <footer class="site-footer">
     <div class="footer-main page-width">

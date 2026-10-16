@@ -341,6 +341,11 @@
     }
   }
   const ADMIN_THEME_LABELS = {
+    daylight: 'Daylight Crisp (Light)',
+    ivory: 'Warm Ivory Paper (Light)',
+    mint: 'Mint Sage Light',
+    blossom: 'Rose Blossom Light',
+    sky: 'Lavender Cloud Light',
     kinetic: 'Vibrant Kinetic',
     emerald: 'Emerald Botanical',
     sunset: 'Sunset Terracotta',
@@ -348,8 +353,8 @@
     royal: 'Royal Luxe Gold'
   };
   function syncAdminThemeUi(themeId) {
-    const activeTheme = Object.hasOwn(ADMIN_THEME_LABELS, themeId) ? themeId : (window.getMarketTechTheme?.() || 'kinetic');
-    const label = ADMIN_THEME_LABELS[activeTheme] || 'Vibrant Kinetic';
+    const activeTheme = Object.hasOwn(ADMIN_THEME_LABELS, themeId) ? themeId : (window.getMarketTechTheme?.() || 'daylight');
+    const label = ADMIN_THEME_LABELS[activeTheme] || 'Daylight Crisp (Light)';
     window.applyMarketTechTheme?.(activeTheme);
     $('#overview-active-theme-badge').textContent = `Active: ${label}`;
     $('#website-theme-status').textContent = `Current active theme: ${label} — click any theme card below to switch in one click.`;
@@ -362,7 +367,7 @@
     });
   }
   async function selectWebsiteTheme(themeId) {
-    const activeTheme = Object.hasOwn(ADMIN_THEME_LABELS, themeId) ? themeId : 'kinetic';
+    const activeTheme = Object.hasOwn(ADMIN_THEME_LABELS, themeId) ? themeId : 'daylight';
     const label = ADMIN_THEME_LABELS[activeTheme];
     settings.site = { ...(settings.site || {}), theme: activeTheme };
     syncAdminThemeUi(activeTheme);
@@ -374,7 +379,7 @@
     }
   }
   function renderSettings() {
-    const activeTheme = settings?.site?.theme || window.getMarketTechTheme?.() || 'kinetic';
+    const activeTheme = settings?.site?.theme || window.getMarketTechTheme?.() || 'daylight';
     syncAdminThemeUi(activeTheme);
     if (!settings || !settings.site) return;
     fillForm($('#site-settings-form'), settings.site);
@@ -1104,7 +1109,7 @@
     const button = event.target.closest('[data-theme-select]');
     if (button) selectWebsiteTheme(button.dataset.themeSelect);
   });
-  syncAdminThemeUi(window.getMarketTechTheme?.() || 'kinetic');
+  syncAdminThemeUi(window.getMarketTechTheme?.() || 'daylight');
   $('#refresh-integrations').addEventListener('click', refreshAll);
 
   $('#load-flipkart-orders').addEventListener('click', () => loadFlipkartOrders(true));

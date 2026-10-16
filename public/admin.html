@@ -54,17 +54,43 @@
           <section class="admin-card admin-theme-strip" id="overview-theme-strip" aria-label="1-Click Website Theme Switcher">
             <div class="admin-theme-strip-head">
               <div>
-                <span class="admin-eyebrow">INSTANT 1-CLICK THEME SWITCHER</span>
+                <span class="admin-eyebrow">INSTANT 1-CLICK THEME SWITCHER · 10 PRESETS (5 LIGHT + 5 BOLD)</span>
                 <h2>Website <em>theme</em></h2>
-                <p>Click any of the 5 themes below to switch the entire website &amp; admin look in one click.</p>
+                <p>Choose from 5 ultra-readable Light themes (crystal-clear dark text) or 5 Bold Gradient themes in one click.</p>
               </div>
-              <span class="theme-active-pill" id="overview-active-theme-badge">Active: Vibrant Kinetic</span>
+              <span class="theme-active-pill" id="overview-active-theme-badge">Active: Daylight Crisp</span>
             </div>
+            <div class="admin-theme-group-label">☀️ Light &amp; High-Contrast Themes (Maximum Text Clarity)</div>
             <div class="admin-theme-grid compact" id="overview-theme-grid" role="radiogroup" aria-label="Choose website theme">
-              <button type="button" class="admin-theme-option is-active" data-theme-select="kinetic" role="radio" aria-checked="true">
+              <button type="button" class="admin-theme-option is-active" data-theme-select="daylight" role="radio" aria-checked="true">
+                <span class="theme-option-preview" style="background:linear-gradient(135deg,#ffffff 0%,#e0f2fe 55%,#93c5fd 100%);border:1px solid #cbd5e1"></span>
+                <span class="theme-option-copy"><strong>Daylight Crisp (Light)</strong><small>Pure White · Sky · Navy Ink</small></span>
+                <span class="theme-option-state">Active ✓</span>
+              </button>
+              <button type="button" class="admin-theme-option" data-theme-select="ivory" role="radio" aria-checked="false">
+                <span class="theme-option-preview" style="background:linear-gradient(135deg,#fffdf9 0%,#f5efe4 55%,#d6c7b2 100%);border:1px solid #d6d3d1"></span>
+                <span class="theme-option-copy"><strong>Warm Ivory Paper (Light)</strong><small>Cream · Sand · Espresso Ink</small></span>
+                <span class="theme-option-state">1-Click Apply</span>
+              </button>
+              <button type="button" class="admin-theme-option" data-theme-select="mint" role="radio" aria-checked="false">
+                <span class="theme-option-preview" style="background:linear-gradient(135deg,#f6fef9 0%,#d1fae5 55%,#6ee7b7 100%);border:1px solid #a7f3d0"></span>
+                <span class="theme-option-copy"><strong>Mint Sage Light</strong><small>Mint White · Sage · Forest Ink</small></span>
+                <span class="theme-option-state">1-Click Apply</span>
+              </button>
+              <button type="button" class="admin-theme-option" data-theme-select="blossom" role="radio" aria-checked="false">
+                <span class="theme-option-preview" style="background:linear-gradient(135deg,#fffafb 0%,#ffe4ec 55%,#fda4af 100%);border:1px solid #fecdd3"></span>
+                <span class="theme-option-copy"><strong>Rose Blossom Light</strong><small>Soft Blush · Petal · Berry Ink</small></span>
+                <span class="theme-option-state">1-Click Apply</span>
+              </button>
+              <button type="button" class="admin-theme-option" data-theme-select="sky" role="radio" aria-checked="false">
+                <span class="theme-option-preview" style="background:linear-gradient(135deg,#f8faff 0%,#e0e7ff 55%,#a5b4fc 100%);border:1px solid #c7d2fe"></span>
+                <span class="theme-option-copy"><strong>Lavender Cloud Light</strong><small>Cloud White · Periwinkle · Indigo Ink</small></span>
+                <span class="theme-option-state">1-Click Apply</span>
+              </button>
+              <button type="button" class="admin-theme-option" data-theme-select="kinetic" role="radio" aria-checked="false">
                 <span class="theme-option-preview" style="background:linear-gradient(135deg,#2563eb,#7c3aed,#db2777)"></span>
                 <span class="theme-option-copy"><strong>Vibrant Kinetic</strong><small>Cobalt · Violet · Magenta</small></span>
-                <span class="theme-option-state">Active ✓</span>
+                <span class="theme-option-state">1-Click Apply</span>
               </button>
               <button type="button" class="admin-theme-option" data-theme-select="emerald" role="radio" aria-checked="false">
                 <span class="theme-option-preview" style="background:linear-gradient(135deg,#059669,#0d9488,#d97706)"></span>
@@ -120,41 +146,97 @@
           <section class="admin-card settings-card theme-gallery-card" id="website-theme-card">
             <div class="settings-card-heading">
               <div>
-                <h2>Website theme — 5 single-click options</h2>
-                <p id="website-theme-status">Click any theme card below to apply and publish it across the entire website immediately.</p>
+                <h2>Website theme — 10 single-click options (5 Light + 5 Bold)</h2>
+                <p id="website-theme-status">Click any theme card below to apply and publish it across the entire website immediately. Light themes use high-contrast dark ink on bright surfaces for crystal-clear reading.</p>
               </div>
               <span>🎨</span>
             </div>
+            <div class="admin-theme-group-label">☀️ 5 Light &amp; High-Contrast Themes (Crystal-Clear Dark Words)</div>
             <div class="admin-theme-grid detailed" id="website-theme-grid" role="radiogroup" aria-label="Website theme options">
-              <button type="button" class="admin-theme-option is-active" data-theme-select="kinetic" role="radio" aria-checked="true">
-                <div class="theme-card-banner" style="background:linear-gradient(135deg,#131c47 0%,#2b1968 52%,#4a1259 100%)">
-                  <span class="theme-card-badge">Default</span>
-                  <div class="theme-swatches"><i style="background:#2563eb"></i><i style="background:#7c3aed"></i><i style="background:#db2777"></i><i style="background:#f59e0b"></i></div>
+              <button type="button" class="admin-theme-option is-active" data-theme-select="daylight" role="radio" aria-checked="true">
+                <div class="theme-card-banner is-light-banner" style="background:linear-gradient(135deg,#ffffff 0%,#eff6ff 52%,#dbeafe 100%)">
+                  <span class="theme-card-badge is-light-badge">Light · High Contrast</span>
+                  <div class="theme-swatches"><i style="background:#ffffff;border-color:#94a3b8"></i><i style="background:#dbeafe;border-color:#94a3b8"></i><i style="background:#1d4ed8"></i><i style="background:#0f172a"></i></div>
                 </div>
                 <div class="theme-option-copy">
-                  <strong>1. Vibrant Kinetic</strong>
-                  <small>Electric cobalt, violet &amp; hot magenta animated mesh</small>
+                  <strong>1. Daylight Crisp (Light)</strong>
+                  <small>Pure white &amp; soft sky blue with deep navy ink words</small>
                 </div>
                 <span class="theme-option-state">Active ✓</span>
               </button>
+              <button type="button" class="admin-theme-option" data-theme-select="ivory" role="radio" aria-checked="false">
+                <div class="theme-card-banner is-light-banner" style="background:linear-gradient(135deg,#fffdf9 0%,#f5efe4 52%,#ede3d2 100%)">
+                  <span class="theme-card-badge is-light-badge">Light · Editorial</span>
+                  <div class="theme-swatches"><i style="background:#fffdf9;border-color:#a8a29e"></i><i style="background:#f5efe4;border-color:#a8a29e"></i><i style="background:#b45309"></i><i style="background:#1c1917"></i></div>
+                </div>
+                <div class="theme-option-copy">
+                  <strong>2. Warm Ivory Paper (Light)</strong>
+                  <small>Cream paper &amp; warm sand with rich espresso ink words</small>
+                </div>
+                <span class="theme-option-state">1-Click Apply</span>
+              </button>
+              <button type="button" class="admin-theme-option" data-theme-select="mint" role="radio" aria-checked="false">
+                <div class="theme-card-banner is-light-banner" style="background:linear-gradient(135deg,#f6fef9 0%,#e6f9f0 52%,#d1fae5 100%)">
+                  <span class="theme-card-badge is-light-badge">Light · Botanical</span>
+                  <div class="theme-swatches"><i style="background:#f6fef9;border-color:#6ee7b7"></i><i style="background:#d1fae5;border-color:#6ee7b7"></i><i style="background:#047857"></i><i style="background:#062e22"></i></div>
+                </div>
+                <div class="theme-option-copy">
+                  <strong>3. Mint Sage Light</strong>
+                  <small>Airy mint &amp; pastel sage with crisp forest-charcoal ink</small>
+                </div>
+                <span class="theme-option-state">1-Click Apply</span>
+              </button>
+              <button type="button" class="admin-theme-option" data-theme-select="blossom" role="radio" aria-checked="false">
+                <div class="theme-card-banner is-light-banner" style="background:linear-gradient(135deg,#fffafb 0%,#fff0f5 52%,#ffe4ec 100%)">
+                  <span class="theme-card-badge is-light-badge">Light · Warm Blush</span>
+                  <div class="theme-swatches"><i style="background:#fffafb;border-color:#fda4af"></i><i style="background:#ffe4ec;border-color:#fda4af"></i><i style="background:#be123c"></i><i style="background:#3b0a21"></i></div>
+                </div>
+                <div class="theme-option-copy">
+                  <strong>4. Rose Blossom Light</strong>
+                  <small>Soft blush &amp; petal pink with deep plum-berry ink words</small>
+                </div>
+                <span class="theme-option-state">1-Click Apply</span>
+              </button>
+              <button type="button" class="admin-theme-option" data-theme-select="sky" role="radio" aria-checked="false">
+                <div class="theme-card-banner is-light-banner" style="background:linear-gradient(135deg,#f8faff 0%,#eef2ff 52%,#e0e7ff 100%)">
+                  <span class="theme-card-badge is-light-badge">Light · Modern</span>
+                  <div class="theme-swatches"><i style="background:#f8faff;border-color:#a5b4fc"></i><i style="background:#e0e7ff;border-color:#a5b4fc"></i><i style="background:#4338ca"></i><i style="background:#1e1b4b"></i></div>
+                </div>
+                <div class="theme-option-copy">
+                  <strong>5. Lavender Cloud Light</strong>
+                  <small>Cloud white &amp; soft periwinkle with dark indigo ink</small>
+                </div>
+                <span class="theme-option-state">1-Click Apply</span>
+              </button>
+              <button type="button" class="admin-theme-option" data-theme-select="kinetic" role="radio" aria-checked="false">
+                <div class="theme-card-banner" style="background:linear-gradient(135deg,#131c47 0%,#2b1968 52%,#4a1259 100%)">
+                  <span class="theme-card-badge">Bold Gradient</span>
+                  <div class="theme-swatches"><i style="background:#2563eb"></i><i style="background:#7c3aed"></i><i style="background:#db2777"></i><i style="background:#f59e0b"></i></div>
+                </div>
+                <div class="theme-option-copy">
+                  <strong>6. Vibrant Kinetic</strong>
+                  <small>Electric cobalt, violet &amp; hot magenta animated mesh</small>
+                </div>
+                <span class="theme-option-state">1-Click Apply</span>
+              </button>
               <button type="button" class="admin-theme-option" data-theme-select="emerald" role="radio" aria-checked="false">
                 <div class="theme-card-banner" style="background:linear-gradient(135deg,#062c22 0%,#0d4a3a 54%,#115e59 100%)">
-                  <span class="theme-card-badge">Fresh</span>
+                  <span class="theme-card-badge">Bold Gradient</span>
                   <div class="theme-swatches"><i style="background:#059669"></i><i style="background:#0d9488"></i><i style="background:#10b981"></i><i style="background:#d97706"></i></div>
                 </div>
                 <div class="theme-option-copy">
-                  <strong>2. Emerald Botanical</strong>
+                  <strong>7. Emerald Botanical</strong>
                   <small>Lush forest emerald, ocean teal &amp; warm sunlit gold</small>
                 </div>
                 <span class="theme-option-state">1-Click Apply</span>
               </button>
               <button type="button" class="admin-theme-option" data-theme-select="sunset" role="radio" aria-checked="false">
                 <div class="theme-card-banner" style="background:linear-gradient(135deg,#3b0d1e 0%,#5c1912 52%,#7c2d12 100%)">
-                  <span class="theme-card-badge">Warm</span>
+                  <span class="theme-card-badge">Bold Gradient</span>
                   <div class="theme-swatches"><i style="background:#ea580c"></i><i style="background:#e11d48"></i><i style="background:#f59e0b"></i><i style="background:#fb7185"></i></div>
                 </div>
                 <div class="theme-option-copy">
-                  <strong>3. Sunset Terracotta</strong>
+                  <strong>8. Sunset Terracotta</strong>
                   <small>Warm coral orange, rose crimson &amp; glowing amber</small>
                 </div>
                 <span class="theme-option-state">1-Click Apply</span>
@@ -165,18 +247,18 @@
                   <div class="theme-swatches"><i style="background:#090d1e"></i><i style="background:#06b6d4"></i><i style="background:#6366f1"></i><i style="background:#a855f7"></i></div>
                 </div>
                 <div class="theme-option-copy">
-                  <strong>4. Midnight Cyber Neon</strong>
+                  <strong>9. Midnight Cyber Neon</strong>
                   <small>Deep space dark mode with neon cyan &amp; laser violet</small>
                 </div>
                 <span class="theme-option-state">1-Click Apply</span>
               </button>
               <button type="button" class="admin-theme-option" data-theme-select="royal" role="radio" aria-checked="false">
                 <div class="theme-card-banner" style="background:linear-gradient(135deg,#1a103c 0%,#2e1559 54%,#4c1d95 100%)">
-                  <span class="theme-card-badge">Luxury</span>
+                  <span class="theme-card-badge">Bold Luxury</span>
                   <div class="theme-swatches"><i style="background:#311b63"></i><i style="background:#d97706"></i><i style="background:#7c3aed"></i><i style="background:#f59e0b"></i></div>
                 </div>
                 <div class="theme-option-copy">
-                  <strong>5. Royal Luxe Gold</strong>
+                  <strong>10. Royal Luxe Gold</strong>
                   <small>Regal plum indigo, champagne gold &amp; warm ivory</small>
                 </div>
                 <span class="theme-option-state">1-Click Apply</span>

@@ -275,7 +275,7 @@
     if (!['overview', 'products', 'orders', 'customers', 'crm', 'inventory', 'website', 'integrations', 'marketing', 'developer'].includes(page)) return;
     currentPage = page;
     $$('.admin-page').forEach(section => { section.hidden = section.id !== `page-${page}`; });
-    $('.admin-nav-item[data-page]').forEach(button => button.classList.toggle('active', button.dataset.page === page));
+    document.querySelectorAll('.admin-nav-item[data-page]').forEach(button => button.classList.toggle('active', button.dataset.page === page));
     const inCrmWorkspace = ['crm', 'orders', 'customers', 'products', 'inventory'].includes(page);
     $('#crm-nav-group')?.classList.toggle('has-active-page', inCrmWorkspace);
     if (inCrmWorkspace) setCrmNavExpanded(true);

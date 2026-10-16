@@ -20,9 +20,10 @@ const page = t => `<!doctype html>
 <meta name="description" content="${esc(t.description)} Runs in your browser; files are never uploaded.">
 <title>${esc(t.name)} — MarketTech Applications</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/styles.css?v=kinetic-1">
-<link rel="stylesheet" href="/applications/applications.css?v=kinetic-1">
-<link rel="stylesheet" href="/applications/toolkit.css?v=kinetic-1">${t.css ? `\n<link rel="stylesheet" href="${t.css}?v=kinetic-1">` : ""}
+<link rel="stylesheet" href="/styles.css?v=kinetic-2">
+<link rel="stylesheet" href="/applications/applications.css?v=kinetic-2">
+<link rel="stylesheet" href="/applications/toolkit.css?v=kinetic-2">${t.css ? `\n<link rel="stylesheet" href="${t.css}?v=kinetic-2">` : ""}
+<script src="/theme.js?v=1"></script>
 <script type="module" src="/applications/tool.js?v=1"></script>
 </head>
 <body class="applications-page tk-page" data-tool="${t.slug}">

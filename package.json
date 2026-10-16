@@ -8,7 +8,7 @@
     "test:import": "node tests/product-import.test.mjs",
     "test:storefront": "node tests/storefront-dom.test.mjs",
     "test": "npm run test:import && npm run test:storefront",
-    "test:applications": "node tests/applications.test.mjs && node tests/powerpoint.test.mjs",
+    "test:applications": "node tests/applications.test.mjs && node tests/application-tools.test.mjs && node tests/powerpoint.test.mjs",
     "build:tools": "node scripts/build-tool-pages.mjs",
     "check:applications": "node scripts/check-applications.mjs"
   },

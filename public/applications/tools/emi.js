@@ -1,7 +1,10 @@
 const fmt = value => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(value);
 const number = value => Number.parseFloat(value) || 0;
 
-function calculate(principal, annualRate, months) {
+export function calculateEmi(principal, annualRate, months) {
+  principal = Math.min(10_000_000, Math.max(1_000, Math.round(Number(principal) || 1_000)));
+  annualRate = Math.min(50, Math.max(0, Number(annualRate) || 0));
+  months = Math.min(360, Math.max(1, Math.round(Number(months) || 1)));
   const monthlyRate = annualRate / 12 / 100;
   const emi = monthlyRate === 0
     ? principal / months
@@ -23,8 +26,8 @@ function render(root) {
   root.innerHTML = `
     <section class="tk-panel emi-layout" aria-label="EMI calculator">
       <div class="emi-inputs">
-        <div class="tk-field"><label for="emi-amount">Loan amount</label><div class="emi-input-wrap"><span>₹</span><input id="emi-amount" type="number" min="1000" step="1000" value="500000" inputmode="decimal"></div><input data-for="emi-amount" type="range" min="10000" max="10000000" step="10000" value="500000" aria-label="Loan amount slider"><small>₹10,000 to ₹1 crore</small></div>
-        <div class="tk-field"><label for="emi-rate">Annual interest rate</label><div class="emi-input-wrap"><input id="emi-rate" type="number" min="0" max="50" step="0.1" value="10.5" inputmode="decimal"><span>%</span></div><input data-for="emi-rate" type="range" min="0" max="30" step="0.1" value="10.5" aria-label="Interest rate slider"><small>0% to 30% per year</small></div>
+        <div class="tk-field"><label for="emi-amount">Loan amount</label><div class="emi-input-wrap"><span>₹</span><input id="emi-amount" type="number" min="1000" max="10000000" step="1000" value="500000" inputmode="decimal"></div><input data-for="emi-amount" type="range" min="10000" max="10000000" step="10000" value="500000" aria-label="Loan amount slider"><small>₹1,000 to ₹1 crore</small></div>
+        <div class="tk-field"><label for="emi-rate">Annual interest rate</label><div class="emi-input-wrap"><input id="emi-rate" type="number" min="0" max="50" step="0.1" value="10.5" inputmode="decimal"><span>%</span></div><input data-for="emi-rate" type="range" min="0" max="50" step="0.1" value="10.5" aria-label="Interest rate slider"><small>0% to 50% per year</small></div>
         <div class="tk-field"><label for="emi-tenure">Loan tenure</label><div class="emi-input-wrap"><input id="emi-tenure" type="number" min="1" max="360" step="1" value="60" inputmode="numeric"><span>months</span></div><input data-for="emi-tenure" type="range" min="1" max="360" step="1" value="60" aria-label="Loan tenure slider"><small><span id="emi-years">5 years</span></small></div>
       </div>
       <div class="emi-result-card"><p class="emi-label">YOUR MONTHLY EMI</p><output id="emi-value" class="emi-value">₹10,747</output><div class="emi-breakdown"><div><span>Principal amount</span><strong id="emi-principal">₹5,00,000</strong></div><div><span>Total interest</span><strong id="emi-interest">₹1,44,808</strong></div><div><span>Total repayment</span><strong id="emi-total">₹6,44,808</strong></div></div></div>
@@ -41,15 +44,15 @@ function render(root) {
   let latest = null;
 
   function update() {
-    const principal = Math.max(0, number(amount.value));
-    const annualRate = Math.max(0, number(rate.value));
-    const months = Math.max(1, Math.round(number(tenure.value)));
+    const principal = Math.min(10_000_000, Math.max(1_000, Math.round(number(amount.value) || 1_000)));
+    const annualRate = Math.min(50, Math.max(0, number(rate.value)));
+    const months = Math.min(360, Math.max(1, Math.round(number(tenure.value) || 1)));
     amount.value = principal; rate.value = annualRate; tenure.value = months;
     root.querySelector('[data-for="emi-amount"]').value = principal;
     root.querySelector('[data-for="emi-rate"]').value = annualRate;
     root.querySelector('[data-for="emi-tenure"]').value = months;
     years.textContent = `${(months / 12).toFixed(months % 12 ? 1 : 0)} years`;
-    latest = calculate(principal, annualRate, months);
+    latest = calculateEmi(principal, annualRate, months);
     root.querySelector("#emi-value").textContent = money(latest.emi);
     root.querySelector("#emi-principal").textContent = money(principal);
     root.querySelector("#emi-interest").textContent = money(latest.interest);

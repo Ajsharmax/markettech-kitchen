@@ -22,13 +22,13 @@ for (const t of APPLICATIONS) {
 assert.equal(existsSync(path.join(dir, "tool-2.html")), false);
 const powerpoint = APPLICATIONS.find(t => t.slug === "pdf-to-powerpoint");
 assert.equal(powerpoint.module, "convert", "PDF to PowerPoint should use the shared tool process");
-assert.match(powerpoint.description, /editable in PowerPoint/i, "the registry should describe editable text output");
+assert.match(powerpoint.description, /editable.*PowerPoint/i, "the registry should describe editable PowerPoint output");
 assert.equal(powerpoint.url, undefined, "PDF to PowerPoint should not bypass the Applications tool page");
 assert.ok(existsSync(path.join(dir, "vendor", "pptxgenjs-3.12.0.min.js")), "missing self-hosted PowerPoint library");
 const powerpointPage = readFileSync(path.join(dir, "pdf-to-powerpoint.html"), "utf8");
 assert.ok(powerpointPage.includes('data-tool="pdf-to-powerpoint"'));
 assert.ok(powerpointPage.includes("/applications/tool.js"));
-assert.ok(powerpointPage.includes("selectable PDF text editable in PowerPoint"));
+assert.ok(powerpointPage.includes("text-only or artwork-preserving PowerPoint output options"));
 assert.ok(!powerpointPage.includes("image-based PowerPoint slides"), "PowerPoint page should not advertise raster-only slides");
 assert.ok(!powerpointPage.includes("cdnjs.cloudflare.com"), "PowerPoint page should not rely on a CDN");
 assert.deepEqual(parseRanges("1-3, 5, 8-", 10), [1, 2, 3, 5, 8, 9, 10]);

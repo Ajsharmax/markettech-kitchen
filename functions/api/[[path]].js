@@ -1732,7 +1732,9 @@ async function handleApi(request, env) {
     const settings = await getSettings(env);
     const freeShippingAt = Number.isFinite(Number(settings.site.freeShippingAt)) ? Number(settings.site.freeShippingAt) : DEFAULT_FREE_SHIPPING_AT;
     const shippingFee = Number.isFinite(Number(settings.site.shippingFee)) ? Number(settings.site.shippingFee) : DEFAULT_SHIPPING_FEE;
-    const shipping = await resolveShippingFee(state, pincode);
+    // Keep checkout pricing authoritative: a zero free-shipping threshold means
+    // delivery is free for every order, as exposed by /api/config.
+    const shipping = shippingFee > 0 && freeShippingAt > 0 && subtotal < freeShippingAt ? shippingFee : 0;
     const nowIso = new Date().toISOString();
     const activeOffersRows = await env.DB.prepare('SELECT * FROM offers WHERE active = 1 AND starts_at <= ? AND ends_at >= ?').bind(nowIso, nowIso).all().catch(() => ({ results: [] }));
     const activeOffers = (activeOffersRows.results || []).map(parseOfferRow);

@@ -77,6 +77,14 @@ check(/loadStore\(\);/.test(appJs), 'Storefront: app.js must call loadStore() on
 check(/api\('\/api\/products'\)/.test(appJs), 'Storefront: loadStore() must fetch /api/products');
 check(/renderProducts\(\);/.test(appJs), 'Storefront: loadStore() must call renderProducts()');
 
+// Customer-visible delivery totals must follow the same server-provided settings
+// as the authoritative order total; a stale PIN-code quote must not be added.
+check(/function deliveryCharge\(subtotal\)/.test(appJs), 'Storefront: checkout must calculate delivery from the configured fee and threshold');
+check(/return fee > 0 && threshold > 0 && subtotal < threshold \? fee : 0;/.test(appJs), 'Storefront: zero threshold must mean free delivery on every order');
+check(/const shipping = deliveryCharge\(subtotal\);/.test(appJs), 'Storefront: checkout total must use the configured delivery charge');
+check(!/api\('\/api\/shipping-rate/.test(appJs), 'Storefront: checkout must not show a location quote that differs from configured delivery pricing');
+check(indexHtml.includes('Free delivery on every order'), 'Storefront: cart delivery fallback must match the free-delivery default');
+
 // Regression: the product modal body is #product-modal-body. Referencing a
 // non-existent #modal-product-body used to crash the whole storefront script.
 check(indexIds.has('product-modal-body'), 'Storefront: #product-modal-body must exist in index.html');

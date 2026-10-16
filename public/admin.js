@@ -261,11 +261,24 @@
     }
   }
 
+  function setCrmNavExpanded(expanded) {
+    const toggle = $('#crm-nav-toggle');
+    const submenu = $('#crm-nav-submenu');
+    const group = $('#crm-nav-group');
+    if (!toggle || !submenu || !group) return;
+    toggle.setAttribute('aria-expanded', String(expanded));
+    submenu.hidden = !expanded;
+    group.classList.toggle('is-open', expanded);
+  }
+
   function openPage(page) {
     if (!['overview', 'products', 'orders', 'customers', 'crm', 'inventory', 'website', 'integrations', 'marketing', 'developer'].includes(page)) return;
     currentPage = page;
     $$('.admin-page').forEach(section => { section.hidden = section.id !== `page-${page}`; });
-    $$('.admin-nav-item[data-page]').forEach(button => button.classList.toggle('active', button.dataset.page === page));
+    $('.admin-nav-item[data-page]').forEach(button => button.classList.toggle('active', button.dataset.page === page));
+    const inCrmWorkspace = ['crm', 'orders', 'customers', 'products', 'inventory'].includes(page);
+    $('#crm-nav-group')?.classList.toggle('has-active-page', inCrmWorkspace);
+    if (inCrmWorkspace) setCrmNavExpanded(true);
     $('#breadcrumb-current').textContent = page[0].toUpperCase() + page.slice(1);
     $('#admin-sidebar').classList.remove('mobile-open');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1074,7 +1087,11 @@
     showLogin();
   });
 
-  $$('.admin-nav-item[data-page]').forEach(button => button.addEventListener('click', () => openPage(button.dataset.page)));
+  $('.admin-nav-item[data-page]').forEach(button => button.addEventListener('click', () => openPage(button.dataset.page)));
+  $('#crm-nav-toggle')?.addEventListener('click', () => {
+    const expanded = $('#crm-nav-toggle').getAttribute('aria-expanded') === 'true';
+    setCrmNavExpanded(!expanded);
+  });
   document.addEventListener('click', event => {
     const pageLink = event.target.closest('[data-page-link]');
     if (pageLink) { event.preventDefault(); openPage(pageLink.dataset.pageLink); }

@@ -1600,21 +1600,19 @@ p{font-weight:500}
 
 /* Consistent typography for every top-level mobile navigation item. */
 @media (max-width: 720px) {
-  .mobile-nav > a,
-  .mobile-nav > button,
-  .mobile-nav > .mobile-applications-dropdown > summary {
+  .site-header .mobile-nav > a,
+  .site-header .mobile-nav > button,
+  .site-header .mobile-nav > .mobile-applications-dropdown > summary {
     font-family: var(--sans);
-    font-size: 18px;
-    font-weight: 400;
+    font-size: 21px;
+    font-weight: 500;
     line-height: 1.4;
     letter-spacing: normal;
     text-transform: none;
   }
-  .mobile-nav > a,
-  .mobile-nav > button {
-    padding: 16px 4px;
-  }
-  .mobile-nav > .mobile-applications-dropdown > summary {
+  .site-header .mobile-nav > a,
+  .site-header .mobile-nav > button,
+  .site-header .mobile-nav > .mobile-applications-dropdown > summary {
     padding: 16px 4px;
   }
 }

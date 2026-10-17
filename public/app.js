@@ -342,13 +342,15 @@
 
       // Settings are secondary. Keep the catalogue visible even if one settings
       // request fails, while retaining the last known safe defaults.
-      const [settingsResult, contentResult, couponsResult] = await Promise.allSettled([
+      const [settingsResult, contentResult, couponsResult, youpiResult] = await Promise.allSettled([
         api('/api/config'),
         api('/api/storefront-settings'),
-        api('/api/public-coupons')
+        api('/api/public-coupons'),
+        api('/api/payment/youpi/config')
       ]);
       if (settingsResult.status === 'fulfilled') config = settingsResult.value;
       else console.error('MarketTech config failed:', settingsResult.reason);
+      config.youpiEnabled = youpiResult.status === 'fulfilled' && youpiResult.value?.enabled === true;
       if (contentResult.status === 'fulfilled') storefrontSettings = contentResult.value;
       else console.error('MarketTech storefront settings failed:', contentResult.reason);
       if (couponsResult.status === 'fulfilled') publicCoupons = Array.isArray(couponsResult.value) ? couponsResult.value : [];

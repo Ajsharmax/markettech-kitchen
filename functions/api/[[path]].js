@@ -1939,7 +1939,6 @@ async function handleApi(request, env) {
       // the browser to ask this origin for the authoritative D1 payment status afterwards.
       const returnUrl = new URL('/', new URL(request.url).origin);
       returnUrl.searchParams.set('youpi-return', '1');
-      returnUrl.searchParams.set('order_id', order.id);
       const upstream = await fetch(baseUrl + '/api/v1/payments', {
         method: 'POST',
         headers: {

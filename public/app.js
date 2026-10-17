@@ -825,6 +825,17 @@
       checkout.open();
     });
   }
+
+  async function launchYoupiCheckout(order) {
+    const created = await api('/api/payment/youpi/create', {
+      method: 'POST',
+      body: JSON.stringify({ orderId: order.id })
+    });
+    if (!created.checkoutUrl) throw new Error('The UPI gateway did not return a checkout URL.');
+    window.location.assign(created.checkoutUrl);
+    return { redirected: true };
+  }
+
   async function completeOrder(order, upiLink = '') {
     appliedCoupon = '';
     if (order.paymentStatus === 'Paid' || order.paymentMethod === 'Cash on Delivery') trackEvent('purchase', { transaction_id: order.id, value: Number(order.total), currency: 'INR' });
@@ -1156,6 +1167,9 @@
         const payment = await launchRazorpay(result.order, customer);
         if (payment.verified) await completeOrder(payment.order);
         else $('#checkout-error').textContent = payment.error || `Payment window closed. Order ${result.order.id} is still awaiting payment; you can cancel it from the admin panel.`;
+      } else if (result.order.paymentMethod === 'YouPI UPI') {
+        button.innerHTML = 'Opening secure UPI checkout…';
+        await launchYoupiCheckout(result.order);
       } else {
         await completeOrder(result.order, result.order.upiLink || '');
       }

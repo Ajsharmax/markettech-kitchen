@@ -1778,9 +1778,10 @@ async function handleApi(request, env) {
     discount += promotionDiscount;
 
     const requestedPayment = String(body.paymentMethod || 'cod').toLowerCase();
-    if (!['cod', 'upi', 'razorpay'].includes(requestedPayment)) return json(400, { error: 'Choose a valid payment option.' });
+    if (!['cod', 'upi', 'razorpay', 'youpi'].includes(requestedPayment)) return json(400, { error: 'Choose a valid payment option.' });
     if (requestedPayment === 'upi' && !settings.site.upiVpa) return json(400, { error: 'UPI is not configured yet. Please choose another payment option.' });
     if (requestedPayment === 'razorpay' && (!env.RAZORPAY_KEY_ID || !env.RAZORPAY_KEY_SECRET)) return json(400, { error: 'Online payment is not connected yet. Please choose COD or UPI.' });
+    if (requestedPayment === 'youpi' && (String(env.YOUPI_ENABLED || '').toLowerCase() !== 'true' || !String(env.YOUPI_BASE_URL || '').trim() || !String(env.YOUPI_MERCHANT_ID || '').trim())) return json(400, { error: 'YouPI checkout is not enabled. Please choose another payment option.' });
 
     const order = {
       id: `MT-${new Date().toISOString().slice(2, 10).replaceAll('-', '')}-${hex(crypto.getRandomValues(new Uint8Array(2))).toUpperCase()}`,
@@ -1806,7 +1807,7 @@ async function handleApi(request, env) {
       shipping,
       quantityDiscount,
       total: subtotal - discount - quantityDiscount + shipping,
-      paymentMethod: requestedPayment === 'cod' ? 'Cash on Delivery' : requestedPayment === 'upi' ? 'UPI' : 'Razorpay',
+      paymentMethod: requestedPayment === 'cod' ? 'Cash on Delivery' : requestedPayment === 'upi' ? 'UPI' : requestedPayment === 'youpi' ? 'YouPI UPI' : 'Razorpay',
       paymentStatus: requestedPayment === 'cod' ? 'Due on delivery' : 'Pending',
       status: 'New'
     };
@@ -1815,6 +1816,9 @@ async function handleApi(request, env) {
     if (requestedPayment === 'razorpay') {
       razorpayOrder = await createRazorpayOrder(order, env);
       order.gatewayOrderId = razorpayOrder.id;
+    } else if (requestedPayment === 'youpi') {
+      // Hosted checkout will be initiated by the browser through the order-scoped endpoint.
+      order.gatewayOrderId = order.id;
     }
 
     // One conditional D1 update reserves every item or none. The following INSERT uses

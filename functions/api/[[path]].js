@@ -1873,7 +1873,12 @@ async function handleApi(request, env) {
   if (route === '/api/payment/youpi/create' && method === 'POST') {
     const baseUrl = String(env.YOUPI_BASE_URL || '').trim().replace(/\/+$/, '');
     const merchantId = String(env.YOUPI_MERCHANT_ID || '').trim();
-    if (String(env.YOUPI_ENABLED || '').toLowerCase() !== 'true' || !baseUrl || !merchantId) {
+    let gatewayUrl;
+    try { gatewayUrl = new URL(baseUrl); } catch { return json(503, { error: 'YouPI gateway URL is invalid.' }); }
+    if (gatewayUrl.protocol !== 'https:' || gatewayUrl.username || gatewayUrl.password || gatewayUrl.search || gatewayUrl.hash) {
+      return json(503, { error: 'YouPI gateway must use a valid HTTPS base URL.' });
+    }
+    if (String(env.YOUPI_ENABLED || '').toLowerCase() !== 'true' || !merchantId) {
       return json(503, { error: 'YouPI checkout is not enabled yet. Configure the gateway privately in Cloudflare first.' });
     }
 
@@ -1917,7 +1922,10 @@ async function handleApi(request, env) {
         signal: controller.signal
       });
       const response = await upstream.json().catch(() => ({}));
-      if (!upstream.ok || !response.paymentId || !response.checkoutUrl) {
+      let checkout;
+      try { checkout = new URL(String(response.checkoutUrl || '')); } catch { checkout = null; }
+      if (checkout && (checkout.protocol !== 'https:' || checkout.username || checkout.password)) checkout = null;
+      if (!upstream.ok || !response.paymentId || !checkout) {
         console.error('YouPI create payment failed with status', upstream.status);
         return json(502, { error: 'The UPI gateway could not start payment. Your order remains pending; please try again or contact support.' });
       }
@@ -1930,7 +1938,7 @@ async function handleApi(request, env) {
         .bind('Pending', JSON.stringify(order), order.id, 'Paid').run();
       return json(200, {
         ok: true,
-        checkoutUrl: String(response.checkoutUrl),
+        checkoutUrl: checkout.toString(),
         paymentId: String(response.paymentId),
         orderId: order.id
       });
@@ -1960,11 +1968,13 @@ async function handleApi(request, env) {
     try { event = JSON.parse(rawBody); } catch { return json(400, { error: 'Invalid webhook JSON.' }); }
     if (event.event !== 'SUCCESS') return json(200, { received: true, ignored: true });
 
-    const merchantOrderId = String(event.metadata?.merchantOrderId || event.orderId || '').trim().toUpperCase().slice(0, 80);
+    // The gateway signs the raw body and includes the metadata supplied when the session was created.
+    const merchantOrderId = String(event.metadata?.merchantOrderId || '').trim().toUpperCase().slice(0, 80);
     const paymentId = String(event.paymentId || '').trim().slice(0, 100);
+    const eventOrderId = String(event.orderId || '').trim().toUpperCase().slice(0, 100);
     const utr = String(event.utr || '').trim().slice(0, 80);
     const amountPaise = Number(event.amountPaise);
-    if (!merchantOrderId || !paymentId || !Number.isSafeInteger(amountPaise) || amountPaise < 1) {
+    if (!merchantOrderId || !paymentId || !eventOrderId || !Number.isSafeInteger(amountPaise) || amountPaise < 1) {
       return json(400, { error: 'Required payment fields are missing.' });
     }
 
@@ -1972,6 +1982,8 @@ async function handleApi(request, env) {
     const order = row ? parseOrder(row) : null;
     if (!order) return json(404, { error: 'Order not found.' });
     if (Math.round(Number(order.total) * 100) !== amountPaise) return json(409, { error: 'Payment amount does not match order total.' });
+    if (eventOrderId !== String(order.gatewayOrderId || order.id).toUpperCase()) return json(409, { error: 'Gateway order does not match this order.' });
+    if (order.paymentMethod !== 'YouPI UPI') return json(409, { error: 'This order is not configured for YouPI UPI.' });
     if (order.status === 'Cancelled') return json(409, { error: 'Order is cancelled.' });
     if (order.paymentStatus === 'Paid') {
       return order.youpiPaymentId === paymentId
@@ -1985,8 +1997,16 @@ async function handleApi(request, env) {
     order.youpiPaymentId = paymentId;
     order.youpiUtr = utr;
     order.paymentVerifiedAt = new Date().toISOString();
-    await env.DB.prepare("UPDATE orders SET payment_status = ?, data = ? WHERE id = ? AND payment_status <> 'Paid'")
+    const updated = await env.DB.prepare("UPDATE orders SET payment_status = ?, data = ? WHERE id = ? AND payment_status <> 'Paid'")
       .bind('Paid', JSON.stringify(order), order.id).run();
+    if (!updated?.meta?.changes) {
+      const latest = await env.DB.prepare('SELECT payment_status, data FROM orders WHERE id = ?').bind(order.id).first();
+      const latestOrder = latest ? parseOrder(latest) : null;
+      if (latestOrder?.paymentStatus === 'Paid' && latestOrder.youpiPaymentId === paymentId) {
+        return json(200, { received: true, duplicate: true });
+      }
+      return json(409, { error: 'Order payment status changed before confirmation could be saved.' });
+    }
     return json(200, { received: true });
   }
 

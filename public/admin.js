@@ -408,6 +408,7 @@
     const upi = integrationStatus.upi || {};
     const analytics = integrationStatus.analytics || {};
     const email = integrationStatus.emailProvider || {};
+    const youpi = integrationStatus.youpi || {};
     const setStatus = (id, active, text) => {
       const element = $(id);
       element.textContent = text;
@@ -422,6 +423,13 @@
     setStatus('#analytics-status', analyticsCount > 0, analyticsCount ? `${analyticsCount} ID${analyticsCount === 1 ? '' : 's'} saved` : 'Not connected');
     $('#analytics-detail').textContent = analyticsCount ? `${analyticsCount} analytics/ad integration${analyticsCount === 1 ? '' : 's'} configured. Trackers wait for visitor consent.` : 'Add your public measurement IDs in the Marketing & ads form below. Trackers load only after a visitor gives optional analytics consent.';
     setStatus('#email-provider-status', email.configured, email.configured ? 'Server key found' : 'Not connected');
+    setStatus('#youpi-gateway-status', youpi.gatewayUrlConfigured, youpi.gatewayUrlConfigured ? 'Configured' : 'Missing');
+    $('#youpi-gateway-detail').textContent = youpi.gatewayUrlConfigured ? 'A gateway URL is saved privately in Cloudflare.' : 'Add YOUPI_BASE_URL in Cloudflare Pages variables.';
+    setStatus('#youpi-merchant-status', youpi.merchantConfigured, youpi.merchantConfigured ? 'Configured' : 'Missing');
+    $('#youpi-merchant-detail').textContent = youpi.merchantConfigured ? 'Merchant ID is saved privately in Cloudflare.' : 'Add YOUPI_MERCHANT_ID in Cloudflare Pages variables.';
+    setStatus('#youpi-webhook-status', youpi.webhookConfigured, youpi.webhookConfigured ? 'Configured' : 'Missing');
+    $('#youpi-webhook-detail').textContent = youpi.webhookConfigured ? 'Webhook secret is saved privately in Cloudflare.' : 'Add YOUPI_WEBHOOK_SECRET as a secret in Cloudflare.';
+    $('#youpi-enabled-detail').textContent = youpi.enabled && youpi.configured ? 'Configured and enabled. Complete a verified test payment before customer use.' : 'Disabled until the private gateway settings are complete and YOUPI_ENABLED=true.';
   }
   async function loadFlipkartListings(reset = false) {
     if (flipkartListingsLoading) return;
@@ -1150,6 +1158,11 @@
       downloadCsv('markettech-subscribers.csv', [['Email'], ...subscribers.map(email => [email])]);
       showToast(`${subscribers.length} subscriber${subscribers.length === 1 ? '' : 's'} exported.`);
     } catch (error) { showToast(error.message); }
+  });
+  $('#copy-youpi-env-snippet')?.addEventListener('click', async () => {
+    const snippet = 'YOUPI_BASE_URL=\nYOUPI_MERCHANT_ID=\nYOUPI_WEBHOOK_SECRET=\nYOUPI_ENABLED=false';
+    try { await navigator.clipboard.writeText(snippet); showToast('YouPI variable names copied. Add real values privately in Cloudflare.'); }
+    catch { showToast('Add the YouPI variable names in Cloudflare Pages → Settings → Variables and Secrets.'); }
   });
   $('#copy-env-snippet').addEventListener('click', async () => {
     const snippet = 'RAZORPAY_KEY_ID=rzp_test_your_key_id\\nRAZORPAY_KEY_SECRET=your_secret\\nRAZORPAY_MODE=test';

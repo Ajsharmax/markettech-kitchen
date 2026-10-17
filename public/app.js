@@ -835,6 +835,9 @@
       body: JSON.stringify({ orderId: order.id })
     });
     if (!created.checkoutUrl) throw new Error('The UPI gateway did not return a checkout URL.');
+    // Keep the customer's order reference on the same origin; this is only a return-page
+    // lookup key and never proof of payment.
+    try { sessionStorage.setItem('mt-youpi-pending-order', order.id); } catch {}
     window.location.assign(created.checkoutUrl);
     return { redirected: true };
   }

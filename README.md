@@ -95,7 +95,7 @@ Configure the following in Cloudflare Pages → Settings → Variables and Secre
 - `YOUPI_MERCHANT_ID`: the merchant UUID assigned by your YouPI instance.
 - `YOUPI_WEBHOOK_SECRET`: the webhook HMAC secret configured for the MarketTech merchant in YouPI.
 - `YOUPI_ENABLED`: set to `true` only after gateway setup and test payments are verified.
-- `YOUPI_RETURN_URL`: optional HTTPS return URL on MarketTech if configured by the YouPI instance.
+- `YOUPI_RETURN_URL`: optional HTTPS return URL. If unset, MarketTech supplies an order-specific return URL which checks D1 status after the redirect; the return URL itself is never proof of payment.
 
 Configure the YouPI merchant webhook target as `https://www.markettech.in/api/payment/youpi/webhook` (or the matching preview host before test). The webhook endpoint verifies `X-Gateway-Signature` with HMAC-SHA256 against the **raw request body**, checks the expected amount and order/payment IDs, and updates payment status only for a signed `SUCCESS` event. It is idempotent for a duplicate success event.
 

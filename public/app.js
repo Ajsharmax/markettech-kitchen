@@ -324,24 +324,22 @@
   async function handleYoupiReturn() {
     const url = new URL(window.location.href);
     if (url.searchParams.get('youpi-return') !== '1') return;
-    let orderId = '';
-    try { orderId = sessionStorage.getItem('mt-youpi-pending-order') || ''; } catch {}
-    // Strip return markers immediately; query strings do not establish payment success.
+    let savedOrder = null;
+    try { savedOrder = JSON.parse(sessionStorage.getItem('mt-youpi-pending-order') || 'null'); } catch {}
+    const orderId = String(savedOrder?.orderId || '').trim();
+    const phone = String(savedOrder?.phone || '');
+    const email = String(savedOrder?.email || '');
+    // Strip gateway return markers immediately; URL parameters do not establish payment success.
     url.searchParams.delete('youpi-return');
     url.searchParams.delete('order_id');
     url.searchParams.delete('amount');
     url.searchParams.delete('utr');
     window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
-    if (!orderId) return;
+    if (!orderId || (!phone.trim() && !email.trim())) {
+      $('#checkout-error').textContent = 'We could not safely identify the order to check payment status. Please contact support with your order number.';
+      return;
+    }
     try {
-      const statusForm = $('#checkout-form');
-      const fields = statusForm ? new FormData(statusForm) : null;
-      const phone = fields?.get('phone') || '';
-      const email = fields?.get('email') || '';
-      if (!String(phone).trim() && !String(email).trim()) {
-        $('#checkout-error').textContent = 'Please return to checkout and use the same contact details to check your order status.';
-        return;
-      }
       const result = await api('/api/payment/youpi/status', {
         method: 'POST',
         body: JSON.stringify({ orderId, phone, email })
@@ -885,7 +883,13 @@
     if (!created.checkoutUrl) throw new Error('The UPI gateway did not return a checkout URL.');
     // Keep the customer's order reference on the same origin; this is only a return-page
     // lookup key and never proof of payment.
-    try { sessionStorage.setItem('mt-youpi-pending-order', order.id); } catch {}
+    try {
+      sessionStorage.setItem('mt-youpi-pending-order', JSON.stringify({
+        orderId: order.id,
+        phone: String(order.customer?.phone || ''),
+        email: String(order.customer?.email || '')
+      }));
+    } catch {}
     window.location.assign(created.checkoutUrl);
     return { redirected: true };
   }

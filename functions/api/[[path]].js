@@ -1863,10 +1863,18 @@ async function handleApi(request, env) {
   if (route === '/api/payment/youpi/status' && method === 'POST') {
     const body = await readJson(request);
     const orderId = String(body.orderId || '').trim().toUpperCase().slice(0, 80);
-    if (!orderId) return json(400, { error: 'Missing order number.' });
+    const phoneDigits = normalizePhone(body.phone || '').replace(/\D/g, '');
+    const email = cleanEmail(body.email || '');
+    if (!orderId || (!phoneDigits && !email)) return json(400, { error: 'Order number and the checkout phone or email are required.' });
     const row = await env.DB.prepare('SELECT id, status, payment_status, total, created_at, data FROM orders WHERE id = ?').bind(orderId).first();
     const order = row ? parseOrder(row) : null;
     if (!order || order.paymentMethod !== 'YouPI UPI') return json(404, { error: 'YouPI order not found.' });
+    const savedPhoneDigits = normalizePhone(order.customer?.phone || '').replace(/\D/g, '');
+    const savedEmail = cleanEmail(order.customer?.email || '');
+    if ((phoneDigits && phoneDigits !== savedPhoneDigits) && (!email || email !== savedEmail)) {
+      return json(403, { error: 'Order contact details do not match.' });
+    }
+    if (!phoneDigits && (!email || email !== savedEmail)) return json(403, { error: 'Order contact details do not match.' });
     return json(200, {
       orderId: order.id,
       paymentStatus: order.paymentStatus,

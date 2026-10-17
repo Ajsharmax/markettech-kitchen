@@ -486,6 +486,7 @@
     const options = config.paymentOptions || {};
     $('#payment-upi').hidden = !options.upi;
     $('#payment-razorpay').hidden = !options.razorpay;
+    $('#payment-youpi').hidden = !config.youpiEnabled;
     const selected = $('input[name="paymentMethod"]:checked');
     if (selected && selected.closest('label').hidden) $('input[name="paymentMethod"][value="cod"]').checked = true;
     $$('.payment-choice').forEach(label => label.classList.toggle('is-selected', $('input', label)?.checked));

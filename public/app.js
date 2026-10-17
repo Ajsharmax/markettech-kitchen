@@ -334,9 +334,17 @@
     window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
     if (!orderId) return;
     try {
+      const statusForm = $('#checkout-form');
+      const fields = statusForm ? new FormData(statusForm) : null;
+      const phone = fields?.get('phone') || '';
+      const email = fields?.get('email') || '';
+      if (!String(phone).trim() && !String(email).trim()) {
+        $('#checkout-error').textContent = 'Please return to checkout and use the same contact details to check your order status.';
+        return;
+      }
       const result = await api('/api/payment/youpi/status', {
         method: 'POST',
-        body: JSON.stringify({ orderId })
+        body: JSON.stringify({ orderId, phone, email })
       });
       if (result.paid) {
         try { sessionStorage.removeItem('mt-youpi-pending-order'); } catch {}

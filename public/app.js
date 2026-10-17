@@ -355,10 +355,14 @@
         };
         await completeOrder(order);
       } else {
-        const message = result.paymentStatus === 'Failed'
-          ? 'The UPI payment was not confirmed. Please contact support or try again.'
-          : 'Your payment is still being verified. Please wait for confirmation before placing another order.';
-        $('#checkout-error').textContent = message;
+        // Keep the customer on the store's confirmation view with the known order number.
+        $('#checkout-modal').hidden = true;
+        $('#success-order-id').textContent = result.orderId || orderId;
+        $('#success-upi-link').hidden = true;
+        $('#upi-payment-details').hidden = true;
+        $('#upi-qr-wrap').hidden = true;
+        $('#success-description').textContent = 'Your payment has not been confirmed yet. Do not pay a second time. We will update the order after the gateway sends verified confirmation.';
+        openLayer($('#success-modal'));
       }
     } catch (error) {
       $('#checkout-error').textContent = 'We could not retrieve your latest payment status. Your order remains pending until the gateway confirms it. Contact support with your order number if you need help.';

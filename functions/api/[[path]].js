@@ -1921,12 +1921,17 @@ async function handleApi(request, env) {
         email: String(order.customer?.email || ''),
         phoneNumber: String(order.customer?.phone || '')
       },
-      ...(configuredReturnUrl ? { returnUrl: configuredReturnUrl } : {}),
+      returnUrl: configuredReturnUrl || returnUrl.toString(),
       metadata: { merchantOrderId: order.id, source: 'markettech.in' }
     };
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
     try {
+      // Gateway URLs are administrator-configured. The order-specific return URL enables
+      // the browser to ask this origin for the authoritative D1 payment status afterwards.
+      const returnUrl = new URL('/', new URL(request.url).origin);
+      returnUrl.searchParams.set('youpi-return', '1');
+      returnUrl.searchParams.set('order_id', order.id);
       const upstream = await fetch(baseUrl + '/api/v1/payments', {
         method: 'POST',
         headers: {

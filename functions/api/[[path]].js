@@ -1957,7 +1957,8 @@ async function handleApi(request, env) {
       }
       order.gatewayOrderId = gatewayOrderId;
       order.youpiPaymentId = String(response.paymentId);
-      order.youpiCheckoutUrl = String(response.checkoutUrl);
+      order.youpiGatewayOrderId = String(response.orderId || gatewayOrderId);
+      order.youpiCheckoutUrl = String(checkout);
       order.paymentMethod = 'YouPI UPI';
       order.updatedAt = new Date().toISOString();
       await env.DB.prepare('UPDATE orders SET payment_status = ?, data = ? WHERE id = ? AND payment_status <> ?')
@@ -2008,7 +2009,7 @@ async function handleApi(request, env) {
     const order = row ? parseOrder(row) : null;
     if (!order) return json(404, { error: 'Order not found.' });
     if (Math.round(Number(order.total) * 100) !== amountPaise) return json(409, { error: 'Payment amount does not match order total.' });
-    if (eventOrderId !== String(order.gatewayOrderId || order.id).toUpperCase()) return json(409, { error: 'Gateway order does not match this order.' });
+    if (eventOrderId !== String(order.youpiGatewayOrderId || order.gatewayOrderId || order.id).toUpperCase()) return json(409, { error: 'Gateway order does not match this order.' });
     if (order.paymentMethod !== 'YouPI UPI') return json(409, { error: 'This order is not configured for YouPI UPI.' });
     if (order.status === 'Cancelled') return json(409, { error: 'Order is cancelled.' });
     if (order.paymentStatus === 'Paid') {

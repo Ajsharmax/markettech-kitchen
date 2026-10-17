@@ -1860,6 +1860,22 @@ async function handleApi(request, env) {
   }
 
 
+  if (route === '/api/payment/youpi/status' && method === 'POST') {
+    const body = await readJson(request);
+    const orderId = String(body.orderId || '').trim().toUpperCase().slice(0, 80);
+    if (!orderId) return json(400, { error: 'Missing order number.' });
+    const row = await env.DB.prepare('SELECT id, status, payment_status, total, created_at, data FROM orders WHERE id = ?').bind(orderId).first();
+    const order = row ? parseOrder(row) : null;
+    if (!order || order.paymentMethod !== 'YouPI UPI') return json(404, { error: 'YouPI order not found.' });
+    return json(200, {
+      orderId: order.id,
+      paymentStatus: order.paymentStatus,
+      orderStatus: order.status,
+      total: order.total,
+      paid: order.paymentStatus === 'Paid'
+    });
+  }
+
   if (route === '/api/payment/youpi/config' && method === 'GET') {
     const settings = await getSettings(env);
     const configured = Boolean(String(env.YOUPI_BASE_URL || '').trim() && String(env.YOUPI_MERCHANT_ID || '').trim());

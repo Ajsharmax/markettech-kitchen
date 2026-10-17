@@ -879,19 +879,19 @@
     });
   }
 
-  async function launchYoupiCheckout(order) {
+  async function launchYoupiCheckout(order, customer) {
     const created = await api('/api/payment/youpi/create', {
       method: 'POST',
       body: JSON.stringify({ orderId: order.id })
     });
     if (!created.checkoutUrl) throw new Error('The UPI gateway did not return a checkout URL.');
-    // Keep the customer's order reference on the same origin; this is only a return-page
-    // lookup key and never proof of payment.
+    // Keep only the order reference and the contact details the customer supplied.
+    // This is used for a post-redirect lookup, never as proof of payment.
     try {
       sessionStorage.setItem('mt-youpi-pending-order', JSON.stringify({
         orderId: order.id,
-        phone: String(order.customer?.phone || ''),
-        email: String(order.customer?.email || '')
+        phone: String(customer?.phone || ''),
+        email: String(customer?.email || '')
       }));
     } catch {}
     window.location.assign(created.checkoutUrl);
@@ -1231,7 +1231,7 @@
         else $('#checkout-error').textContent = payment.error || `Payment window closed. Order ${result.order.id} is still awaiting payment; you can cancel it from the admin panel.`;
       } else if (result.order.paymentMethod === 'YouPI UPI') {
         button.innerHTML = 'Opening secure UPI checkout…';
-        await launchYoupiCheckout(result.order);
+        await launchYoupiCheckout(result.order, customer);
       } else {
         await completeOrder(result.order, result.order.upiLink || '');
       }

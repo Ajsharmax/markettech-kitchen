@@ -321,6 +321,54 @@
     finally { button.disabled = false; button.innerHTML = original; }
   }
 
+  async function handleYoupiReturn() {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('youpi-return') !== '1') return;
+    let savedOrder = null;
+    try { savedOrder = JSON.parse(sessionStorage.getItem('mt-youpi-pending-order') || 'null'); } catch {}
+    const orderId = String(savedOrder?.orderId || '').trim();
+    const phone = String(savedOrder?.phone || '');
+    const email = String(savedOrder?.email || '');
+    // Strip gateway return markers immediately; URL parameters do not establish payment success.
+    url.searchParams.delete('youpi-return');
+    url.searchParams.delete('order_id');
+    url.searchParams.delete('amount');
+    url.searchParams.delete('utr');
+    window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
+    if (!orderId || (!phone.trim() && !email.trim())) {
+      $('#checkout-error').textContent = 'We could not safely identify the order to check payment status. Please contact support with your order number.';
+      return;
+    }
+    try {
+      const result = await api('/api/payment/youpi/status', {
+        method: 'POST',
+        body: JSON.stringify({ orderId, phone, email })
+      });
+      if (result.paid) {
+        try { sessionStorage.removeItem('mt-youpi-pending-order'); } catch {}
+        const order = {
+          id: result.orderId,
+          total: result.total,
+          status: result.orderStatus,
+          paymentMethod: 'YouPI UPI',
+          paymentStatus: 'Paid'
+        };
+        await completeOrder(order);
+      } else {
+        // Keep the customer on the store's confirmation view with the known order number.
+        $('#checkout-modal').hidden = true;
+        $('#success-order-id').textContent = result.orderId || orderId;
+        $('#success-upi-link').hidden = true;
+        $('#upi-payment-details').hidden = true;
+        $('#upi-qr-wrap').hidden = true;
+        $('#success-description').textContent = 'Your payment has not been confirmed yet. Do not pay a second time. We will update the order after the gateway sends verified confirmation.';
+        openLayer($('#success-modal'));
+      }
+    } catch (error) {
+      $('#checkout-error').textContent = 'We could not retrieve your latest payment status. Your order remains pending until the gateway confirms it. Contact support with your order number if you need help.';
+    }
+  }
+
   async function loadStore() {
     try {
       // Products are the critical storefront data. Load and render them first so
@@ -342,13 +390,15 @@
 
       // Settings are secondary. Keep the catalogue visible even if one settings
       // request fails, while retaining the last known safe defaults.
-      const [settingsResult, contentResult, couponsResult] = await Promise.allSettled([
+      const [settingsResult, contentResult, couponsResult, youpiResult] = await Promise.allSettled([
         api('/api/config'),
         api('/api/storefront-settings'),
-        api('/api/public-coupons')
+        api('/api/public-coupons'),
+        api('/api/payment/youpi/config')
       ]);
       if (settingsResult.status === 'fulfilled') config = settingsResult.value;
       else console.error('MarketTech config failed:', settingsResult.reason);
+      config.youpiEnabled = youpiResult.status === 'fulfilled' && youpiResult.value?.enabled === true;
       if (contentResult.status === 'fulfilled') storefrontSettings = contentResult.value;
       else console.error('MarketTech storefront settings failed:', contentResult.reason);
       if (couponsResult.status === 'fulfilled') publicCoupons = Array.isArray(couponsResult.value) ? couponsResult.value : [];
@@ -361,6 +411,8 @@
       catch (error) { console.error('MarketTech storefront content failed:', error); }
       try { renderPaymentOptions(); }
       catch (error) { console.error('MarketTech payment options failed:', error); }
+      try { await handleYoupiReturn(); }
+      catch (error) { console.error('MarketTech YouPI return status failed:', error); }
     } catch (error) {
       // Never leave the mobile storefront blank because a customer's browser
       // temporarily cannot reach /api/products. Keep the catalogue usable.
@@ -486,6 +538,7 @@
     const options = config.paymentOptions || {};
     $('#payment-upi').hidden = !options.upi;
     $('#payment-razorpay').hidden = !options.razorpay;
+    $('#payment-youpi').hidden = !config.youpiEnabled;
     const selected = $('input[name="paymentMethod"]:checked');
     if (selected && selected.closest('label').hidden) $('input[name="paymentMethod"][value="cod"]').checked = true;
     $$('.payment-choice').forEach(label => label.classList.toggle('is-selected', $('input', label)?.checked));
@@ -825,6 +878,26 @@
       checkout.open();
     });
   }
+
+  async function launchYoupiCheckout(order, customer) {
+    const created = await api('/api/payment/youpi/create', {
+      method: 'POST',
+      body: JSON.stringify({ orderId: order.id })
+    });
+    if (!created.checkoutUrl) throw new Error('The UPI gateway did not return a checkout URL.');
+    // Keep only the order reference and the contact details the customer supplied.
+    // This is used for a post-redirect lookup, never as proof of payment.
+    try {
+      sessionStorage.setItem('mt-youpi-pending-order', JSON.stringify({
+        orderId: order.id,
+        phone: String(customer?.phone || ''),
+        email: String(customer?.email || '')
+      }));
+    } catch {}
+    window.location.assign(created.checkoutUrl);
+    return { redirected: true };
+  }
+
   async function completeOrder(order, upiLink = '') {
     appliedCoupon = '';
     if (order.paymentStatus === 'Paid' || order.paymentMethod === 'Cash on Delivery') trackEvent('purchase', { transaction_id: order.id, value: Number(order.total), currency: 'INR' });
@@ -1156,6 +1229,9 @@
         const payment = await launchRazorpay(result.order, customer);
         if (payment.verified) await completeOrder(payment.order);
         else $('#checkout-error').textContent = payment.error || `Payment window closed. Order ${result.order.id} is still awaiting payment; you can cancel it from the admin panel.`;
+      } else if (result.order.paymentMethod === 'YouPI UPI') {
+        button.innerHTML = 'Opening secure UPI checkout…';
+        await launchYoupiCheckout(result.order, customer);
       } else {
         await completeOrder(result.order, result.order.upiLink || '');
       }

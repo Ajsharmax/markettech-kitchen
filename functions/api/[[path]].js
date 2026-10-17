@@ -1778,9 +1778,10 @@ async function handleApi(request, env) {
     discount += promotionDiscount;
 
     const requestedPayment = String(body.paymentMethod || 'cod').toLowerCase();
-    if (!['cod', 'upi', 'razorpay'].includes(requestedPayment)) return json(400, { error: 'Choose a valid payment option.' });
+    if (!['cod', 'upi', 'razorpay', 'youpi'].includes(requestedPayment)) return json(400, { error: 'Choose a valid payment option.' });
     if (requestedPayment === 'upi' && !settings.site.upiVpa) return json(400, { error: 'UPI is not configured yet. Please choose another payment option.' });
     if (requestedPayment === 'razorpay' && (!env.RAZORPAY_KEY_ID || !env.RAZORPAY_KEY_SECRET)) return json(400, { error: 'Online payment is not connected yet. Please choose COD or UPI.' });
+    if (requestedPayment === 'youpi' && (String(env.YOUPI_ENABLED || '').toLowerCase() !== 'true' || !String(env.YOUPI_BASE_URL || '').trim() || !String(env.YOUPI_MERCHANT_ID || '').trim())) return json(400, { error: 'YouPI checkout is not enabled. Please choose another payment option.' });
 
     const order = {
       id: `MT-${new Date().toISOString().slice(2, 10).replaceAll('-', '')}-${hex(crypto.getRandomValues(new Uint8Array(2))).toUpperCase()}`,
@@ -1806,7 +1807,7 @@ async function handleApi(request, env) {
       shipping,
       quantityDiscount,
       total: subtotal - discount - quantityDiscount + shipping,
-      paymentMethod: requestedPayment === 'cod' ? 'Cash on Delivery' : requestedPayment === 'upi' ? 'UPI' : 'Razorpay',
+      paymentMethod: requestedPayment === 'cod' ? 'Cash on Delivery' : requestedPayment === 'upi' ? 'UPI' : requestedPayment === 'youpi' ? 'YouPI UPI' : 'Razorpay',
       paymentStatus: requestedPayment === 'cod' ? 'Due on delivery' : 'Pending',
       status: 'New'
     };
@@ -1815,6 +1816,9 @@ async function handleApi(request, env) {
     if (requestedPayment === 'razorpay') {
       razorpayOrder = await createRazorpayOrder(order, env);
       order.gatewayOrderId = razorpayOrder.id;
+    } else if (requestedPayment === 'youpi') {
+      // Hosted checkout will be initiated by the browser through the order-scoped endpoint.
+      order.gatewayOrderId = order.id;
     }
 
     // One conditional D1 update reserves every item or none. The following INSERT uses
@@ -1853,6 +1857,184 @@ async function handleApi(request, env) {
       };
     }
     return json(201, { ok: true, order: responseOrder });
+  }
+
+
+  if (route === '/api/payment/youpi/status' && method === 'POST') {
+    const body = await readJson(request);
+    const orderId = String(body.orderId || '').trim().toUpperCase().slice(0, 80);
+    const phoneDigits = normalizePhone(body.phone || '').replace(/\D/g, '');
+    const email = cleanEmail(body.email || '');
+    if (!orderId || (!phoneDigits && !email)) return json(400, { error: 'Order number and the checkout phone or email are required.' });
+    const row = await env.DB.prepare('SELECT id, status, payment_status, total, created_at, data FROM orders WHERE id = ?').bind(orderId).first();
+    const order = row ? parseOrder(row) : null;
+    if (!order || order.paymentMethod !== 'YouPI UPI') return json(404, { error: 'YouPI order not found.' });
+    const savedPhoneDigits = normalizePhone(order.customer?.phone || '').replace(/\D/g, '');
+    const savedEmail = cleanEmail(order.customer?.email || '');
+    if ((phoneDigits && phoneDigits !== savedPhoneDigits) && (!email || email !== savedEmail)) {
+      return json(403, { error: 'Order contact details do not match.' });
+    }
+    if (!phoneDigits && (!email || email !== savedEmail)) return json(403, { error: 'Order contact details do not match.' });
+    return json(200, {
+      orderId: order.id,
+      paymentStatus: order.paymentStatus,
+      orderStatus: order.status,
+      total: order.total,
+      paid: order.paymentStatus === 'Paid'
+    });
+  }
+
+  if (route === '/api/payment/youpi/config' && method === 'GET') {
+    const settings = await getSettings(env);
+    const configured = Boolean(String(env.YOUPI_BASE_URL || '').trim() && String(env.YOUPI_MERCHANT_ID || '').trim());
+    return json(200, {
+      enabled: configured && String(env.YOUPI_ENABLED || '').toLowerCase() === 'true',
+      storeName: settings.site.storeName,
+      currency: 'INR'
+    });
+  }
+
+  if (route === '/api/payment/youpi/create' && method === 'POST') {
+    const baseUrl = String(env.YOUPI_BASE_URL || '').trim().replace(/\/+$/, '');
+    const merchantId = String(env.YOUPI_MERCHANT_ID || '').trim();
+    let gatewayUrl;
+    try { gatewayUrl = new URL(baseUrl); } catch { return json(503, { error: 'YouPI gateway URL is invalid.' }); }
+    if (gatewayUrl.protocol !== 'https:' || gatewayUrl.username || gatewayUrl.password || gatewayUrl.search || gatewayUrl.hash) {
+      return json(503, { error: 'YouPI gateway must use a valid HTTPS base URL.' });
+    }
+    if (String(env.YOUPI_ENABLED || '').toLowerCase() !== 'true' || !merchantId) {
+      return json(503, { error: 'YouPI checkout is not enabled yet. Configure the gateway privately in Cloudflare first.' });
+    }
+
+    const body = await readJson(request);
+    const orderId = String(body.orderId || '').trim().toUpperCase().slice(0, 80);
+    if (!orderId) return json(400, { error: 'Missing order number.' });
+
+    const row = await env.DB.prepare('SELECT id, status, payment_status, total, created_at, data FROM orders WHERE id = ?').bind(orderId).first();
+    const order = row ? parseOrder(row) : null;
+    if (!order) return json(404, { error: 'Order not found.' });
+    if (order.paymentMethod !== 'YouPI UPI' && order.paymentMethod !== 'UPI') return json(409, { error: 'This order is not a YouPI UPI order.' });
+    if (order.paymentStatus === 'Paid') return json(409, { error: 'This order is already paid.' });
+    if (order.status === 'Cancelled') return json(409, { error: 'This order was cancelled.' });
+
+    const gatewayOrderId = String(order.gatewayOrderId || order.id);
+    const payload = {
+      orderId: gatewayOrderId,
+      amount: Number(order.total).toFixed(2),
+      currency: 'INR',
+      description: 'MarketTech order ' + order.id,
+      customer: {
+        name: String(order.customer?.name || ''),
+        email: String(order.customer?.email || ''),
+        phoneNumber: String(order.customer?.phone || '')
+      },
+      metadata: { merchantOrderId: order.id, source: 'markettech.in' }
+    };
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    try {
+      // Always return to the origin that initiated checkout, including Preview deployments.
+      const returnUrl = new URL('/', new URL(request.url).origin);
+      returnUrl.searchParams.set('youpi-return', '1');
+      payload.returnUrl = returnUrl.toString();
+      const upstream = await fetch(baseUrl + '/api/v1/payments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Merchant-Id': merchantId,
+          'Idempotency-Key': 'markettech-' + order.id
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      });
+      const response = await upstream.json().catch(() => ({}));
+      let checkout;
+      try { checkout = new URL(String(response.checkoutUrl || '')); } catch { checkout = null; }
+      if (checkout && (checkout.protocol !== 'https:' || checkout.username || checkout.password)) checkout = null;
+      if (!upstream.ok || !response.paymentId || !checkout) {
+        console.error('YouPI create payment failed with status', upstream.status);
+        return json(502, { error: 'The UPI gateway could not start payment. Your order remains pending; please try again or contact support.' });
+      }
+      order.gatewayOrderId = gatewayOrderId;
+      order.youpiPaymentId = String(response.paymentId);
+      order.youpiGatewayOrderId = String(response.orderId || gatewayOrderId);
+      order.youpiCheckoutUrl = String(checkout);
+      order.paymentMethod = 'YouPI UPI';
+      order.updatedAt = new Date().toISOString();
+      await env.DB.prepare('UPDATE orders SET payment_status = ?, data = ? WHERE id = ? AND payment_status <> ?')
+        .bind('Pending', JSON.stringify(order), order.id, 'Paid').run();
+      return json(200, {
+        ok: true,
+        checkoutUrl: checkout.toString(),
+        paymentId: String(response.paymentId),
+        orderId: order.id
+      });
+    } catch (error) {
+      console.error('YouPI create payment request failed:', error?.name || 'FetchError');
+      return json(502, { error: error?.name === 'AbortError' ? 'UPI gateway timed out. Your order remains pending.' : 'Could not connect to the UPI gateway. Your order remains pending.' });
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  if (route === '/api/payment/youpi/webhook' && method === 'POST') {
+    const secret = String(env.YOUPI_WEBHOOK_SECRET || '');
+    if (!secret) return json(503, { error: 'YouPI webhook verification is not configured.' });
+
+    const rawBody = await request.text();
+    if (encoder.encode(rawBody).byteLength > 100000) return json(413, { error: 'Webhook payload is too large.' });
+    const signature = String(request.headers.get('X-Gateway-Signature') || '');
+    if (!/^sha256=[a-f0-9]{64}$/i.test(signature)) return json(401, { error: 'Invalid webhook signature.' });
+
+    const key = await crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    const signedBytes = await crypto.subtle.sign('HMAC', key, encoder.encode(rawBody));
+    const expectedSignature = 'sha256=' + hex(signedBytes);
+    if (!constantTimeEqual(signature.toLowerCase(), expectedSignature.toLowerCase())) return json(401, { error: 'Invalid webhook signature.' });
+
+    let event;
+    try { event = JSON.parse(rawBody); } catch { return json(400, { error: 'Invalid webhook JSON.' }); }
+    if (event.event !== 'SUCCESS') return json(200, { received: true, ignored: true });
+
+    // The gateway signs the raw body and includes the metadata supplied when the session was created.
+    const merchantOrderId = String(event.metadata?.merchantOrderId || '').trim().toUpperCase().slice(0, 80);
+    const paymentId = String(event.paymentId || '').trim().slice(0, 100);
+    const eventOrderId = String(event.orderId || '').trim().toUpperCase().slice(0, 100);
+    const utr = String(event.utr || '').trim().slice(0, 80);
+    const amountPaise = Number(event.amountPaise);
+    if (!merchantOrderId || !paymentId || !eventOrderId || !Number.isSafeInteger(amountPaise) || amountPaise < 1) {
+      return json(400, { error: 'Required payment fields are missing.' });
+    }
+
+    const row = await env.DB.prepare('SELECT id, status, payment_status, total, created_at, data FROM orders WHERE id = ?').bind(merchantOrderId).first();
+    const order = row ? parseOrder(row) : null;
+    if (!order) return json(404, { error: 'Order not found.' });
+    if (Math.round(Number(order.total) * 100) !== amountPaise) return json(409, { error: 'Payment amount does not match order total.' });
+    if (eventOrderId !== String(order.youpiGatewayOrderId || order.gatewayOrderId || order.id).toUpperCase()) return json(409, { error: 'Gateway order does not match this order.' });
+    if (order.paymentMethod !== 'YouPI UPI') return json(409, { error: 'This order is not configured for YouPI UPI.' });
+    if (order.status === 'Cancelled') return json(409, { error: 'Order is cancelled.' });
+    if (order.paymentStatus === 'Paid') {
+      return order.youpiPaymentId === paymentId
+        ? json(200, { received: true, duplicate: true })
+        : json(409, { error: 'A different payment is already recorded for this order.' });
+    }
+    if (order.youpiPaymentId && order.youpiPaymentId !== paymentId) return json(409, { error: 'Gateway payment does not match this order.' });
+
+    order.paymentStatus = 'Paid';
+    order.paymentMethod = 'YouPI UPI';
+    order.youpiPaymentId = paymentId;
+    order.youpiUtr = utr;
+    order.paymentVerifiedAt = new Date().toISOString();
+    const updated = await env.DB.prepare("UPDATE orders SET payment_status = ?, data = ? WHERE id = ? AND payment_status <> 'Paid'")
+      .bind('Paid', JSON.stringify(order), order.id).run();
+    if (!updated?.meta?.changes) {
+      const latest = await env.DB.prepare('SELECT payment_status, data FROM orders WHERE id = ?').bind(order.id).first();
+      const latestOrder = latest ? parseOrder(latest) : null;
+      if (latestOrder?.paymentStatus === 'Paid' && latestOrder.youpiPaymentId === paymentId) {
+        return json(200, { received: true, duplicate: true });
+      }
+      return json(409, { error: 'Order payment status changed before confirmation could be saved.' });
+    }
+    return json(200, { received: true });
   }
 
   if (route === '/api/payment/razorpay/verify' && method === 'POST') {

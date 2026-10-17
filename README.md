@@ -84,3 +84,20 @@ The repository includes a dependency-free `npm run check` command for JavaScript
 - UPI payment is manual: confirm the transfer in your bank/UPI app before dispatching.
 - The newsletter form stores email addresses in D1; it does not send emails automatically.
 - Take periodic backups of your D1 data and exported product/order records. Do not treat the sample catalogue as real inventory.
+
+## Optional YouPI UPI checkout (feature branch; disabled by default)
+
+A separately hosted YouPI PG instance can be used for UPI checkout. This integration is opt-in and will stay hidden until all settings are configured and `YOUPI_ENABLED=true`.
+
+Configure the following in Cloudflare Pages → Settings → Variables and Secrets for Preview first (do not put secrets in source control):
+
+- `YOUPI_BASE_URL`: the HTTPS base URL of your self-hosted YouPI payment/checkout API (must serve `POST /api/v1/payments`). This is not a localhost URL.
+- `YOUPI_MERCHANT_ID`: the merchant UUID assigned by your YouPI instance.
+- `YOUPI_WEBHOOK_SECRET`: the webhook HMAC secret configured for the MarketTech merchant in YouPI.
+- `YOUPI_ENABLED`: set to `true` only after gateway setup and test payments are verified.
+
+Configure the YouPI merchant webhook target as `https://www.markettech.in/api/payment/youpi/webhook` (or the matching preview host before test). The webhook endpoint verifies `X-Gateway-Signature` with HMAC-SHA256 against the **raw request body**, checks the expected amount and order/payment IDs, and updates payment status only for a signed `SUCCESS` event. It is idempotent for a duplicate success event.
+
+Important: YouPI PG is a self-hosted Node.js service with a persistent SQLite/Postgres database and companion SMS/Gmail/Android observers. This is separate infrastructure; it does not run inside Cloudflare Pages Functions. Do not expose the dashboard/API until its initial admin credentials are changed, HTTPS and network restrictions are configured, bank-observer access is secured, and a restore/backup plan exists. UPI payment verification depends on your own gateway's banking observers; run test transactions and validate reconciliation before enabling customer use.
+
+Current branch UI/checkout changes are for preview only. Do not merge or enable production until the preview has been tested end-to-end.

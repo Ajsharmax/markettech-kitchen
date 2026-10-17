@@ -321,6 +321,44 @@
     finally { button.disabled = false; button.innerHTML = original; }
   }
 
+  async function handleYoupiReturn() {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('youpi-return') !== '1') return;
+    let orderId = '';
+    try { orderId = sessionStorage.getItem('mt-youpi-pending-order') || ''; } catch {}
+    // Strip return markers immediately; query strings do not establish payment success.
+    url.searchParams.delete('youpi-return');
+    url.searchParams.delete('order_id');
+    url.searchParams.delete('amount');
+    url.searchParams.delete('utr');
+    window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
+    if (!orderId) return;
+    try {
+      const result = await api('/api/payment/youpi/status', {
+        method: 'POST',
+        body: JSON.stringify({ orderId })
+      });
+      if (result.paid) {
+        try { sessionStorage.removeItem('mt-youpi-pending-order'); } catch {}
+        const order = {
+          id: result.orderId,
+          total: result.total,
+          status: result.orderStatus,
+          paymentMethod: 'YouPI UPI',
+          paymentStatus: 'Paid'
+        };
+        await completeOrder(order);
+      } else {
+        const message = result.paymentStatus === 'Failed'
+          ? 'The UPI payment was not confirmed. Please contact support or try again.'
+          : 'Your payment is still being verified. Please wait for confirmation before placing another order.';
+        $('#checkout-error').textContent = message;
+      }
+    } catch (error) {
+      $('#checkout-error').textContent = 'We could not retrieve your latest payment status. Your order remains pending until the gateway confirms it. Contact support with your order number if you need help.';
+    }
+  }
+
   async function loadStore() {
     try {
       // Products are the critical storefront data. Load and render them first so
@@ -363,6 +401,8 @@
       catch (error) { console.error('MarketTech storefront content failed:', error); }
       try { renderPaymentOptions(); }
       catch (error) { console.error('MarketTech payment options failed:', error); }
+      try { await handleYoupiReturn(); }
+      catch (error) { console.error('MarketTech YouPI return status failed:', error); }
     } catch (error) {
       // Never leave the mobile storefront blank because a customer's browser
       // temporarily cannot reach /api/products. Keep the catalogue usable.

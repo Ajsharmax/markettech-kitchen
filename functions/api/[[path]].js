@@ -2416,6 +2416,13 @@ async function handleApi(request, env) {
           metaPixel: Boolean(settings.marketing.metaPixelId)
         },
         emailProvider: { configured: Boolean(env.RESEND_API_KEY || env.SENDGRID_API_KEY) },
+        youpi: {
+          enabled: String(env.YOUPI_ENABLED || '').toLowerCase() === 'true',
+          configured: Boolean(String(env.YOUPI_BASE_URL || '').trim() && String(env.YOUPI_MERCHANT_ID || '').trim() && String(env.YOUPI_WEBHOOK_SECRET || '').trim()),
+          gatewayUrlConfigured: Boolean(String(env.YOUPI_BASE_URL || '').trim()),
+          merchantConfigured: Boolean(String(env.YOUPI_MERCHANT_ID || '').trim()),
+          webhookConfigured: Boolean(String(env.YOUPI_WEBHOOK_SECRET || '').trim())
+        },
         imageStorage: { configured: Boolean(env.UPLOADS) }
       });
     }

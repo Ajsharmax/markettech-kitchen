@@ -407,7 +407,7 @@
     $$('[data-free-shipping-benefit]').forEach(element => { element.textContent = threshold > 0 ? `Free shipping over ${formatMoney(threshold)}` : 'Free shipping on every order'; });
     // MarketTech business contact details shown publicly on the storefront.
     // Keep these values independent from older sample settings saved in D1.
-    const email = 'primecreation.selling@gmail.com';
+    const email = 'support@markettech.in';
     $$('[data-contact-email]').forEach(element => {
       element.href = `mailto:${email}`;
       element.textContent = email;

@@ -1267,6 +1267,20 @@
     const row = button.closest('[data-product-id]');
     const product = products.find(item => item.id === row?.dataset.productId);
     if (button.dataset.action === 'edit-product' && product) openProductEditor(product);
+    if (button.dataset.action === 'toggle-visibility' && product) {
+      const nextStatus = String(product.status || 'active').toLowerCase() === 'inactive' ? 'active' : 'inactive';
+      const actionLabel = nextStatus === 'active' ? 'show this product in the store' : 'hide this product from the store';
+      if (!window.confirm(`Do you want to ${actionLabel}? This changes only this product.`)) return;
+      button.disabled = true;
+      try {
+        await api(`/api/admin/products/${encodeURIComponent(product.id)}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ ...product, status: nextStatus })
+        });
+        await refreshAll();
+        showToast(nextStatus === 'active' ? `${product.name} is now visible in the store.` : `${product.name} is now hidden from the store.`);
+      } catch (error) { showToast(error.message); button.disabled = false; }
+    }
     if (button.dataset.action === 'delete-product' && product) {
       if (!window.confirm(`Remove “${product.name}” from your collection?`)) return;
       button.disabled = true;

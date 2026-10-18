@@ -426,6 +426,11 @@
       grid.hidden = false;
       $('#empty-products').hidden = true;
     }
+    const requestedPolicy = new URLSearchParams(window.location.search).get('policy');
+    if (['shipping', 'returns', 'privacy', 'terms'].includes(requestedPolicy)) {
+      openPolicy(requestedPolicy);
+      window.history.replaceState(null, '', window.location.pathname);
+    }
   }
 
   function applyStorefrontSettings() {
@@ -1265,7 +1270,8 @@
     });
   }
 
-  $('#year').textContent = new Date().getFullYear();
+  const footerYear = document.querySelector('[data-footer-year]');
+  if (footerYear) footerYear.textContent = new Date().getFullYear();
   if (window.location.hash === '#contact') {
     setTimeout(() => openLayer($('#contact-modal')), 80);
   }

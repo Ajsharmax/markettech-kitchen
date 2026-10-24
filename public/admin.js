@@ -340,7 +340,7 @@
     $('#product-rows').innerHTML = list.map(product => {
       const available = Number(product.stock) > 0;
       const stockClass = Number(product.stock) <= Number(settings?.site?.lowStockThreshold ?? 8) ? 'stock-low' : '';
-      return `<tr data-product-id="${escapeHtml(product.id)}"><td><div class="product-table-item"><img src="${escapeHtml(product.image)}" alt=""><span><strong>${escapeHtml(product.name)}</strong><small>${escapeHtml(product.sku ? (product.tag ? `${product.sku} · ${product.tag}` : product.sku) : (product.tag || product.id))}</small></span></div></td><td><span class="category-label">${escapeHtml(product.category)}</span></td><td><span class="price-label">${formatMoney(product.price)}</span></td><td><span class="stock-label ${stockClass}">${Number(product.stock)} units</span></td><td><span class="product-status${available ? '' : ' out'}">${available ? 'Active' : 'Out of stock'}</span></td><td><div class="table-actions"><button type="button" data-action="edit-product">Edit</button><button type="button" class="delete-action" data-action="delete-product">Delete</button></div></td></tr>`;
+      return `<tr data-product-id="${escapeHtml(product.id)}"><td><div class="product-table-item"><img src="${escapeHtml(product.image)}" alt=""><span><strong>${escapeHtml(product.name)}</strong><small>${escapeHtml(product.sku ? (product.tag ? `${product.sku} · ${product.tag}` : product.sku) : (product.tag || product.id))}</small></span></div></td><td><span class="category-label">${escapeHtml(product.category)}</span></td><td><span class="price-label">${formatMoney(product.price)}</span></td><td><span class="stock-label ${stockClass}">${Number(product.stock)} units</span></td><td><span class="product-status${String(product.status || 'active').toLowerCase() === 'inactive' ? ' out' : ''}">${String(product.status || 'active').toLowerCase() === 'inactive' ? 'Hidden' : (available ? 'Active' : 'Out of stock')}</span></td><td><div class="table-actions"><button type="button" data-action="toggle-visibility">${String(product.status || 'active').toLowerCase() === 'inactive' ? 'Show in store' : 'Hide from store'}</button><button type="button" data-action="edit-product">Edit</button><button type="button" class="delete-action" data-action="delete-product">Delete</button></div></td></tr>`;
     }).join('');
     $('#empty-products-admin').hidden = list.length > 0;
   }
@@ -408,6 +408,7 @@
     const upi = integrationStatus.upi || {};
     const analytics = integrationStatus.analytics || {};
     const email = integrationStatus.emailProvider || {};
+    const youpi = integrationStatus.youpi || {};
     const setStatus = (id, active, text) => {
       const element = $(id);
       element.textContent = text;
@@ -422,6 +423,13 @@
     setStatus('#analytics-status', analyticsCount > 0, analyticsCount ? `${analyticsCount} ID${analyticsCount === 1 ? '' : 's'} saved` : 'Not connected');
     $('#analytics-detail').textContent = analyticsCount ? `${analyticsCount} analytics/ad integration${analyticsCount === 1 ? '' : 's'} configured. Trackers wait for visitor consent.` : 'Add your public measurement IDs in the Marketing & ads form below. Trackers load only after a visitor gives optional analytics consent.';
     setStatus('#email-provider-status', email.configured, email.configured ? 'Server key found' : 'Not connected');
+    setStatus('#youpi-gateway-status', youpi.gatewayUrlConfigured, youpi.gatewayUrlConfigured ? 'Configured' : 'Missing');
+    $('#youpi-gateway-detail').textContent = youpi.gatewayUrlConfigured ? 'A gateway URL is saved privately in Cloudflare.' : 'Add YOUPI_BASE_URL in Cloudflare Pages variables.';
+    setStatus('#youpi-merchant-status', youpi.merchantConfigured, youpi.merchantConfigured ? 'Configured' : 'Missing');
+    $('#youpi-merchant-detail').textContent = youpi.merchantConfigured ? 'Merchant ID is saved privately in Cloudflare.' : 'Add YOUPI_MERCHANT_ID in Cloudflare Pages variables.';
+    setStatus('#youpi-webhook-status', youpi.webhookConfigured, youpi.webhookConfigured ? 'Configured' : 'Missing');
+    $('#youpi-webhook-detail').textContent = youpi.webhookConfigured ? 'Webhook secret is saved privately in Cloudflare.' : 'Add YOUPI_WEBHOOK_SECRET as a secret in Cloudflare.';
+    $('#youpi-enabled-detail').textContent = youpi.enabled && youpi.configured ? 'Configured and enabled. Complete a verified test payment before customer use.' : 'Disabled until the private gateway settings are complete and YOUPI_ENABLED=true.';
   }
   async function loadFlipkartListings(reset = false) {
     if (flipkartListingsLoading) return;
@@ -1151,6 +1159,11 @@
       showToast(`${subscribers.length} subscriber${subscribers.length === 1 ? '' : 's'} exported.`);
     } catch (error) { showToast(error.message); }
   });
+  $('#copy-youpi-env-snippet')?.addEventListener('click', async () => {
+    const snippet = 'YOUPI_BASE_URL=\nYOUPI_MERCHANT_ID=\nYOUPI_WEBHOOK_SECRET=\nYOUPI_ENABLED=false';
+    try { await navigator.clipboard.writeText(snippet); showToast('YouPI variable names copied. Add real values privately in Cloudflare.'); }
+    catch { showToast('Add the YouPI variable names in Cloudflare Pages → Settings → Variables and Secrets.'); }
+  });
   $('#copy-env-snippet').addEventListener('click', async () => {
     const snippet = 'RAZORPAY_KEY_ID=rzp_test_your_key_id\\nRAZORPAY_KEY_SECRET=your_secret\\nRAZORPAY_MODE=test';
     try { await navigator.clipboard.writeText(snippet); showToast('Razorpay setup snippet copied.'); }
@@ -1254,6 +1267,17 @@
     const row = button.closest('[data-product-id]');
     const product = products.find(item => item.id === row?.dataset.productId);
     if (button.dataset.action === 'edit-product' && product) openProductEditor(product);
+    if (button.dataset.action === 'toggle-visibility' && product) {
+      const nextStatus = String(product.status || 'active').toLowerCase() === 'inactive' ? 'active' : 'inactive';
+      const actionLabel = nextStatus === 'active' ? 'show this product in the store' : 'hide this product from the store';
+      if (!window.confirm(`Do you want to ${actionLabel}? This changes only this product.`)) return;
+      button.disabled = true;
+      try {
+        await api(`/api/admin/products/${encodeURIComponent(product.id)}`, { method: 'PATCH', body: JSON.stringify({ ...product, status: nextStatus }) });
+        await refreshAll();
+        showToast(nextStatus === 'active' ? `${product.name} is now visible in the store.` : `${product.name} is now hidden from the store.`);
+      } catch (error) { showToast(error.message); button.disabled = false; }
+    }
     if (button.dataset.action === 'delete-product' && product) {
       if (!window.confirm(`Remove “${product.name}” from your collection?`)) return;
       button.disabled = true;

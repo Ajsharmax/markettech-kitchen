@@ -25,6 +25,7 @@ const page = t => `<!doctype html>
 <link rel="stylesheet" href="/applications/toolkit.css?v=kinetic-2">${t.css ? `\n<link rel="stylesheet" href="${esc(t.css)}">` : ""}
 <script src="/theme.js?v=1"></script>
 <script type="module" src="/applications/tool.js?v=2"></script>
+<script defer src="/account-nav.js?v=1"></script>
 </head>
 <body class="applications-page tk-page" data-tool="${t.slug}">
 <div class="apps-kinetic-bg" aria-hidden="true"><span class="apps-orb apps-orb-a"></span><span class="apps-orb apps-orb-b"></span><span class="apps-orb apps-orb-c"></span></div>

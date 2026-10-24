@@ -305,7 +305,23 @@
         try { sessionStorage.setItem('mt-customer-preview-token', customerPreviewToken); } catch { /* token is also kept for this page */ }
       }
       currentCustomer = result.customer;
+      if (!currentCustomer?.id) throw new Error('Sign-in did not complete. Please try again.');
+      // Confirm the browser accepted the HttpOnly session cookie before showing
+      // success. A blocked cookie must never look like a successful login.
+      const session = await api('/api/auth/me');
+      if (session.customer?.id !== currentCustomer.id) {
+        currentCustomer = null;
+        throw new Error('Your browser could not keep you signed in. Allow cookies for markettech.in and try again.');
+      }
       form.reset();
+      const returnTo = new URLSearchParams(window.location.search).get('returnTo');
+      if (returnTo) {
+        const destination = new URL(returnTo, window.location.origin);
+        if (destination.origin === window.location.origin && destination.pathname !== '/') {
+          window.location.assign(destination.href);
+          return;
+        }
+      }
       if (shouldContinueToCheckout) {
         checkoutAfterAuth = false;
         try {

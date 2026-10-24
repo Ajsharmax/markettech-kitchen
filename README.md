@@ -101,3 +101,51 @@ Configure the YouPI merchant webhook target as `https://www.markettech.in/api/pa
 Important: YouPI PG is a self-hosted Node.js service with a persistent SQLite/Postgres database and companion SMS/Gmail/Android observers. This is separate infrastructure; it does not run inside Cloudflare Pages Functions. Do not expose the dashboard/API until its initial admin credentials are changed, HTTPS and network restrictions are configured, bank-observer access is secured, and a restore/backup plan exists. UPI payment verification depends on your own gateway's banking observers; run test transactions and validate reconciliation before enabling customer use.
 
 Current branch UI/checkout changes are for preview only. Do not merge or enable production until the preview has been tested end-to-end.
+
+
+## Customer login: Better Auth
+
+Customer signup, email/password sign-in, logout and authenticated order history
+use Better Auth 1.7.12 with the existing Cloudflare D1 database. No separate auth
+server or paid auth subscription is required. Cloudflare usage limits still apply.
+The storefront keeps its existing account dialog and `/api/auth/register`,
+`/api/auth/login`, `/api/auth/logout`, `/api/auth/me` API contract. Other Better Auth
+routes are intentionally not exposed. Admin authentication is unchanged.
+
+Deployment requirements:
+
+1. Install locked dependencies with `npm ci` (Node 22.5+).
+2. Apply `migrations/0003_better_auth.sql` to D1 **before** deploying the code.
+   This additive, repeatable migration imports customers using their existing IDs
+   and marks their email addresses unverified. Orders and CRM records stay linked.
+3. Configure a cryptographically random `BETTER_AUTH_SECRET` of at least 32
+   characters as a **secret** in the Cloudflare Pages production environment.
+   Never commit it or reuse the local test secret. Keep it stable between deploys.
+4. Set the Pages build command to `npm run build`, output directory to `public`,
+   compatibility date to `2026-10-24`, and enable `nodejs_compat`.
+   Preserve the existing `DB`, `UPLOADS`, admin and commerce settings.
+5. Preview deployments require their own D1 binding, migrations and auth secret;
+   do not bind public preview branches to the production customer database.
+
+New passwords require at least 8 characters and use Better Auth's default scrypt
+hashing. Imported PBKDF2 passwords continue to work, including old short
+passwords, and upgrade to scrypt after successful sign-in. Existing legacy
+sessions remain valid until their normal expiry; logout invalidates both types.
+Sessions use host-only, HttpOnly, Secure, SameSite=Lax cookies in production.
+Rate limits persist in D1 across Worker instances. Account linking is disabled.
+
+Email verification, password reset emails and social login are not enabled.
+They require a separately configured mail sender or OAuth credentials before
+those flows can be offered to customers.
+
+Validation: `npm test` covers the store plus migration, auth, rate limits, cookie
+revocation, order access and admin isolation. `npm run test:auth:runtime` builds
+the Pages Function and checks signup/session lookup in Cloudflare workerd with
+real local D1 and native scrypt. The auth test also checks the generated schema
+against Better Auth's migration API; request-time full-database introspection is
+disabled to stay within D1 request query limits.
+
+Rollback: redeploy the previous Pages deployment. The new tables are additive;
+keep them and the original customers/sessions tables. New Better Auth accounts
+will need the Better Auth deployment to sign in. Do not drop production tables
+or overwrite upgraded password hashes when retrying the migration.

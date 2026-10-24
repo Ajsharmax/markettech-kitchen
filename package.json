@@ -4,15 +4,25 @@
   "private": true,
   "description": "MarketTech Kitchen storefront with Cloudflare Pages Functions, D1 and R2",
   "scripts": {
-    "check": "node --check public/app.js && node --check public/admin.js && node --check \"functions/api/[[path]].js\" && node --check \"functions/uploads/[[path]].js\"",
+    "check": "node --check public/app.js && node --check public/admin.js && node --check \"functions/api/[[path]].js\" && node --check \"functions/uploads/[[path]].js\" && node --check server/auth.mjs",
     "test:import": "node tests/product-import.test.mjs",
     "test:storefront": "node tests/storefront-dom.test.mjs",
-    "test": "npm run test:import && npm run test:storefront",
+    "test": "npm run test:import && npm run test:storefront && npm run test:auth",
     "test:applications": "node tests/applications.test.mjs && node tests/application-tools.test.mjs && node tests/powerpoint.test.mjs",
     "build:tools": "node scripts/build-tool-pages.mjs",
-    "check:applications": "node scripts/check-applications.mjs"
+    "check:applications": "node scripts/check-applications.mjs",
+    "test:auth": "node tests/auth.test.mjs",
+    "build": "npm run check",
+    "test:auth:runtime": "wrangler pages functions build --outdir .wrangler/auth-build --compatibility-date 2026-10-24 --compatibility-flags nodejs_compat --minify && node tests/auth-runtime.test.mjs"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22.5"
+  },
+  "dependencies": {
+    "better-auth": "1.7.12"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261024.1",
+    "wrangler": "4.152.0"
   }
 }

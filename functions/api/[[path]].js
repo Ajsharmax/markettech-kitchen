@@ -1,12 +1,10 @@
+import { createAuth, upgradeImportedPassword } from '../../server/auth.mjs';
+
 const encoder = new TextEncoder();
 const DEFAULT_SHIPPING_FEE = 99;
 const DEFAULT_FREE_SHIPPING_AT = 1999;
 const ADMIN_SESSION_MS = 8 * 60 * 60 * 1000;
 const CUSTOMER_SESSION_MS = 14 * 24 * 60 * 60 * 1000;
-// Keep this work factor within Cloudflare Workers Free CPU limits. The used count is stored per account.
-const PASSWORD_ITERATIONS = 20000;
-const MAX_PASSWORD_ITERATIONS = 100000;
-
 const DEFAULT_SETTINGS = {
   site: {
     storeName: 'MarketTech Kitchen',
@@ -81,7 +79,9 @@ function json(status, payload, extraHeaders = {}) {
     'X-Content-Type-Options': 'nosniff',
     'Referrer-Policy': 'strict-origin-when-cross-origin'
   });
-  for (const [key, value] of new Headers(extraHeaders)) headers.set(key, value);
+  const extra = new Headers(extraHeaders);
+  for (const [key, value] of extra) if (key !== 'set-cookie') headers.set(key, value);
+  for (const cookie of extra.getSetCookie()) headers.append('Set-Cookie', cookie);
   return new Response(JSON.stringify(payload), { status, headers });
 }
 
@@ -121,12 +121,6 @@ function base64Url(bytes) {
   let binary = '';
   for (const byte of bytes) binary += String.fromCharCode(byte);
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
-}
-
-function fromBase64Url(value) {
-  const normalized = String(value || '').replace(/-/g, '+').replace(/_/g, '/');
-  const binary = atob(normalized + '='.repeat((4 - normalized.length % 4) % 4));
-  return Uint8Array.from(binary, character => character.charCodeAt(0));
 }
 
 function randomToken() {
@@ -177,24 +171,6 @@ function safeCustomer(row) {
     phone: row.phone || '',
     createdAt: row.created_at || row.createdAt || ''
   };
-}
-
-async function hashPassword(password, saltBytes = crypto.getRandomValues(new Uint8Array(16)), iterations = PASSWORD_ITERATIONS) {
-  const key = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']);
-  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: saltBytes, iterations, hash: 'SHA-256' }, key, 256);
-  return { salt: base64Url(saltBytes), hash: base64Url(new Uint8Array(bits)), iterations };
-}
-
-async function verifyPassword(password, customer) {
-  try {
-    const salt = fromBase64Url(customer.password_salt || '');
-    const iterations = Number(customer.password_iterations) || PASSWORD_ITERATIONS;
-    if (!Number.isInteger(iterations) || iterations < 10000 || iterations > MAX_PASSWORD_ITERATIONS) return false;
-    const result = await hashPassword(password, salt, iterations);
-    return constantTimeEqual(result.hash, customer.password_hash || '');
-  } catch {
-    return false;
-  }
 }
 
 async function createSession(env, kind, userId) {
@@ -583,6 +559,11 @@ async function razorpaySignature(secret, message) {
 }
 
 async function getCustomer(request, env) {
+  if (env.BETTER_AUTH_SECRET && /(?:^|;\s*)(?:__Secure-)?mt_auth\./.test(request.headers.get('Cookie') || '')) {
+    const session = await createAuth(env, request).api.getSession({ headers: request.headers });
+    if (session?.user) return safeCustomer(session.user);
+  }
+  // Existing sessions expire naturally; new sessions are issued by Better Auth.
   const id = await sessionUser(request, env, 'customer');
   if (!id) return null;
   const row = await env.DB.prepare('SELECT id, name, email, phone, created_at FROM customers WHERE id = ?').bind(id).first();
@@ -1551,70 +1532,56 @@ async function handleApi(request, env) {
     return json(200, { site: settings.site, policies: settings.policies, marketing: settings.marketing, developer: settings.developer, offers: (offers.results || []).map(parseOfferRow) });
   }
 
-  if (route === '/api/auth/register' && method === 'POST') {
-    const body = await readJson(request);
-    const name = String(body.name || '').trim().slice(0, 100);
-    const email = cleanEmail(body.email);
-    const phone = normalizePhone(body.phone);
-    const phoneDigits = phone.replace(/\D/g, '');
-    const password = String(body.password || '');
-    const passwordValid = password.length >= 4 && password.length <= 128
-      && /[A-Z]/.test(password)
-      && /[a-z]/.test(password)
-      && /\d/.test(password)
-      && /[^A-Za-z0-9]/.test(password);
-    if (!name || !email || phoneDigits.length < 10 || phoneDigits.length > 15 || !passwordValid) {
-      return json(400, { error: 'Use a password with 1 capital letter, 1 small letter, 1 number and 1 symbol. It can be short.' });
+  if (route.startsWith('/api/auth/')) {
+    if (!env.BETTER_AUTH_SECRET) return json(503, { error: 'Account login is temporarily unavailable. Please try again later.' });
+    const endpoints = {
+      '/api/auth/register': ['POST', '/sign-up/email'],
+      '/api/auth/login': ['POST', '/sign-in/email'],
+      '/api/auth/logout': ['POST', '/sign-out'],
+      '/api/auth/me': ['GET', '/get-session']
+    };
+    const endpoint = endpoints[route];
+    // Expose only the storefront's supported operations. Profile/email changes
+    // need their own verified-email flow before they can be enabled.
+    if (!endpoint || method !== endpoint[0]) return json(404, { error: 'Not found.' });
+    const auth = createAuth(env, request);
+    if (route === '/api/auth/me') return json(200, { customer: await getCustomer(request, env) });
+    let body = {};
+    if (route !== '/api/auth/logout') {
+      body = await readJson(request);
+      body = { email: cleanEmail(body.email), password: String(body.password || ''),
+        ...(route.endsWith('register') ? { name: String(body.name || '').trim().slice(0, 100), phone: normalizePhone(body.phone) } : {}) };
+      if (body.password.length > 128) return json(400, { error: 'Use a password of at most 128 characters.' });
+      if (route.endsWith('register')) {
+        const digits = body.phone.replace(/\D/g, '');
+        if (!body.name || !body.email || digits.length < 10 || digits.length > 15) return json(400, { error: 'Enter your name, a valid email and phone number.' });
+        if (body.password.length < 8) return json(400, { error: 'Use a password with at least 8 characters.' });
+      }
     }
-    const existing = await env.DB.prepare('SELECT id FROM customers WHERE email = ?').bind(email).first();
-    if (existing) return json(409, { error: 'An account with that email already exists. Sign in instead.' });
-    const credential = await hashPassword(password);
-    const customer = { id: crypto.randomUUID(), name, email, phone, passwordSalt: credential.salt, passwordHash: credential.hash, createdAt: new Date().toISOString() };
-    try {
-      await env.DB.prepare(`INSERT INTO customers (id, email, name, phone, password_salt, password_hash, password_iterations, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
-        .bind(customer.id, email, name, phone, credential.salt, credential.hash, credential.iterations, customer.createdAt).run();
-    } catch (error) {
-      const duplicate = await env.DB.prepare('SELECT id FROM customers WHERE email = ?').bind(email).first();
-      if (duplicate) return json(409, { error: 'An account with that email already exists. Sign in instead.' });
-      throw error;
+    const target = new URL(request.url);
+    target.pathname = '/api/auth' + endpoint[1];
+    const headers = new Headers(request.headers);
+    headers.set('Content-Type', 'application/json');
+    headers.delete('Content-Length');
+    const response = await auth.handler(new Request(target, { method: 'POST', headers, body: JSON.stringify(body) }));
+    const payload = await response.json();
+    const outgoing = new Headers();
+    for (const cookie of response.headers.getSetCookie()) outgoing.append('Set-Cookie', cookie);
+    if (response.headers.has('Retry-After')) outgoing.set('Retry-After', response.headers.get('Retry-After'));
+    if (!response.ok) return json(response.status, { error: response.status === 429 ? 'Too many attempts. Please wait 15 minutes and try again.' : (payload.message || 'Unable to sign in. Please try again.') }, outgoing);
+    if (route === '/api/auth/logout') {
+      const token = getToken(request, 'mt_customer');
+      if (token) await env.DB.prepare("DELETE FROM sessions WHERE token_hash = ? AND kind = 'customer'").bind(await sha256(token)).run();
+      outgoing.append('Set-Cookie', sessionCookie('mt_customer', '', 0));
+      return json(200, { ok: true }, outgoing);
     }
-    const token = await createSession(env, 'customer', customer.id);
-    return json(201, { ok: true, customer: { id: customer.id, name, email, phone, createdAt: customer.createdAt } }, {
-      'Set-Cookie': sessionCookie('mt_customer', token, Math.floor(CUSTOMER_SESSION_MS / 1000))
-    });
+    if (route === '/api/auth/login') {
+      // A failed optional rehash must not discard an otherwise valid sign-in.
+      try { await upgradeImportedPassword(env, payload.user.id, body.password); }
+      catch { console.error('Could not upgrade imported account password.'); }
+    }
+    return json(route.endsWith('register') ? 201 : 200, { ok: true, customer: safeCustomer(payload.user) }, outgoing);
   }
-
-  if (route === '/api/auth/login' && method === 'POST') {
-    const windowMs = 15 * 60 * 1000;
-    if (await isRateLimited(env, request, 'customer', 8, windowMs)) return json(429, { error: 'Too many sign-in attempts. Please wait 15 minutes and try again.' });
-    const body = await readJson(request);
-    const email = cleanEmail(body.email);
-    const password = String(body.password || '');
-    const customer = email ? await env.DB.prepare('SELECT id, email, name, phone, password_salt, password_hash, password_iterations, created_at FROM customers WHERE email = ?').bind(email).first() : null;
-    let matches = false;
-    if (password.length <= 128) {
-      if (customer) matches = await verifyPassword(password, customer);
-      else await hashPassword(password, new Uint8Array(16), PASSWORD_ITERATIONS);
-    }
-    if (!matches) {
-      await recordLoginFailure(env, request, 'customer', windowMs);
-      return json(401, { error: 'That email and password don’t match.' });
-    }
-    await clearLoginFailures(env, request, 'customer');
-    const token = await createSession(env, 'customer', customer.id);
-    return json(200, { ok: true, customer: safeCustomer(customer) }, {
-      'Set-Cookie': sessionCookie('mt_customer', token, Math.floor(CUSTOMER_SESSION_MS / 1000))
-    });
-  }
-
-  if (route === '/api/auth/logout' && method === 'POST') {
-    const token = getToken(request, 'mt_customer');
-    if (token) await env.DB.prepare('DELETE FROM sessions WHERE token_hash = ? AND kind = ?').bind(await sha256(token), 'customer').run();
-    return json(200, { ok: true }, { 'Set-Cookie': sessionCookie('mt_customer', '', 0) });
-  }
-
-  if (route === '/api/auth/me' && method === 'GET') return json(200, { customer: await getCustomer(request, env) });
 
   if (route === '/api/account/orders' && method === 'GET') {
     const customer = await getCustomer(request, env);

@@ -7,13 +7,14 @@
     "check": "node --check public/app.js && node --check public/admin.js && node --check \"functions/api/[[path]].js\" && node --check \"functions/uploads/[[path]].js\" && node --check server/auth.mjs",
     "test:import": "node tests/product-import.test.mjs",
     "test:storefront": "node tests/storefront-dom.test.mjs",
-    "test": "npm run test:import && npm run test:storefront && npm run test:auth",
+    "test": "npm run test:import && npm run test:storefront && npm run test:auth && npm run test:coupons",
     "test:applications": "node tests/applications.test.mjs && node tests/application-tools.test.mjs && node tests/powerpoint.test.mjs",
     "build:tools": "node scripts/build-tool-pages.mjs",
     "check:applications": "node scripts/check-applications.mjs",
     "test:auth": "node tests/auth.test.mjs",
     "build": "npm run check",
-    "test:auth:runtime": "wrangler pages functions build --outdir .wrangler/auth-build --compatibility-date 2026-10-24 --compatibility-flags nodejs_compat --minify && node tests/auth-runtime.test.mjs"
+    "test:auth:runtime": "wrangler pages functions build --outdir .wrangler/auth-build --compatibility-date 2026-10-24 --compatibility-flags nodejs_compat --minify && node tests/auth-runtime.test.mjs",
+    "test:coupons": "node tests/coupon-display.test.mjs"
   },
   "engines": {
     "node": ">=22.5"

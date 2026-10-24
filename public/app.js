@@ -104,14 +104,14 @@
     const next = coupons.filter(coupon => Number(coupon.minOrder) > subtotal).sort((a, b) => Number(a.minOrder) - Number(b.minOrder))[0];
     let message = '';
     if (best && next) {
-      const gap = Math.max(0, Number(next.coupon.minOrder) - subtotal);
-      const nextAt = couponDiscountPreview(next.coupon, Number(next.coupon.minOrder));
-      if (nextAt > best.discount) message = '<strong>🎉 ' + escapeHtml(best.coupon.code) + ' unlocked: save ' + formatMoney(best.discount) + '.</strong><span>Add ' + formatMoney(gap) + ' more to unlock <b>' + escapeHtml(next.coupon.code) + '</b> and save up to ' + formatMoney(nextAt) + '.</span>';
+      const gap = Math.max(0, Number(next.minOrder) - subtotal);
+      const nextAt = couponDiscountPreview(next, Number(next.minOrder));
+      if (nextAt > best.discount) message = '<strong>🎉 ' + escapeHtml(best.coupon.code) + ' unlocked: save ' + formatMoney(best.discount) + '.</strong><span>Add ' + formatMoney(gap) + ' more to unlock <b>' + escapeHtml(next.code) + '</b> and save up to ' + formatMoney(nextAt) + '.</span>';
       else message = '<strong>🎉 ' + escapeHtml(best.coupon.code) + ' is available: save ' + formatMoney(best.discount) + '.</strong><span>You already have the better available saving.</span>';
     } else if (next) {
-      const gap = Math.max(0, Number(next.coupon.minOrder) - subtotal);
-      const nextAt = couponDiscountPreview(next.coupon, Number(next.coupon.minOrder));
-      message = '<strong>💡 Add ' + formatMoney(gap) + ' more to unlock ' + escapeHtml(next.coupon.code) + '.</strong><span>Reach ' + formatMoney(next.coupon.minOrder) + ' and save up to ' + formatMoney(nextAt) + '.</span>';
+      const gap = Math.max(0, Number(next.minOrder) - subtotal);
+      const nextAt = couponDiscountPreview(next, Number(next.minOrder));
+      message = '<strong>💡 Add ' + formatMoney(gap) + ' more to unlock ' + escapeHtml(next.code) + '.</strong><span>Reach ' + formatMoney(next.minOrder) + ' and save up to ' + formatMoney(nextAt) + '.</span>';
     } else if (best) message = '<strong>🎉 Best available saving: ' + escapeHtml(best.coupon.code) + ' — ' + formatMoney(best.discount) + ' off.</strong>';
     box.innerHTML = message;
     box.hidden = !message;
@@ -136,12 +136,12 @@
   }
   function updateAccountButtons() {
     const firstName = currentCustomer?.name?.trim().split(/\s+/)[0] || '';
-    $('#open-account').textContent = firstName ? `Hi, ${firstName}` : 'Account';
-    $('#open-account').setAttribute('aria-label', firstName ? `Open ${firstName}'s account menu` : 'Open account menu');
+    $('#open-account').textContent = firstName ? `Hi, ${firstName}` : 'Sign in / Register';
+    $('#open-account').setAttribute('aria-label', firstName ? `Open ${firstName}'s account menu` : 'Sign in or create an account');
     $('#open-account').setAttribute('aria-expanded', 'false');
-    $('#open-account').innerHTML = (firstName ? 'Hi, ' + escapeHtml(firstName) : 'Account') + ' <span class="account-chevron" aria-hidden="true">⌄</span>';
+    $('#open-account').innerHTML = (firstName ? 'Hi, ' + escapeHtml(firstName) : 'Sign in / Register') + ' <span class="account-chevron" aria-hidden="true">⌄</span>';
     const mobileAccount = $('#mobile-account-link');
-    if (mobileAccount) mobileAccount.textContent = firstName ? `Your account · ${firstName}` : 'Your account';
+    if (mobileAccount) mobileAccount.textContent = firstName ? `Your account · ${firstName}` : 'Sign in / Register';
   }
   function closeAccountMenu() {
     const button = $('#open-account');
@@ -160,7 +160,8 @@
   $('#open-account')?.addEventListener('click', event => {
     event.preventDefault();
     event.stopPropagation();
-    toggleAccountMenu();
+    if (currentCustomer) toggleAccountMenu();
+    else openAccount();
   });
   $('#account-profile-link')?.addEventListener('click', () => {
     closeAccountMenu();
@@ -1278,5 +1279,6 @@
   updateAccountButtons();
   updateCartUI();
   refreshCustomerSession();
+  if (new URLSearchParams(window.location.search).get('account') === 'login') openAccount();
   loadStore();
 })();

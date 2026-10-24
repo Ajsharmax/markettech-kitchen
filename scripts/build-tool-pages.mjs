@@ -20,7 +20,7 @@ const page = t => `<!doctype html>
 <meta name="description" content="${esc(t.description)} Runs in your browser; files are never uploaded.">
 <title>${esc(t.name)} — MarketTech Applications</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/styles.css?v=kinetic-2">
+<link rel="stylesheet" href="/styles.css?v=restored-c43266f">
 <link rel="stylesheet" href="/applications/applications.css?v=kinetic-2">
 <link rel="stylesheet" href="/applications/toolkit.css?v=kinetic-2">${t.css ? `\n<link rel="stylesheet" href="${esc(t.css)}">` : ""}
 <script src="/theme.js?v=1"></script>
@@ -28,7 +28,7 @@ const page = t => `<!doctype html>
 </head>
 <body class="applications-page tk-page" data-tool="${t.slug}">
 <div class="apps-kinetic-bg" aria-hidden="true"><span class="apps-orb apps-orb-a"></span><span class="apps-orb apps-orb-b"></span><span class="apps-orb apps-orb-c"></span></div>
-<header class="applications-header"><a class="applications-brand" href="/" aria-label="MarketTech home"><img src="/images/markettech-tech-logo.svg?v=2" alt="MarketTech — Smart Shopping &amp; Smart Tools" width="228" height="76"></a><nav aria-label="Applications navigation"><a href="/">Store</a><a href="/applications">Applications</a></nav></header>
+<header class="applications-header"><a class="applications-brand" href="/" aria-label="MarketTech home"><img src="/images/markettech-tech-logo.svg?v=2" alt="MarketTech — Smart Shopping &amp; Smart Tools" width="228" height="76"></a><nav aria-label="Applications navigation"><a href="/">Store</a><a href="/applications">Applications</a><a href="/?account=login">Sign in / Register</a></nav></header>
 <main class="tk-main${t.wide ? " wide" : ""}">
 <p class="tk-crumbs"><a href="/applications">← All applications</a></p>
 <header class="tk-head"><p class="applications-eyebrow">${esc(t.category.toUpperCase())}</p><h1>${esc(t.name)}</h1><p>${esc(t.description)}</p><span class="tk-privacy">Your files are processed on your device and never uploaded.</span></header>

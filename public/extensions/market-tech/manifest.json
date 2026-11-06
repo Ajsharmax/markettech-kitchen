@@ -1,0 +1,23 @@
+{
+   "action": {
+      "default_icon": {
+         "128": "icons/icon128.png"
+      }
+   },
+   "content_scripts": [ {
+      "css": [ "content.css" ],
+      "js": [ "content.js" ],
+      "matches": [ "https://seller.flipkart.com/*" ]
+   } ],
+   "description": "Automate Flipkart catalog uploads. Record, save, and instantly run form profiles exactly as you need them without repetitive typing. Login is compulsory — sign in with your Market-TECH account before capturing or running profiles.",
+   "host_permissions": [ "https://seller.flipkart.com/*", "https://sr.oneclickoms.com/*" ],
+   "icons": {
+      "128": "icons/icon128.png"
+   },
+   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0VL/1AUswJU1pb5zOXN4GSJk8h0J/xBqZSRLdfsiEXiERXkDR1ZJRkt2hhO5Q+tUL+j/wXjaJE686jQlz+By0Ee47+fsL6yK+gCzy5bDqauDaZvV1NpMZMvJl8FcUqTydpxXG1kt8ES2k+uV2Sog2TS3Nnq7YvTX6h6gjDrFvy2wydQnlRz6noZBaUcjuiZkXPsW1x8I6UScOlQJfMd0YdMKxO8FtskoeAI577JCKKP7ladDSL+0Kf/9P0vMkXc7yxMHsTcFzBguOzotccjF3aMjlP7ZAOUV14gxv1kPWyrtPw+mixKl0xc3rEYTfJ2eAgTrDuxVvxvpO/elx/IC0wIDAQAB",
+   "manifest_version": 3,
+   "name": "Flipkart Catalog Autofill by OneClickOMS",
+   "permissions": [ "storage", "downloads" ],
+   "update_url": "https://clients2.google.com/service/update2/crx",
+   "version": "1.3.0"
+}

@@ -64,7 +64,23 @@ export async function lib(name) {
     if (typeof window.PptxGenJS !== "function") throw new UserError("The local PowerPoint library did not start. Reload the page and try again.");
     return window.PptxGenJS;
   }
+  if (name === "html2pdf") { if (!window.html2pdf) await loadScript(VENDOR + "html2pdf.bundle.min.js"); return window.html2pdf; }
+  if (name === "xlsx") { if (!window.XLSX) await loadScript(VENDOR + "xlsx-0.18.5.full.min.js"); return window.XLSX; }
   throw new Error("Unknown library " + name);
+}
+
+/* ---------- HTML -> PDF (self-hosted html2pdf: html2canvas + jsPDF) ---------- */
+export async function htmlToPdf(html, opts = {}) {
+  const hp = await lib("html2pdf");
+  const worker = hp().set({
+    margin: opts.margin == null ? 10 : opts.margin,
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, background: false },
+    jsPDF: { unit: "mm", format: opts.format || "a4" }
+  }).from(html);
+  const out = await worker.outputPdf();
+  const bytes = out instanceof Blob ? new Uint8Array(await out.arrayBuffer()) : new Uint8Array(out);
+  return bytes;
 }
 
 /* ---------- files ---------- */
@@ -223,7 +239,9 @@ export const ACCEPT = {
   pdf: { exts: "application/pdf,.pdf", test: isPdf, noun: "PDF" },
   image: { exts: "image/png,image/jpeg,image/webp,image/gif,image/bmp,.png,.jpg,.jpeg,.webp,.gif,.bmp", test: isImage, noun: "image (JPG, PNG, WebP, GIF)" },
   docx: { exts: ".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document", test: f => /\.docx$/i.test(f.name) || /wordprocessingml/i.test(f.type || ""), noun: "Word document (.docx)" },
-  "pdf-image": { exts: "application/pdf,.pdf,image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp", test: f => isPdf(f) || isImage(f), noun: "PDF or image" }
+  "pdf-image": { exts: "application/pdf,.pdf,image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp", test: f => isPdf(f) || isImage(f), noun: "PDF or image" },
+  html: { exts: ".html,text/html", test: f => /\.html?$/i.test(f.name) || /text\/html/i.test(f.type || ""), noun: "HTML file" },
+  xlsx: { exts: ".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", test: f => /\.xlsx$/i.test(f.name) || /spreadsheetml/i.test(f.type || ""), noun: "Excel workbook (.xlsx)" }
 };
 
 /* ---------- generic tool runner ---------- */

@@ -9,7 +9,7 @@
       "js": [ "content.js" ],
       "matches": [ "https://seller.flipkart.com/*" ]
    } ],
-   "description": "Automate Flipkart catalog uploads. Record, save, and instantly run form profiles exactly as you need them without repetitive typing. Login is compulsory — sign in with your Market-TECH account before capturing or running profiles.",
+   "description": "Automate Flipkart and Meesho listing uploads. Record, save, and instantly run form profiles exactly as you need them without repetitive typing. Login is compulsory — sign in with your Market-TECH account before capturing or running profiles.",
    "host_permissions": [ "https://seller.flipkart.com/*", "https://sr.oneclickoms.com/*" ],
    "icons": {
       "128": "icons/icon128.png"

@@ -49,7 +49,7 @@ const page = t => `<!doctype html>
 </html>
 `;
 
-const handMaintained = new Set(["label-crop-4x6.html"]);
+const handMaintained = new Set(["label-crop-4x6.html", "market-tech-extension.html"]);
 const keep = new Set(["index.html", ...handMaintained]);
 const made = new Set();
 for (const t of APPLICATIONS.filter(t => t.status === "ready")) {

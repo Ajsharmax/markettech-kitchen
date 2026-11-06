@@ -222,6 +222,7 @@ export function dropZone({ accept, multiple, text, hint, onFiles, id }) {
 export const ACCEPT = {
   pdf: { exts: "application/pdf,.pdf", test: isPdf, noun: "PDF" },
   image: { exts: "image/png,image/jpeg,image/webp,image/gif,image/bmp,.png,.jpg,.jpeg,.webp,.gif,.bmp", test: isImage, noun: "image (JPG, PNG, WebP, GIF)" },
+  docx: { exts: ".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document", test: f => /\.docx$/i.test(f.name) || /wordprocessingml/i.test(f.type || ""), noun: "Word document (.docx)" },
   "pdf-image": { exts: "application/pdf,.pdf,image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp", test: f => isPdf(f) || isImage(f), noun: "PDF or image" }
 };
 
@@ -292,7 +293,7 @@ export async function mountSpec(root, spec) {
   function sync() {
     list.replaceChildren();
     files.forEach((f, i) => {
-      const thumb = f.kind === "image" ? h("img", { src: f.url, alt: "", class: "tk-thumb" }) : h("span", { class: "tk-badge" }, "PDF");
+      const thumb = f.kind === "image" ? h("img", { src: f.url, alt: "", class: "tk-thumb" }) : h("span", { class: "tk-badge" }, f.kind === "pdf" ? "PDF" : (f.name.split(".").pop() || "file").toUpperCase().slice(0, 4));
       const meta = [fmtSize(f.size)];
       if (f.pages) meta.push(f.pages + (f.pages === 1 ? " page" : " pages"));
       if (f.locked) meta.push("password-protected");
@@ -326,7 +327,7 @@ export async function mountSpec(root, spec) {
     const take = multiple ? good : [good[0]];
     if (!multiple) { files.forEach(f => f.url && URL.revokeObjectURL(f.url)); files = []; }
     for (const file of take) {
-      const entry = { id: ++uid, file, name: file.name, size: file.size, kind: isPdf(file) ? "pdf" : "image", pages: 0, locked: false, _bytes: null };
+      const entry = { id: ++uid, file, name: file.name, size: file.size, kind: isPdf(file) ? "pdf" : isImage(file) ? "image" : "file", pages: 0, locked: false, _bytes: null };
       entry.bytes = async () => entry._bytes || (entry._bytes = await readBytes(file));
       if (entry.kind === "image") entry.url = URL.createObjectURL(file);
       files.push(entry);

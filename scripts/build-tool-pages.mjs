@@ -37,7 +37,14 @@ const page = t => `<!doctype html>
 <div id="tool-root"></div>
 <nav class="tk-more" aria-label="More tools"><h2>More tools</h2><div id="more-tools"></div></nav>
 </main>
-<footer class="applications-footer"><span>MarketTech Applications</span><a href="/">Back to MarketTech ↗</a></footer>
+<footer class="site-footer">
+  <div class="footer-main page-width">
+    <div class="footer-brand-col"><a class="brand brand-footer" href="/"><img class="brand-logo" src="/images/markettech-tech-logo.svg?v=1" width="760" height="253" alt="MarketTech — Smart Shopping &amp; Smart Tools"></a></div>
+    <nav class="footer-links" aria-label="Explore MarketTech"><h3>Explore</h3><a href="/applications">Applications</a><a href="/about.html">About MarketTech</a></nav>
+    <nav class="footer-links" aria-label="Help and contact"><h3>Help &amp; contact</h3><a href="mailto:support@markettech.in">support@markettech.in</a><a href="https://wa.me/917827685375?text=Hi%20MarketTech%20Team%2C%20I%20need%20some%20help%20with%20your%20website.%20Could%20you%20please%20assist%20me%3F" target="_blank" rel="noopener noreferrer">WhatsApp support ↗</a><a href="/?policy=shipping#policies" data-policy="shipping">Shipping policy</a><a href="/?policy=returns#policies" data-policy="returns">Returns policy</a><span class="footer-contact-address">New Delhi, India</span></nav>
+  </div>
+  <div class="footer-bottom page-width"><span>© <span data-footer-year>2026</span> MarketTech. Made for everyday.</span><div><a href="/?policy=privacy#policies" data-policy="privacy">Privacy</a><a href="/?policy=terms#policies" data-policy="terms">Terms</a></div></div>
+</footer>
 </body>
 </html>
 `;
@@ -48,7 +55,9 @@ const made = new Set();
 for (const t of APPLICATIONS.filter(t => t.status === "ready")) {
   const file = t.slug + ".html";
   if (handMaintained.has(file)) { console.log("preserved", file); continue; }
-  writeFileSync(path.join(dir, file), page(t)); made.add(file);
+  const html = page(t).replace(/\r?\n/g, "\r\n")
+    .replace(/(<footer class="site-footer">[\s\S]*?<\/footer>)/, block => block.replace(/\r\n/g, "\n"));
+  writeFileSync(path.join(dir, file), html); made.add(file);
 }
 // remove stale generated pages and the old placeholders, but never delete hand-maintained pages
 for (const f of readdirSync(dir)) if (f.endsWith(".html") && !keep.has(f) && !made.has(f)) { unlinkSync(path.join(dir, f)); console.log("removed", f); }
